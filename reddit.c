@@ -30,19 +30,19 @@ void redditGetSubreddit(char * sub, char * sorting, struct post * postList)
 	curl_handle = curl_easy_init();
  
  	//GET request 
- 	char url[256];
- 	strcpy(url,"http://reddit.com");
- 	strcat(url,sub);
- 	strcat(url,"/");
- 	strcat(url,sorting);
- 	strcat(url,".json");
+  char url[256];
+  strcpy(url,"http://reddit.com");
+  strcat(url,sub);
+  strcat(url,"/");
+  strcat(url,sorting);
+  strcat(url,".json");
   curl_easy_setopt(curl_handle, CURLOPT_URL, url);
- 	curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
+  curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
   curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
   curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&chunk);
   curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "cReddit/0.0.1 opensource mainline by /u/blacksmid"); //Our user-agent!
  
-	//Lets request
+  //Lets request
   curl_easy_perform(curl_handle);
 
   //and cleanup
@@ -103,7 +103,7 @@ void redditGetSubreddit(char * sub, char * sorting, struct post * postList)
   		atPost++;
   	}
   }
-	if(chunk.memory)
-  	free(chunk.memory);
+  if(chunk.memory)
+    free(chunk.memory);
  
 }
