@@ -6,4 +6,4 @@ CLI Reddit client written in C. Oh, crossplatform too!
 
 How to build
 ============
-Just run ./build.sh really.
+You'll need libncurses and libcurl to build. Then just run ./build.sh really.

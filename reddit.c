@@ -24,8 +24,7 @@ void redditGetSubreddit(char * sub, char * sorting, struct post * postList)
 {
   CURL *curl_handle;
   struct MemoryStruct chunk;
- 
-	chunk.memory = malloc(1);  /* will be grown as needed by the realloc above */ 
+ 	chunk.memory = malloc(1);  /* will be grown as needed by the realloc above */ 
   chunk.size = 0;   
 	curl_handle = curl_easy_init();
  
@@ -82,7 +81,6 @@ void redditGetSubreddit(char * sub, char * sorting, struct post * postList)
   		i += 4;
   		memcpy(postList[atPost].title,&chunk.memory[t[i].start],t[i].end-t[i].start);
   		postList[atPost].title[t[i].end-t[i].start] = 0;
-  		//printf("%s %s %s\n",postList[atPost].subreddit,postList[atPost].id,postList[atPost].title);
   		//Relative possition of score and author isn't constant. So lets search the score variable
   		for(i = i; i != 2500; ++i)
   		{
