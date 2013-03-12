@@ -56,9 +56,9 @@ void redditGetSubreddit(char * sub, char * sorting, struct post * postList)
   r = jsmn_parse(&p, js, t, 2500);
   int i =0;
   int atPost = 0;
-  for(i = 0; i != 2500; ++i)
+  for(i = 0; i < 2500; ++i)
   {
-  	if(t[i].start == -1) break;
+	if(t[i].start == -1) break;
   	if(t[i].type == 1) {i+=t[i].size; continue;}
   	if(t[i].start >= t[i].end || t[i].end-t[i].start > 2040) continue;
   	char buffer[1024*2];
@@ -90,14 +90,13 @@ void redditGetSubreddit(char * sub, char * sorting, struct post * postList)
   			memcpy(buffer2,&chunk.memory[t[i].start],t[i].end-t[i].start);
   			buffer2[t[i].end-t[i].start] = 0;
   			if(strcmp("score",buffer2) == 0) break;
-  		}
+		}
   		i++;
   		memcpy(postList[atPost].votes,&chunk.memory[t[i].start],t[i].end-t[i].start);
   		postList[atPost].votes[t[i].end-t[i].start] = 0;
   		i += 34;
   		memcpy(postList[atPost].author,&chunk.memory[t[i].start],t[i].end-t[i].start);
   		postList[atPost].author[t[i].end-t[i].start] = 0;
-  		
   		atPost++;
   	}
   }
