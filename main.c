@@ -15,7 +15,7 @@ void buildScreen(char **text, int selected, int size)
 	{
 		if(i == selected)
 			attron(COLOR_PAIR(1));
-		printw("%s\n\n",text[i]);
+		printw("%s\n",text[i]);
 		attroff(COLOR_PAIR(1));
 	}
 	refresh();
@@ -24,12 +24,14 @@ void showSubreddit(char* subreddit)
 {
 	struct post threads[25];//Our array with reddit threads
         redditGetSubreddit(subreddit,"hot",threads);
-        //Just some ncurses testing
+	//Just some ncurses testing
         int i;
         char *text[25]; //Text buffer for each line
         for(i = 0; i != 25; ++i)
         {
-                char buffer[512]; //Lets make a bigg ass text buffer so we got enough space
+		if(threads[i].id == 0)
+			continue;
+                char buffer[2048]; //Lets make a bigg ass text buffer so we got enough space
                 strcpy(buffer,threads[i].id);
                 strcat(buffer,"(");
                 strcat(buffer,threads[i].votes);
@@ -39,11 +41,15 @@ void showSubreddit(char* subreddit)
                 strcat(buffer,threads[i].author);
                 text[i] = (char*)malloc(strlen(buffer)); //Now lets make a small buffer that fits exacly!
                 strcpy(text[i],buffer); //And copy our data into it!
-        }
+        	printw("%s\n",buffer);
+		refresh();
+	}
+		
         int selected = 0; //Lets select the first post!
         buildScreen(text,selected,25); //And print it!
         int c;
-        while(c = getch())
+	struct comments cList[500];
+        while(c = wgetch(stdscr))
         {
                 if(c == 'q') //Lets make a break key, so i dont have to close the tab like last time :S
                         break;//YEA FUCK YOU WHILE, TAKE THAT BITCH
@@ -53,11 +59,19 @@ void showSubreddit(char* subreddit)
                                 if(selected != 0)
                                         selected--;
                         break;
+
                         case KEY_DOWN:
                                 if(selected != 24)
                                         selected++;
                         break;
-                }
+
+                	case '\n':
+				printw("Lets gogogo\n");
+				refresh();
+				redditGetThread(threads[selected].id,cList);
+				wgetch(stdscr);
+			break;
+		}
                 buildScreen(text,selected,25); //Print the updates!!
         }
 
