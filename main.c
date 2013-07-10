@@ -83,6 +83,10 @@ int main(int argc, char *argv[])
 	keypad(stdscr,1);//Enable extra keys like arrowkeys
 	noecho(); 
 	curl_global_init(CURL_GLOBAL_ALL);
+        if (!argv[1]) {
+            printf("Please supply a subreddit to go to e.g. /r/coding");
+            exit(0);
+        }
 	showSubreddit(argv[1]);
 	/* we're done with libcurl, so clean it up */ 
 	curl_global_cleanup();
