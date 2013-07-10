@@ -158,20 +158,18 @@ void redditGetThread(char * postid, struct comments * commentList)
     jsmntok_t t[2500];
     js = chunk.memory;
     jsmn_init(&p);
-    r = jsmn_parse(&p, js, t, 250);
+    r = jsmn_parse(&p, js, t, 2500);
     int i =0;
-    char buffer[2048];
+    char buffer[6048];
 
     int atPost = 0;
-    for(i = 0; i < 250; ++i)
+    for(i = 0; i < 2500; ++i)
     {
-        //printw("%i\n",i);
         if(t[i].start == -1) continue;
         if(t[i].type == 1 ) {i+=t[i].size;  continue;}
         if(t[i].start >= t[i].end || t[i].end-t[i].start > 2040) continue;
         memcpy(buffer,&chunk.memory[t[i].start],t[i].end-t[i].start);
         buffer[t[i].end-t[i].start] = 0;
-        //printw("Buffer:%s\n",buffer);
         refresh();
 
         if(strcmp("id",buffer) == 0)
@@ -184,27 +182,17 @@ void redditGetThread(char * postid, struct comments * commentList)
             strcpy(commentList[atPost].id,tmp);
             free(tmp);
         }		
-        /*        if(strcmp("title",buffer) == 0)
-                  {
-                  i++;
-                  char *tmp = malloc(t[i].end-t[i].start+1);
-                  memcpy(tmp,&chunk.memory[t[i].start],t[i].end-t[i].start);
-                  commentList[atPost].title = malloc(t[i].end-t[i].start+1);
-                  tmp[t[i].end-t[i].start] = 0;
-                  strcpy(commentList[atPost].title,tmp);
-                  free(tmp);
-                  } */
         /* Measured in ups and down votes, TODO
-          if(strcmp("score",buffer) == 0)
-        {
-            i++;
-            char *tmp = malloc(t[i].end-t[i].start+1);
-            memcpy(tmp,&chunk.memory[t[i].start],t[i].end-t[i].start);
-            commentList[atPost].votes = malloc(t[i].end-t[i].start+1);
-            tmp[t[i].end-t[i].start] = 0;
-            strcpy(commentList[atPost].votes,tmp);
-            free(tmp);
-        }*/
+           if(strcmp("score",buffer) == 0)
+           {
+           i++;
+           char *tmp = malloc(t[i].end-t[i].start+1);
+           memcpy(tmp,&chunk.memory[t[i].start],t[i].end-t[i].start);
+           commentList[atPost].votes = malloc(t[i].end-t[i].start+1);
+           tmp[t[i].end-t[i].start] = 0;
+           strcpy(commentList[atPost].votes,tmp);
+           free(tmp);
+           }*/
         if(strcmp("author",buffer) == 0)
         {
             i++;
@@ -213,7 +201,10 @@ void redditGetThread(char * postid, struct comments * commentList)
             commentList[atPost].author = malloc(t[i].end-t[i].start+1);
             tmp[t[i].end-t[i].start] = 0;
             strcpy(commentList[atPost].author,tmp);
+            atPost++;
             free(tmp);
+            if(atPost == 25)
+                break;
         }
         if(strcmp("body",buffer) == 0)
         {
@@ -223,13 +214,8 @@ void redditGetThread(char * postid, struct comments * commentList)
             tmp[t[i].end-t[i].start] = 0;
             commentList[atPost].text = malloc(t[i].end-t[i].start+1);
             strcpy(commentList[atPost].text,tmp);
-            atPost++;
             free(tmp);
-            if(atPost == 25)
-                break;
         } 
-
-    printw("%s", commentList[atPost].text);
     }
     if(chunk.memory)
         free(chunk.memory);

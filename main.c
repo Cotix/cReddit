@@ -69,36 +69,34 @@ void showSubreddit(char* subreddit)
                 break;
 
             case '\n':
-                printw("Lets gogogo\n");
                 refresh();
                 redditGetThread(threads[selected].id,cList);
+                // Basically a copy of the code above
                 int u;
                 char *ctext[25]; //Text buffer for each line
-                for(u = 0; u != 500; ++u)
+                for(u = 0; u != 25; ++u)
                 {
                     //printw("starting");
-                    if(cList[u].id == 0)
+                    if(cList[u].id == 0 || cList[u].text == NULL || cList[u].id == NULL || cList[u].author == NULL)
                         continue;
-/*                    char cbuffer[2048]; //Lets make a bigg ass ctext buffer so we got enough space
+                    char cbuffer[2048];
                     strcpy(cbuffer,cList[u].id);
                     strcat(cbuffer," ");
                     strcat(cbuffer,cList[u].author);
-                    strcat(cbuffer," (");
-                    strcat(cbuffer,cList[u].votes);
-                    strcat(cbuffer,")");
+                    // Votes will have to be implemented with up votes minus
+                    // downvotes
+                    //strcat(cbuffer," (");
+                    //strcat(cbuffer,cList[u].votes);
+                    //strcat(cbuffer,")");
                     strcat(cbuffer," - ");
                     strcat(cbuffer,cList[u].text);
                     ctext[u] = (char*)malloc(strlen(cbuffer)); //Now lets make a small buffer that fits exacly!
                     strcpy(ctext[u],cbuffer); //And copy our data into it!
-                    printw("%u %s\n",u,cbuffer); */
-                    //refresh();
-//                    printw("%s %s - %s\n",cList[u].id,cList[u].author,cList[u].text);
+                    printw("%s\n",cbuffer);
+                    refresh();
                 }
-                printw("Done\n");
-                //buildScreen(ctext,selected,25); //Print the updates!!
         }
-        wgetch(stdscr);
-        //buildScreen(text,selected,25); //Print the updates!!
+        buildScreen(text,selected,25); //Print the updates!!
     }
 
 }
@@ -109,10 +107,13 @@ int main(int argc, char *argv[])
     keypad(stdscr,1);//Enable extra keys like arrowkeys
     noecho(); 
     curl_global_init(CURL_GLOBAL_ALL);
+
+    //Incase the user doesn't specify an argument
     if (!argv[1]) {
         printf("Please supply a subreddit to go to e.g. /r/coding");
         exit(0);
     }
+
     showSubreddit(argv[1]);
     /* we're done with libcurl, so clean it up */ 
     curl_global_cleanup();
