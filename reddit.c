@@ -1,4 +1,12 @@
 #include "reddit.h"
+#include "ncurses.h"
+
+int startsWith(char *pre, char *str)
+{
+    size_t lenpre = strlen(pre),
+           lenstr = strlen(str);
+    return lenstr < lenpre ? 0 : strncmp(pre, str, lenpre) == 0;
+}
 
 static size_t
 WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
@@ -15,7 +23,7 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
     memcpy(&(mem->memory[mem->size]), contents, realsize);
     mem->size += realsize;
     mem->memory[mem->size] = 0;
- 
+	
     return realsize;
 }
 
@@ -37,7 +45,7 @@ void redditGetSubreddit(char * sub, char * sorting, struct post * postList)
 	curl_handle = curl_easy_init();
 
 	//GET request
-	int url_size = 17 + strlen(sub) + 1 + strlen(sorting) + 5;
+	int url_size = 23 + strlen(sub) + strlen(sorting);
 	char url[url_size];
 	strcpy(url,"http://reddit.com");
 	strcat(url,sub);
@@ -51,12 +59,18 @@ void redditGetSubreddit(char * sub, char * sorting, struct post * postList)
 
 	//and cleanup
 	curl_easy_cleanup(curl_handle);
-
-	const char *js;
+	
+	char *js;
 	int r;
 	jsmn_parser p;
 	jsmntok_t t[2500];
 	js = chunk.memory;
+	if(startsWith(js, "<html>")) { // this is my way of checking for an invalid response
+		if(chunk.memory)
+			free(chunk.memory);
+		showSubreddit(ask_for_subreddit());
+		return;
+	}
 	jsmn_init(&p);
 	r = jsmn_parse(&p, js, t, 25000);
 	int i =0;
@@ -233,5 +247,33 @@ void redditGetThread(char * postid, struct comments * postList)
   if(chunk.memory)
     free(chunk.memory);
  
+}
+
+void cleanup()
+{
+	curl_global_cleanup();
+	endwin();
+}
+
+char *ask_for_subreddit() {
+	clear();
+	mvprintw(10, 6, "Subreddit: ");
+	int ch, i = 0;
+	char *buffer = malloc(sizeof(int) * 128);
+	while((ch = getch()) != '\n') {
+		if(i == 127) {
+			break;
+		}
+		if(ch == KEY_BACKSPACE) {
+			delch();
+		} else if(ch == KEY_F(10)) {
+			cleanup();
+			exit(0);
+		} else {
+			buffer[i++] = ch;
+			addch(ch);
+		}
+	}
+	return buffer;
 }
 

@@ -29,5 +29,9 @@ struct comments {
 
 void redditGetThread(char * postid, struct comments * commentList);
 void redditGetSubreddit(char * sub, char * sorting, struct post * postList);
+char *ask_for_subreddit();
+void showSubreddit(char *subreddit);
+void cleanup();
+int startsWith(char *pre, char *str);
 
 #endif 
