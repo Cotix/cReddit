@@ -25,57 +25,57 @@ void buildScreen(char **text, int selected, int size)
 void showSubreddit(char* subreddit)
 {
 	struct post threads[25];//Our array with reddit threads
-        redditGetSubreddit(subreddit,"hot",threads);
+	redditGetSubreddit(subreddit,"hot",threads);
 	//Just some ncurses testing
-        int i;
-        char *text[25]; //Text buffer for each line
-        for(i = 0; i != 25; ++i)
-        {
+	int i;
+	char *text[25]; //Text buffer for each line
+	for(i = 0; i != 25; ++i)
+	{
 		if(threads[i].id == 0)
 			continue;
-                char buffer[2048]; //Lets make a bigg ass text buffer so we got enough space
-                strcpy(buffer,threads[i].id);
-                strcat(buffer,"(");
-                strcat(buffer,threads[i].votes);
-                strcat(buffer,")");
-                strcat(buffer,threads[i].title);
-                strcat(buffer," -");
-                strcat(buffer,threads[i].author);
-                text[i] = (char*)malloc(strlen(buffer)); //Now lets make a small buffer that fits exacly!
-                strcpy(text[i],buffer); //And copy our data into it!
-        	printw("%s\n",buffer);
+		char buffer[2048]; //Lets make a bigg ass text buffer so we got enough space
+		//strcpy(buffer,threads[i].id); do we need this?
+		strcat(buffer,"\t(");
+		strcat(buffer,threads[i].votes);
+		strcat(buffer,")\t");
+		strcat(buffer,threads[i].title);
+		strcat(buffer," - ");
+		strcat(buffer,threads[i].author);
+		text[i] = (char*)malloc(strlen(buffer)); //Now lets make a small buffer that fits exacly!
+		strcpy(text[i],buffer); //And copy our data into it!
+		printw("%s\n",buffer);
 		refresh();
 	}
 		
-        int selected = 0; //Lets select the first post!
-        buildScreen(text,selected,25); //And print it!
-        int c;
+	int selected = 0; //Lets select the first post!
+	buildScreen(text,selected,25); //And print it!
+	int c;
 	struct comments cList[500];
-        while(c = wgetch(stdscr))
-        {
-                if(c == 'q') //Lets make a break key, so i dont have to close the tab like last time :S
-                        break;//YEA FUCK YOU WHILE, TAKE THAT BITCH
-                switch(c)
-                {
-                        case KEY_UP:
-                                if(selected != 0)
-                                        selected--;
-                        break;
-
-                        case KEY_DOWN:
-                                if(selected != 24)
-                                        selected++;
-                        break;
-
-                	case '\n':
-				printw("Lets gogogo\n");
-				refresh();
-				redditGetThread(threads[selected].id,cList);
-				wgetch(stdscr);
+	while(c = wgetch(stdscr))
+	{
+		if(c == 'q') //Lets make a break key, so i dont have to close the tab like last time :S
+			break;//YEA FUCK YOU WHILE, TAKE THAT BITCH
+		switch(c)
+		{
+		case KEY_UP:
+			if(selected != 0)
+				selected--;
+			break;
+		case KEY_DOWN:
+			if(selected != 24)
+				selected++;
+			break;
+		case '\n':
+			printw("Lets gogogo\n");
+			refresh();
+			redditGetThread(threads[selected].id,cList);
+			wgetch(stdscr);
+			break;
+		default:
 			break;
 		}
-                buildScreen(text,selected,25); //Print the updates!!
-        }
+    	buildScreen(text,selected,25); //Print the updates!!
+    }
 
 }
 
