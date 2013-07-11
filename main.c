@@ -5,6 +5,7 @@
 #include "reddit.h"
 #include <curl/curl.h>
 #include <ncurses.h>
+
 void buildScreen(char **text, int selected, int size)
 {
 	clear();
@@ -20,6 +21,7 @@ void buildScreen(char **text, int selected, int size)
 	}
 	refresh();
 }
+
 void showSubreddit(char* subreddit)
 {
 	struct post threads[25];//Our array with reddit threads
@@ -76,6 +78,13 @@ void showSubreddit(char* subreddit)
         }
 
 }
+
+void cleanup()
+{
+	curl_global_cleanup();
+        endwin();
+}
+
 int main(int argc, char *argv[])
 {
 	initscr();
@@ -83,9 +92,15 @@ int main(int argc, char *argv[])
 	keypad(stdscr,1);//Enable extra keys like arrowkeys
 	noecho(); 
 	curl_global_init(CURL_GLOBAL_ALL);
-	showSubreddit(argv[1]);
-	/* we're done with libcurl, so clean it up */ 
-	curl_global_cleanup();
-	endwin();
+	
+	if(argc == 2) {
+		showSubreddit(argv[1]);
+	} else {
+		cleanup(); // this will wipe the error message off the screen if done after printf
+		printf("To few arguments: cReddit [subreddit]\n");
+		return 1;
+	}
+ 
+	cleanup();
   	return 0;
 }
