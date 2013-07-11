@@ -82,7 +82,7 @@ void showSubreddit(char* subreddit)
 void cleanup()
 {
 	curl_global_cleanup();
-        endwin();
+	endwin();
 }
 
 int main(int argc, char *argv[])
