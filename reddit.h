@@ -26,6 +26,8 @@ struct comments {
 	char * author;
 	char * votes;
 };
+
 void redditGetThread(char * postid, struct comments * commentList);
 void redditGetSubreddit(char * sub, char * sorting, struct post * postList);
+
 #endif 
