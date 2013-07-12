@@ -7,6 +7,8 @@
 #include "jsmn.h"
 #include <curl/curl.h>
  
+#define REDDIT_URL_BASE_LENGTH 21 
+ 
 struct MemoryStruct {
   	char *memory;
   	size_t size;

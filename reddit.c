@@ -8,8 +8,7 @@ int startsWith(char *pre, char *str)
     return lenstr < lenpre ? 0 : strncmp(pre, str, lenpre) == 0;
 }
 
-    static size_t
-WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
+static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 {
     size_t realsize = size * nmemb;
     struct MemoryStruct *mem = (struct MemoryStruct *)userp;
@@ -28,6 +27,14 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
     return realsize;
 }
 
+char* prepend(char *pre, char *str) 
+{
+    char* newString = malloc(sizeof(char) * strlen(pre) + sizeof(char) * strlen(str));
+    strcpy(newString,pre);
+    strcat(newString,str);
+    return newString;
+} 
+
 void redditGetSubreddit(char * sub, char * sorting, struct post * postList)
 {
     CURL *curl_handle;
@@ -35,9 +42,12 @@ void redditGetSubreddit(char * sub, char * sorting, struct post * postList)
     chunk.memory = malloc(1);  /* will be grown as needed by the realloc above */ 
     chunk.size = 0;   
     curl_handle = curl_easy_init();
-
+    if(!startsWith("/r/",sub)){
+        sub = prepend("/r/",sub);
+    }   
     //GET request 
-    char url[256];
+    int url_size = REDDIT_URL_BASE_LENGTH + strlen(sub) + strlen(sorting);
+    char url[url_size];
     strcpy(url,"http://reddit.com");
     strcat(url,sub);
     strcat(url,"/");
