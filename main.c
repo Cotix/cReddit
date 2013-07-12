@@ -5,8 +5,10 @@
 #include "reddit.h"
 #include <curl/curl.h>
 #include <ncurses.h>
+#include <form.h>
 
 #define SIZEOFELEM(x)  (sizeof(x) / sizeof(x[0]))
+
 
 void buildScreen(char **text, int selected, int size)
 {
@@ -23,7 +25,8 @@ void buildScreen(char **text, int selected, int size)
     }
     refresh();
 }
-void showSubreddit(char* subreddit)
+
+void showSubreddit(char *subreddit)
 {
     struct post threads[25];//Our array with reddit threads
     redditGetSubreddit(subreddit,"hot",threads);
@@ -55,7 +58,7 @@ void showSubreddit(char* subreddit)
     while(c = wgetch(stdscr))
     {
         if(c == 'q') //Lets make a break key, so i dont have to close the tab like last time :S
-            break;//YEA FUCK YOU WHILE, TAKE THAT BITCH
+            break;//YEA FUCK YOU WHILE
         switch(c)
         {
             case KEY_UP:
@@ -95,11 +98,13 @@ void showSubreddit(char* subreddit)
                     printw("%s\n",cbuffer);
                     refresh();
                 }
+                    wgetch(stdscr);
         }
         buildScreen(text,selected,25); //Print the updates!!
     }
 
 }
+
 int main(int argc, char *argv[])
 {
     initscr();
@@ -110,7 +115,9 @@ int main(int argc, char *argv[])
 
     //Incase the user doesn't specify an argument
     if (!argv[1]) {
-        printf("Please supply a subreddit to go to e.g. /r/coding");
+        curl_global_cleanup(); //Dont forget to clean up!!! My whole terminal bugged cause you forgot this :)
+        endwin();
+        printf("Please supply a subreddit to go to e.g. /r/coding\n"); //Added a \n
         exit(0);
     }
 
