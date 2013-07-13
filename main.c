@@ -98,6 +98,7 @@ void showSubreddit(char *subreddit)
                     printw("%s\n",cbuffer);
                     refresh();
                 }
+                    wgetch(stdscr);
         }
         buildScreen(text,selected,25); //Print the updates!!
     }
