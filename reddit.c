@@ -1,7 +1,14 @@
 #include "reddit.h"
+#include "ncurses.h"
 
-    static size_t
-WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
+int startsWith(char *pre, char *str)
+{
+    size_t lenpre = strlen(pre),
+           lenstr = strlen(str);
+    return lenstr < lenpre ? 0 : strncmp(pre, str, lenpre) == 0;
+}
+
+static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 {
     size_t realsize = size * nmemb;
     struct MemoryStruct *mem = (struct MemoryStruct *)userp;
@@ -20,6 +27,14 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
     return realsize;
 }
 
+char* prepend(char *pre, char *str) 
+{
+    char* newString = malloc(sizeof(char) * strlen(pre) + sizeof(char) * strlen(str));
+    strcpy(newString,pre);
+    strcat(newString,str);
+    return newString;
+} 
+
 void redditGetSubreddit(char * sub, char * sorting, struct post * postList)
 {
     CURL *curl_handle;
@@ -27,9 +42,12 @@ void redditGetSubreddit(char * sub, char * sorting, struct post * postList)
     chunk.memory = malloc(1);  /* will be grown as needed by the realloc above */ 
     chunk.size = 0;   
     curl_handle = curl_easy_init();
-
+    if(!startsWith("/r/",sub)){
+        sub = prepend("/r/",sub);
+    }   
     //GET request 
-    char url[256];
+    int url_size = REDDIT_URL_BASE_LENGTH + strlen(sub) + strlen(sorting);
+    char url[url_size];
     strcpy(url,"http://reddit.com");
     strcat(url,sub);
     strcat(url,"/");
@@ -220,5 +238,33 @@ void redditGetThread(char * postid, struct comments * commentList)
     if(chunk.memory)
         free(chunk.memory);
 
+}
+
+void cleanup()
+{
+	curl_global_cleanup();
+	endwin();
+}
+
+char *ask_for_subreddit() {
+	clear();
+	mvprintw(10, 6, "Subreddit: ");
+	int ch, i = 0;
+	char *buffer = malloc(sizeof(int) * 128);
+	while((ch = getch()) != '\n') {
+		if(i == 127) {
+			break;
+		}
+		if(ch == KEY_BACKSPACE) {
+			delch();
+		} else if(ch == KEY_F(10)) {
+			cleanup();
+			exit(0);
+		} else {
+			buffer[i++] = ch;
+			addch(ch);
+		}
+	}
+	return buffer;
 }
 

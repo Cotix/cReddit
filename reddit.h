@@ -7,6 +7,8 @@
 #include "jsmn.h"
 #include <curl/curl.h>
  
+#define REDDIT_URL_BASE_LENGTH 21 
+ 
 struct MemoryStruct {
   	char *memory;
   	size_t size;
@@ -26,6 +28,12 @@ struct comments {
 	char * author;
 	char * votes;
 };
+
 void redditGetThread(char * postid, struct comments * commentList);
 void redditGetSubreddit(char * sub, char * sorting, struct post * postList);
+char *ask_for_subreddit();
+void showSubreddit(char *subreddit);
+void cleanup();
+int startsWith(char *pre, char *str);
+
 #endif 
