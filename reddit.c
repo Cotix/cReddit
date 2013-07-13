@@ -35,7 +35,11 @@ char* prepend(char *pre, char *str)
     return newString;
 } 
 
+<<<<<<< HEAD
 void redditGetSubreddit(char * sub, char * sorting, struct post * postList, int * postCount)
+=======
+void redditGetSubreddit(char * sub, char * sorting, struct post * postList)
+>>>>>>> 4f71652bef00b52b08fea1eff463ca00cfcc7686
 {
     CURL *curl_handle;
     struct MemoryStruct chunk;
