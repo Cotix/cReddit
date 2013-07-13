@@ -35,7 +35,7 @@ char* prepend(char *pre, char *str)
     return newString;
 } 
 
-void redditGetSubreddit(char * sub, char * sorting, struct post * postList)
+void redditGetSubreddit(char * sub, char * sorting, struct post * postList, int * postCount)
 {
     CURL *curl_handle;
     struct MemoryStruct chunk;
@@ -74,8 +74,9 @@ void redditGetSubreddit(char * sub, char * sorting, struct post * postList)
     r = jsmn_parse(&p, js, t, 25000);
     int i =0;
     char buffer[2048];
-
+    
     int atPost = 0;
+
     for(i = 0; i < 25000; ++i)
     {
         if(t[i].start == -1) continue;
@@ -139,11 +140,11 @@ void redditGetSubreddit(char * sub, char * sorting, struct post * postList)
         }
 
     }
+    *postCount = atPost;
     if(chunk.memory)
         free(chunk.memory);
-
 }
-void redditGetThread(char * postid, struct comments * commentList)
+void redditGetThread(char * postid, struct comments * commentList, int * commentCount)
 {
     CURL *curl_handle;
     struct MemoryStruct chunk;
@@ -235,6 +236,7 @@ void redditGetThread(char * postid, struct comments * commentList)
             free(tmp);
         } 
     }
+    *commentCount = atPost;
     if(chunk.memory)
         free(chunk.memory);
 

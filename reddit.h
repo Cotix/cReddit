@@ -29,8 +29,8 @@ struct comments {
 	char * votes;
 };
 
-void redditGetThread(char * postid, struct comments * commentList);
-void redditGetSubreddit(char * sub, char * sorting, struct post * postList);
+void redditGetThread(char * postid, struct comments * commentList, int * commentCount);
+void redditGetSubreddit(char * sub, char * sorting, struct post * postList, int * postCount);
 char *ask_for_subreddit();
 void showSubreddit(char *subreddit);
 void cleanup();
