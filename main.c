@@ -29,11 +29,18 @@ void buildScreen(char **text, int selected, int size)
 void showSubreddit(char *subreddit)
 {
     struct post threads[25];//Our array with reddit threads
-    redditGetSubreddit(subreddit,"hot",threads);
+    int *postCount;
+    postCount = malloc(sizeof(int));
+    redditGetSubreddit(subreddit,"hot",threads,postCount);
     //Just some ncurses testing
     int i;
-    char *text[25]; //Text buffer for each line
-    for(i = 0; i != 25; ++i)
+    int displayCount = 25;
+    if (*postCount < 25) {
+        displayCount=*postCount;
+    }
+    printw("%i\n", displayCount);
+    char *text[displayCount]; //Text buffer for each line
+    for(i = 0; i != displayCount; ++i)
     {
         if(threads[i].id == 0)
             continue;
@@ -52,7 +59,7 @@ void showSubreddit(char *subreddit)
     }
 
     int selected = 0; //Lets select the first post!
-    buildScreen(text,selected,25); //And print it!
+    buildScreen(text,selected,displayCount); //And print it!
     int c;
     struct comments cList[500];
     while(c = wgetch(stdscr))
@@ -73,11 +80,17 @@ void showSubreddit(char *subreddit)
 
             case '\n':
                 refresh();
-                redditGetThread(threads[selected].id,cList);
+                int *commentCount;
+                commentCount = malloc(sizeof(int));
+                redditGetThread(threads[selected].id,cList,commentCount);
+                int cdisplayCount = 25;
+                if (*commentCount < 25) {
+                    cdisplayCount=*postCount;
+                }
                 // Basically a copy of the code above
                 int u;
-                char *ctext[25]; //Text buffer for each line
-                for(u = 0; u != 25; ++u)
+                char *ctext[cdisplayCount]; //Text buffer for each line
+                for(u = 0; u != cdisplayCount; ++u)
                 {
                     //printw("starting");
                     if(cList[u].id == 0 || cList[u].text == NULL || cList[u].id == NULL || cList[u].author == NULL)
@@ -100,7 +113,7 @@ void showSubreddit(char *subreddit)
                 }
                     wgetch(stdscr);
         }
-        buildScreen(text,selected,25); //Print the updates!!
+        buildScreen(text,selected,displayCount); //Print the updates!!
     }
 
 }
