@@ -179,7 +179,7 @@ void redditGetThread(char * postid, struct comments * commentList, int * comment
     jsmn_init(&p);
     r = jsmn_parse(&p, js, t, 2500);
     int i =0;
-    char buffer[6048];
+    char buffer[2048];
 
     int atPost = 0;
     for(i = 0; i < 2500; ++i)
@@ -220,10 +220,7 @@ void redditGetThread(char * postid, struct comments * commentList, int * comment
             commentList[atPost].author = malloc(t[i].end-t[i].start+1);
             tmp[t[i].end-t[i].start] = 0;
             strcpy(commentList[atPost].author,tmp);
-            atPost++;
             free(tmp);
-            if(atPost == 25)
-                break;
         }
         if(strcmp("body",buffer) == 0)
         {
@@ -233,7 +230,10 @@ void redditGetThread(char * postid, struct comments * commentList, int * comment
             tmp[t[i].end-t[i].start] = 0;
             commentList[atPost].text = malloc(t[i].end-t[i].start+1);
             strcpy(commentList[atPost].text,tmp);
+            atPost++;
             free(tmp);
+            if(atPost == 25)
+                break;
         } 
     }
     *commentCount = atPost;
