@@ -6,9 +6,14 @@
 #include <string.h>
 #include "jsmn.h"
 #include <curl/curl.h>
- 
-#define REDDIT_URL_BASE_LENGTH 21 
- 
+
+/* REDDIT_URL_BASE_LENGTH captures the base URL, the trailing '/' after a
+ * subreddit and the ".json" suffix. Excluding the subreddit and sorting,
+ * it looks like the following: http://reddit.com/.json
+ * This is currently defined to be 23 bytes, we add 1 more for '\0'
+ * termination. */
+#define REDDIT_URL_BASE_LENGTH 24
+
 struct MemoryStruct {
   	char *memory;
   	size_t size;
