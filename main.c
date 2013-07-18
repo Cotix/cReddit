@@ -14,7 +14,7 @@ void buildScreen(char **text, int selected, int size)
 {
     clear();
     start_color();
-    init_pair(1,COLOR_RED,COLOR_YELLOW);
+    init_pair(1,COLOR_CYAN,COLOR_MAGENTA);
     int i = 0;
     for(i = 0; i != size; ++i)
     {
@@ -24,6 +24,24 @@ void buildScreen(char **text, int selected, int size)
         attroff(COLOR_PAIR(1));
     }
     refresh();
+}
+
+/*
+    Prints horizontal line of dashes to screen
+*/
+void printHLine(int width) {
+    int i;
+    for (i = 0; i < width; i++) {
+        printw("-");
+    }
+} 
+
+/*
+    Print comments separated by hline equal to width of term
+*/
+void printComment(char *text) {
+    printHLine(COLS);
+    printw("%s\n",text);
 }
 
 void showSubreddit(char *subreddit)
@@ -68,17 +86,17 @@ void showSubreddit(char *subreddit)
             break;//YEA FUCK YOU WHILE
         switch(c)
         {
-            case KEY_UP:
+            case 'k': case KEY_UP:
                 if(selected != 0)
                     selected--;
                 break;
 
-            case KEY_DOWN:
+            case 'j': case KEY_DOWN:
                 if(selected != 24)
                     selected++;
                 break;
 
-            case '\n':
+            case '\n': // Display selected thread
                 refresh();
                 int *commentCount;
                 commentCount = malloc(sizeof(int));
@@ -89,6 +107,11 @@ void showSubreddit(char *subreddit)
                 }
                 // Basically a copy of the code above
                 int u;
+
+                clear();
+                start_color();
+                init_pair(1,COLOR_MAGENTA,COLOR_CYAN);
+
                 char *ctext[cdisplayCount]; //Text buffer for each line
                 for(u = 0; u != cdisplayCount; ++u)
                 {
@@ -108,10 +131,12 @@ void showSubreddit(char *subreddit)
                     strcat(cbuffer,cList[u].text);
                     ctext[u] = (char*)malloc(strlen(cbuffer)); //Now lets make a small buffer that fits exacly!
                     strcpy(ctext[u],cbuffer); //And copy our data into it!
-                    printw("%s\n",cbuffer);
-                    refresh();
+                    printComment(cbuffer);
+                    attroff(COLOR_PAIR(1));
                 }
-                    wgetch(stdscr);
+                refresh();
+
+                wgetch(stdscr);
         }
         buildScreen(text,selected,displayCount); //Print the updates!!
     }
