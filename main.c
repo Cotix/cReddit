@@ -14,7 +14,8 @@ void buildScreen(char **text, int selected, int size)
 {
     clear();
     start_color();
-    init_pair(1,COLOR_CYAN,COLOR_MAGENTA);
+    // init_pair(1,COLOR_CYAN,COLOR_MAGENTA);
+    init_pair(1,COLOR_RED,COLOR_YELLOW);
     int i = 0;
     for(i = 0; i != size; ++i)
     {
@@ -39,9 +40,13 @@ void printHLine(int width) {
 /*
     Print comments separated by hline equal to width of term
 */
-void printComment(char *text) {
+void printComment(char *author, char *text) {
     printHLine(COLS);
-    printw("%s\n",text);
+    attron(COLOR_PAIR(1));
+    printw("%s\n",author);
+    attroff(COLOR_PAIR(1));
+    // printHLine(COLS);
+    printw("    %s\n",text);
 }
 
 void showSubreddit(char *subreddit)
@@ -96,7 +101,7 @@ void showSubreddit(char *subreddit)
                     selected++;
                 break;
 
-            case '\n': // Display selected thread
+            case 'l': case '\n': // Display selected thread
                 refresh();
                 int *commentCount;
                 commentCount = malloc(sizeof(int));
@@ -110,7 +115,7 @@ void showSubreddit(char *subreddit)
 
                 clear();
                 start_color();
-                init_pair(1,COLOR_MAGENTA,COLOR_CYAN);
+                // init_pair(1,COLOR_CYAN,COLOR_MAGENTA);
 
                 char *ctext[cdisplayCount]; //Text buffer for each line
                 for(u = 0; u != cdisplayCount; ++u)
@@ -119,19 +124,19 @@ void showSubreddit(char *subreddit)
                     if(cList[u].id == 0 || cList[u].text == NULL || cList[u].id == NULL || cList[u].author == NULL)
                         continue;
                     char cbuffer[2048];
-                    strcpy(cbuffer,cList[u].id);
-                    strcat(cbuffer," ");
-                    strcat(cbuffer,cList[u].author);
+                    // strcpy(cbuffer,cList[u].id);
+                    // strcat(cbuffer," ");
+                    // strcat(cbuffer,cList[u].author);
                     // Votes will have to be implemented with up votes minus
                     // downvotes
                     //strcat(cbuffer," (");
                     //strcat(cbuffer,cList[u].votes);
                     //strcat(cbuffer,")");
-                    strcat(cbuffer," - ");
-                    strcat(cbuffer,cList[u].text);
-                    ctext[u] = (char*)malloc(strlen(cbuffer)); //Now lets make a small buffer that fits exacly!
-                    strcpy(ctext[u],cbuffer); //And copy our data into it!
-                    printComment(cbuffer);
+                    // strcat(cbuffer," - ");
+                    // strcat(cbuffer,cList[u].text);
+                    // ctext[u] = (char*)malloc(strlen(cbuffer)); //Now lets make a small buffer that fits exacly!
+                    // strcpy(ctext[u],cbuffer); //And copy our data into it!
+                    printComment(cList[u].author, cList[u].text);
                     attroff(COLOR_PAIR(1));
                 }
                 refresh();
