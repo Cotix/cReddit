@@ -68,19 +68,23 @@ void redditGetSubreddit(char * sub, char * sorting, struct post * postList, int 
     const char *js;
     int r;
     jsmn_parser p;
-    jsmntok_t t[2500];
+
+    size_t numtokens = 25000;
+    jsmntok_t t[numtokens];
+
     js = chunk.memory;
     jsmn_init(&p);
-    r = jsmn_parse(&p, js, t, 25000);
+    r = jsmn_parse(&p, js, t, numtokens);
+    
     int i =0;
     char buffer[2048];
     
     int atPost = 0;
 
-    for(i = 0; i < 25000; ++i)
+    for(i = 0; i < numtokens; ++i)
     {
         if(t[i].start == -1) continue;
-        if(t[i].type == 1 ) {i+=t[i].size;  continue;}
+        if(t[i].type == JSMN_OBJECT ) {i+=t[i].size;  continue;}
         if(t[i].start >= t[i].end || t[i].end-t[i].start > 2040) continue;
         memcpy(buffer,&chunk.memory[t[i].start],t[i].end-t[i].start);
         buffer[t[i].end-t[i].start] = 0;
