@@ -7,9 +7,6 @@
 #include <ncurses.h>
 #include <form.h>
 
-#define SIZEOFELEM(x)  (sizeof(x) / sizeof(x[0]))
-
-
 void buildScreen(char **text, int selected, int size)
 {
     clear();
@@ -85,7 +82,7 @@ void showSubreddit(char *subreddit)
                 redditGetThread(threads[selected].id,cList,commentCount);
                 int cdisplayCount = 25;
                 if (*commentCount < 25) {
-                    cdisplayCount=*postCount;
+                    cdisplayCount=*commentCount;
                 }
                 // Basically a copy of the code above
                 int u;
@@ -93,7 +90,7 @@ void showSubreddit(char *subreddit)
                 for(u = 0; u != cdisplayCount; ++u)
                 {
                     //printw("starting");
-                    if(cList[u].id == 0 || cList[u].text == NULL || cList[u].id == NULL || cList[u].author == NULL)
+                    if(cList[u].id == 0)
                         continue;
                     char cbuffer[2048];
                     strcpy(cbuffer,cList[u].id);

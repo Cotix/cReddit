@@ -1,0 +1,407 @@
+==4415== Memcheck, a memory error detector
+==4415== Copyright (C) 2002-2012, and GNU GPL'd, by Julian Seward et al.
+==4415== Using Valgrind-3.8.1 and LibVEX; rerun with -h for copyright info
+==4415== Command: ./cReddit codetogether
+==4415== Parent PID: 4332
+==4415== 
+==4415== Invalid write of size 1
+==4415==    at 0x4C2C872: __GI_strcat (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x401AD8: prepend (reddit.c:34)
+==4415==    by 0x401B6A: redditGetSubreddit (reddit.c:46)
+==4415==    by 0x401207: showSubreddit (main.c:31)
+==4415==    by 0x40189F: main (main.c:134)
+==4415==  Address 0x680043f is 0 bytes after a block of size 15 alloc'd
+==4415==    at 0x4C2C04B: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x401AAE: prepend (reddit.c:32)
+==4415==    by 0x401B6A: redditGetSubreddit (reddit.c:46)
+==4415==    by 0x401207: showSubreddit (main.c:31)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Invalid read of size 1
+==4415==    at 0x4C2CAA4: __GI_strlen (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x401B80: redditGetSubreddit (reddit.c:49)
+==4415==    by 0x401207: showSubreddit (main.c:31)
+==4415==    by 0x40189F: main (main.c:134)
+==4415==  Address 0x680043f is 0 bytes after a block of size 15 alloc'd
+==4415==    at 0x4C2C04B: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x401AAE: prepend (reddit.c:32)
+==4415==    by 0x401B6A: redditGetSubreddit (reddit.c:46)
+==4415==    by 0x401207: showSubreddit (main.c:31)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Invalid read of size 1
+==4415==    at 0x4C2C863: __GI_strcat (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x401C41: redditGetSubreddit (reddit.c:52)
+==4415==    by 0x401207: showSubreddit (main.c:31)
+==4415==    by 0x40189F: main (main.c:134)
+==4415==  Address 0x680043f is 0 bytes after a block of size 15 alloc'd
+==4415==    at 0x4C2C04B: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x401AAE: prepend (reddit.c:32)
+==4415==    by 0x401B6A: redditGetSubreddit (reddit.c:46)
+==4415==    by 0x401207: showSubreddit (main.c:31)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Thread 2:
+==4415== Syscall param sendmsg(mmsg[0].msg_hdr) points to uninitialised byte(s)
+==4415==    at 0x53DC29F: sendmmsg (in /usr/lib/libc-2.17.so)
+==4415==    by 0x759534F: ??? (in /usr/lib/libresolv-2.17.so)
+==4415==    by 0x7592B74: __libc_res_nquery (in /usr/lib/libresolv-2.17.so)
+==4415==    by 0x759315E: ??? (in /usr/lib/libresolv-2.17.so)
+==4415==    by 0x759374E: __libc_res_nsearch (in /usr/lib/libresolv-2.17.so)
+==4415==    by 0x7387A8A: _nss_dns_gethostbyname4_r (in /usr/lib/libnss_dns-2.17.so)
+==4415==    by 0x53C5BEC: gaih_inet (in /usr/lib/libc-2.17.so)
+==4415==    by 0x53C806C: getaddrinfo (in /usr/lib/libc-2.17.so)
+==4415==    by 0x50D1F33: ??? (in /usr/lib/libcurl.so.4.3.0)
+==4415==    by 0x50DB3C3: ??? (in /usr/lib/libcurl.so.4.3.0)
+==4415==    by 0x50D9F6A: ??? (in /usr/lib/libcurl.so.4.3.0)
+==4415==    by 0x615EDD1: start_thread (in /usr/lib/libpthread-2.17.so)
+==4415==  Address 0x7175100 is on thread 2's stack
+==4415== 
+==4415== Syscall param sendmsg(mmsg[0].msg_hdr) points to uninitialised byte(s)
+==4415==    at 0x53DC29F: sendmmsg (in /usr/lib/libc-2.17.so)
+==4415==    by 0x759534F: ??? (in /usr/lib/libresolv-2.17.so)
+==4415==    by 0x7592B74: __libc_res_nquery (in /usr/lib/libresolv-2.17.so)
+==4415==    by 0x759315E: ??? (in /usr/lib/libresolv-2.17.so)
+==4415==    by 0x759374E: __libc_res_nsearch (in /usr/lib/libresolv-2.17.so)
+==4415==    by 0x7387A8A: _nss_dns_gethostbyname4_r (in /usr/lib/libnss_dns-2.17.so)
+==4415==    by 0x53C5BEC: gaih_inet (in /usr/lib/libc-2.17.so)
+==4415==    by 0x53C806C: getaddrinfo (in /usr/lib/libc-2.17.so)
+==4415==    by 0x50D1F33: ??? (in /usr/lib/libcurl.so.4.3.0)
+==4415==    by 0x50DB3C3: ??? (in /usr/lib/libcurl.so.4.3.0)
+==4415==    by 0x50D9F6A: ??? (in /usr/lib/libcurl.so.4.3.0)
+==4415==    by 0x615EDD1: start_thread (in /usr/lib/libpthread-2.17.so)
+==4415==  Address 0x7175100 is on thread 2's stack
+==4415== 
+==4415== Thread 1:
+==4415== Invalid write of size 1
+==4415==    at 0x4C2CBB2: __GI_strcpy (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x4014AB: showSubreddit (main.c:53)
+==4415==    by 0x40189F: main (main.c:134)
+==4415==  Address 0x69153e1 is 0 bytes after a block of size 129 alloc'd
+==4415==    at 0x4C2C04B: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x40147A: showSubreddit (main.c:52)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Invalid read of size 1
+==4415==    at 0x533ECD0: vfprintf (in /usr/lib/libc-2.17.so)
+==4415==    by 0x53ED764: __vsnprintf_chk (in /usr/lib/libc-2.17.so)
+==4415==    by 0x4E59D18: _nc_printf_string (in /usr/lib/libncursesw.so.5.9)
+==4415==    by 0x4E552CE: vwprintw (in /usr/lib/libncursesw.so.5.9)
+==4415==    by 0x4E55578: printw (in /usr/lib/libncursesw.so.5.9)
+==4415==    by 0x401183: buildScreen (main.c:20)
+==4415==    by 0x4014FE: showSubreddit (main.c:59)
+==4415==    by 0x40189F: main (main.c:134)
+==4415==  Address 0x69153e1 is 0 bytes after a block of size 129 alloc'd
+==4415==    at 0x4C2C04B: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x40147A: showSubreddit (main.c:52)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Thread 2:
+==4415== Syscall param sendmsg(mmsg[0].msg_hdr) points to uninitialised byte(s)
+==4415==    at 0x53DC29F: sendmmsg (in /usr/lib/libc-2.17.so)
+==4415==    by 0x759534F: ??? (in /usr/lib/libresolv-2.17.so)
+==4415==    by 0x7592B74: __libc_res_nquery (in /usr/lib/libresolv-2.17.so)
+==4415==    by 0x759315E: ??? (in /usr/lib/libresolv-2.17.so)
+==4415==    by 0x759374E: __libc_res_nsearch (in /usr/lib/libresolv-2.17.so)
+==4415==    by 0x7387A8A: _nss_dns_gethostbyname4_r (in /usr/lib/libnss_dns-2.17.so)
+==4415==    by 0x53C5BEC: gaih_inet (in /usr/lib/libc-2.17.so)
+==4415==    by 0x53C806C: getaddrinfo (in /usr/lib/libc-2.17.so)
+==4415==    by 0x50D1F33: ??? (in /usr/lib/libcurl.so.4.3.0)
+==4415==    by 0x50DB3C3: ??? (in /usr/lib/libcurl.so.4.3.0)
+==4415==    by 0x50D9F6A: ??? (in /usr/lib/libcurl.so.4.3.0)
+==4415==    by 0x615EDD1: start_thread (in /usr/lib/libpthread-2.17.so)
+==4415==  Address 0x7175100 is on thread 2's stack
+==4415== 
+==4415== Syscall param sendmsg(mmsg[0].msg_hdr) points to uninitialised byte(s)
+==4415==    at 0x53DC29F: sendmmsg (in /usr/lib/libc-2.17.so)
+==4415==    by 0x759534F: ??? (in /usr/lib/libresolv-2.17.so)
+==4415==    by 0x7592B74: __libc_res_nquery (in /usr/lib/libresolv-2.17.so)
+==4415==    by 0x759315E: ??? (in /usr/lib/libresolv-2.17.so)
+==4415==    by 0x759374E: __libc_res_nsearch (in /usr/lib/libresolv-2.17.so)
+==4415==    by 0x7387A8A: _nss_dns_gethostbyname4_r (in /usr/lib/libnss_dns-2.17.so)
+==4415==    by 0x53C5BEC: gaih_inet (in /usr/lib/libc-2.17.so)
+==4415==    by 0x53C806C: getaddrinfo (in /usr/lib/libc-2.17.so)
+==4415==    by 0x50D1F33: ??? (in /usr/lib/libcurl.so.4.3.0)
+==4415==    by 0x50DB3C3: ??? (in /usr/lib/libcurl.so.4.3.0)
+==4415==    by 0x50D9F6A: ??? (in /usr/lib/libcurl.so.4.3.0)
+==4415==    by 0x615EDD1: start_thread (in /usr/lib/libpthread-2.17.so)
+==4415==  Address 0x7175100 is on thread 2's stack
+==4415== 
+==4415== Thread 1:
+==4415== Conditional jump or move depends on uninitialised value(s)
+==4415==    at 0x402B8A: redditGetThread (reddit.c:191)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Conditional jump or move depends on uninitialised value(s)
+==4415==    at 0x402BAC: redditGetThread (reddit.c:192)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Conditional jump or move depends on uninitialised value(s)
+==4415==    at 0x402C03: redditGetThread (reddit.c:193)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Conditional jump or move depends on uninitialised value(s)
+==4415==    at 0x402C40: redditGetThread (reddit.c:193)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Conditional jump or move depends on uninitialised value(s)
+==4415==    at 0x4C2DA56: memcpy@@GLIBC_2.14 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x402CB3: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Conditional jump or move depends on uninitialised value(s)
+==4415==    at 0x4C2DA69: memcpy@@GLIBC_2.14 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x402CB3: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Conditional jump or move depends on uninitialised value(s)
+==4415==    at 0x4C2DA7E: memcpy@@GLIBC_2.14 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x402CB3: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Conditional jump or move depends on uninitialised value(s)
+==4415==    at 0x4C2DACB: memcpy@@GLIBC_2.14 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x402CB3: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Conditional jump or move depends on uninitialised value(s)
+==4415==    at 0x4C2DBC0: memcpy@@GLIBC_2.14 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x402CB3: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Conditional jump or move depends on uninitialised value(s)
+==4415==    at 0x4C2DBD4: memcpy@@GLIBC_2.14 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x402CB3: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Conditional jump or move depends on uninitialised value(s)
+==4415==    at 0x4C2DBDA: memcpy@@GLIBC_2.14 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x402CB3: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Use of uninitialised value of size 8
+==4415==    at 0x4C2DBF1: memcpy@@GLIBC_2.14 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x402CB3: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Use of uninitialised value of size 8
+==4415==    at 0x4C2DBF8: memcpy@@GLIBC_2.14 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x402CB3: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Conditional jump or move depends on uninitialised value(s)
+==4415==    at 0x4C2DBFA: memcpy@@GLIBC_2.14 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x402CB3: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Conditional jump or move depends on uninitialised value(s)
+==4415==    at 0x4C2DBE3: memcpy@@GLIBC_2.14 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x402CB3: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Conditional jump or move depends on uninitialised value(s)
+==4415==    at 0x4C2DC00: memcpy@@GLIBC_2.14 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x402CB3: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Conditional jump or move depends on uninitialised value(s)
+==4415==    at 0x4C2DC47: memcpy@@GLIBC_2.14 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x402CB3: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Use of uninitialised value of size 8
+==4415==    at 0x402CEC: redditGetThread (reddit.c:195)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Use of uninitialised value of size 8
+==4415==    at 0x4C2DC18: memcpy@@GLIBC_2.14 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x402CB3: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Use of uninitialised value of size 8
+==4415==    at 0x4C2DC1D: memcpy@@GLIBC_2.14 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x402CB3: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Conditional jump or move depends on uninitialised value(s)
+==4415==    at 0x4C2DC2A: memcpy@@GLIBC_2.14 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x402CB3: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Conditional jump or move depends on uninitialised value(s)
+==4415==    at 0x4C2DC55: memcpy@@GLIBC_2.14 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x402CB3: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Use of uninitialised value of size 8
+==4415==    at 0x4C2DCB4: memcpy@@GLIBC_2.14 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x402CB3: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Use of uninitialised value of size 8
+==4415==    at 0x4C2DCBA: memcpy@@GLIBC_2.14 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x402CB3: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Conditional jump or move depends on uninitialised value(s)
+==4415==    at 0x4C2DCBD: memcpy@@GLIBC_2.14 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x402CB3: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Conditional jump or move depends on uninitialised value(s)
+==4415==    at 0x40320D: redditGetThread (reddit.c:189)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Use of uninitialised value of size 8
+==4415==    at 0x402B84: redditGetThread (reddit.c:191)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Use of uninitialised value of size 8
+==4415==    at 0x402BA7: redditGetThread (reddit.c:192)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Use of uninitialised value of size 8
+==4415==    at 0x402BE5: redditGetThread (reddit.c:193)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Use of uninitialised value of size 8
+==4415==    at 0x402BFE: redditGetThread (reddit.c:193)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Use of uninitialised value of size 8
+==4415==    at 0x402C1B: redditGetThread (reddit.c:193)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Use of uninitialised value of size 8
+==4415==    at 0x402C34: redditGetThread (reddit.c:193)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Use of uninitialised value of size 8
+==4415==    at 0x402BC4: redditGetThread (reddit.c:192)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Use of uninitialised value of size 8
+==4415==    at 0x402C5D: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Use of uninitialised value of size 8
+==4415==    at 0x402C76: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Use of uninitialised value of size 8
+==4415==    at 0x402C9A: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Use of uninitialised value of size 8
+==4415==    at 0x402CCA: redditGetThread (reddit.c:195)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Use of uninitialised value of size 8
+==4415==    at 0x402CE3: redditGetThread (reddit.c:195)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Use of uninitialised value of size 8
+==4415==    at 0x4C2DC2A: memcpy@@GLIBC_2.14 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x402CB3: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Conditional jump or move depends on uninitialised value(s)
+==4415==    at 0x4C2DC5B: memcpy@@GLIBC_2.14 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x402CB3: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Use of uninitialised value of size 8
+==4415==    at 0x4C2DC70: memcpy@@GLIBC_2.14 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x402CB3: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Use of uninitialised value of size 8
+==4415==    at 0x4C2DC76: memcpy@@GLIBC_2.14 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x402CB3: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Conditional jump or move depends on uninitialised value(s)
+==4415==    at 0x4C2DC84: memcpy@@GLIBC_2.14 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x402CB3: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Use of uninitialised value of size 8
+==4415==    at 0x4C2DC84: memcpy@@GLIBC_2.14 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x402CB3: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Conditional jump or move depends on uninitialised value(s)
+==4415==    at 0x4C2DC9E: memcpy@@GLIBC_2.14 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x402CB3: redditGetThread (reddit.c:194)
+==4415==    by 0x4015A8: showSubreddit (main.c:82)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== Invalid write of size 1
+==4415==    at 0x4C2CBB2: __GI_strcpy (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x401792: showSubreddit (main.c:107)
+==4415==    by 0x40189F: main (main.c:134)
+==4415==  Address 0x6953058 is 0 bytes after a block of size 24 alloc'd
+==4415==    at 0x4C2C04B: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==4415==    by 0x401761: showSubreddit (main.c:106)
+==4415==    by 0x40189F: main (main.c:134)
+==4415== 
+==4415== 
+==4415== HEAP SUMMARY:
+==4415==     in use at exit: 2,328,595 bytes in 625 blocks
+==4415==   total heap usage: 4,445 allocs, 3,820 frees, 3,731,857 bytes allocated
+==4415== 
+==4415== LEAK SUMMARY:
+==4415==    definitely lost: 9,181 bytes in 223 blocks
+==4415==    indirectly lost: 0 bytes in 0 blocks
+==4415==      possibly lost: 0 bytes in 0 blocks
+==4415==    still reachable: 2,319,414 bytes in 402 blocks
+==4415==         suppressed: 0 bytes in 0 blocks
+==4415== Rerun with --leak-check=full to see details of leaked memory
+==4415== 
+==4415== For counts of detected and suppressed errors, rerun with: -v
+==4415== Use --track-origins=yes to see where uninitialised values come from
+==4415== ERROR SUMMARY: 13189 errors from 55 contexts (suppressed: 2 from 2)
