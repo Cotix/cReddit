@@ -26,6 +26,27 @@ void buildScreen(char **text, int selected, int size)
     refresh();
 }
 
+/*
+    Prints horizontal line of dashes to screen
+*/
+void printHLine(int width) {
+    int i;
+    for (i = 0; i < width; i++) {
+        printw("-");
+    }
+} 
+
+/*
+    Print comments separated by hline equal to width of term
+*/
+void printComment(char *author, char *text) {
+    printHLine(COLS);
+    attron(COLOR_PAIR(1));
+    printw("%s\n",author);
+    attroff(COLOR_PAIR(1));
+    printw("    %s\n",text);
+}
+
 void showSubreddit(char *subreddit)
 {
     struct post threads[25];//Our array with reddit threads
@@ -68,17 +89,17 @@ void showSubreddit(char *subreddit)
             break;//YEA FUCK YOU WHILE
         switch(c)
         {
-            case KEY_UP:
+            case 'k': case KEY_UP:
                 if(selected != 0)
                     selected--;
                 break;
 
-            case KEY_DOWN:
+            case 'j': case KEY_DOWN:
                 if(selected != 24)
                     selected++;
                 break;
 
-            case '\n':
+            case 'l': case '\n': // Display selected thread
                 refresh();
                 int *commentCount;
                 commentCount = malloc(sizeof(int));
@@ -89,6 +110,11 @@ void showSubreddit(char *subreddit)
                 }
                 // Basically a copy of the code above
                 int u;
+
+                clear();
+                start_color();
+                // init_pair(1,COLOR_CYAN,COLOR_MAGENTA);
+
                 char *ctext[cdisplayCount]; //Text buffer for each line
                 for(u = 0; u != cdisplayCount; ++u)
                 {
@@ -96,22 +122,12 @@ void showSubreddit(char *subreddit)
                     if(cList[u].id == 0 || cList[u].text == NULL || cList[u].id == NULL || cList[u].author == NULL)
                         continue;
                     char cbuffer[2048];
-                    strcpy(cbuffer,cList[u].id);
-                    strcat(cbuffer," ");
-                    strcat(cbuffer,cList[u].author);
-                    // Votes will have to be implemented with up votes minus
-                    // downvotes
-                    //strcat(cbuffer," (");
-                    //strcat(cbuffer,cList[u].votes);
-                    //strcat(cbuffer,")");
-                    strcat(cbuffer," - ");
-                    strcat(cbuffer,cList[u].text);
-                    ctext[u] = (char*)malloc(strlen(cbuffer)); //Now lets make a small buffer that fits exacly!
-                    strcpy(ctext[u],cbuffer); //And copy our data into it!
-                    printw("%s\n",cbuffer);
-                    refresh();
+                    printComment(cList[u].author, cList[u].text);
+                    attroff(COLOR_PAIR(1));
                 }
-                    wgetch(stdscr);
+                refresh();
+
+                wgetch(stdscr);
         }
         buildScreen(text,selected,displayCount); //Print the updates!!
     }
