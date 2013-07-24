@@ -49,7 +49,7 @@ void printComment(char *author, char *text) {
 
 void showSubreddit(char *subreddit)
 {
-    struct post threads[25];//Our array with reddit threads
+    post threads[25];//Our array with reddit threads
     int *postCount;
     postCount = malloc(sizeof(int));
     redditGetSubreddit(subreddit,"hot",threads,postCount);
@@ -82,7 +82,7 @@ void showSubreddit(char *subreddit)
     int selected = 0; //Lets select the first post!
     buildScreen(text,selected,displayCount); //And print it!
     int c;
-    struct comments cList[500];
+    comment cList[500];
     while(c = wgetch(stdscr))
     {
         if(c == 'q') //Lets make a break key, so i dont have to close the tab like last time :S
