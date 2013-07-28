@@ -79,35 +79,25 @@ void showSubreddit(char *subreddit)
         
         char buffer[2048];      //Lets make a bigg ass text buffer so we got enough space
         //strcpy(buffer, posts[i].id);
-        sprintf(buffer, "%d:", i+1);
+        if (i < 9) sprintf(buffer, " %d:", i+1);
+        else sprintf(buffer, "%d:", i+1);
         
         // add the votes with some janky formatting
         strcat(buffer, " [");
-        //char str_votes[10];
-        //strcpy(str_votes, posts[i].votes);
-        //int votes = atoi(str_votes);
-        //if (votes < 10) strcat(buffer, " ");
-        //else strcat(buffer, "  ");
-        // switch (strlen(str_votes)) {
-        //     case 3: 
-        //         strcat(buffer, " ");
-        //         break;
-        //     case 2:
-        //         strcat(buffer, "  ");
-        //         break;
-        //     case 1:
-        //         strcat(buffer, "   ");
-        //         break;
-        //     deafult: break;
-        // }
-        //if (votes < 1000) strcat(buffer, " ");
-        // if (votes < 1000) {
-        //     strcat(buffer, " ");
-        //     if (votes < 100) {
-        //         strcat(buffer, " ");
-        //         if (votes < 10) strcat(buffer, " ");
-        //     }
-        // }
+        char str_votes[10];
+        strcpy(str_votes, posts[i].votes);
+        switch (strlen(str_votes)) {
+            case 3: 
+                strcat(buffer, " ");
+                break;
+            case 2:
+                strcat(buffer, "  ");
+                break;
+            case 1:
+                strcat(buffer, "   ");
+                break;
+            deafult: break;
+        }
         strcat(buffer, posts[i].votes);
         strcat(buffer, "] ");
         
@@ -116,24 +106,12 @@ void showSubreddit(char *subreddit)
         strcat(buffer, posts[i].author);
 
         text[i] = (char*) malloc(strlen(buffer)); //Now lets make a small buffer that fits exacly!
-        strcpy(text[i], buffer); //And copy our data into it!
-        
-        // free the post list
-        free(posts[i].subreddit);
-        free(posts[i].author);
-        free(posts[i].title);
-        free(posts[i].votes);
-        free(posts[i].id);
+        text[i][0] = '\0';
+        strncat(text[i], buffer, strlen(buffer) - 1); //And copy our data into it!
     }
 
     int selected = 0; //Lets select the first post!
     buildScreen(text, selected, displayCount); //And print it!
-
-    // free text after printing
-    int j;
-    for (j = 0; j < displayCount; j++) {
-        free(text[j]);
-    } 
 
     int c;
     comment cList[500];
@@ -184,6 +162,17 @@ void showSubreddit(char *subreddit)
                 wgetch(stdscr);
         }
         buildScreen(text,selected,displayCount); //Print the updates!!
+    }
+    // free text after printing
+    int j;
+    for (j = 0; j < displayCount; j++) {
+        // free the post list
+        free(posts[j].subreddit);
+        free(posts[j].author);
+        free(posts[j].title);
+        free(posts[j].votes);
+        free(posts[j].id);
+        free(text[j]);
     }
 }
 
