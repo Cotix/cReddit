@@ -20,7 +20,7 @@ void buildScreen(char **posts, int selected, int numposts)
     init_pair(1, COLOR_RED, COLOR_WHITE);
 
     int i;
-    for(i = 0; i != numposts; i++)
+    for(i = 0; i < numposts; i++)
     {
         if(i == selected) attron(COLOR_PAIR(1));
         printw("%s\n", posts[i]);
@@ -54,19 +54,17 @@ void printComment(char *author, char *text) {
 
 void showSubreddit(char *subreddit)
 {
-    post posts[25];             //Our array with reddit posts
-    
-    int *postCount;
-    postCount = malloc(sizeof(int));
+    post posts[25];                         // array with reddit posts
+    int *postCount = malloc(sizeof(int));   // number of posts
     
     redditGetSubreddit(subreddit, "hot", posts, postCount);
     
+    // we will display 25 posts at max right now
     int displayCount = 25;
     if (*postCount < 25) {
         displayCount = *postCount;
     }
-  
-    free(postCount); // done with postCount now
+    free(postCount);
 
     char *text[displayCount];    //Text buffer for each line
    
@@ -74,10 +72,12 @@ void showSubreddit(char *subreddit)
     int i;
     for(i = 0; i < displayCount; i++)
     {
-        if(posts[i].id == 0)// because id 0 is the actual post?
+        if(posts[i].id == 0) // first post actually has id of 1?
             continue;
         
         char buffer[2048];      //Lets make a bigg ass text buffer so we got enough space
+
+        // add the post number with some formatting
         //strcpy(buffer, posts[i].id);
         if (i < 9) sprintf(buffer, " %d:", i+1);
         else sprintf(buffer, "%d:", i+1);
@@ -106,12 +106,13 @@ void showSubreddit(char *subreddit)
         strcat(buffer, posts[i].author);
 
         text[i] = (char*) malloc(strlen(buffer)); //Now lets make a small buffer that fits exacly!
+        // And safely copy our data into it!
         text[i][0] = '\0';
-        strncat(text[i], buffer, strlen(buffer) - 1); //And copy our data into it!
+        strncat(text[i], buffer, strlen(buffer) - 1);
     }
 
     int selected = 0; //Lets select the first post!
-    buildScreen(text, selected, displayCount); //And print it!
+    buildScreen(text, selected, displayCount); //And print the screen!
 
     int c;
     comment cList[500];
@@ -132,28 +133,24 @@ void showSubreddit(char *subreddit)
                 break;
 
             case 'l': case '\n': // Display selected thread
-                refresh();
-                int *commentCount;
-                commentCount = malloc(sizeof(int));
+                clear();
+                int *commentCount = malloc(sizeof(int));
                 redditGetThread(posts[selected].id, cList, commentCount);
                 int cdisplayCount = 25;
                 if (*commentCount < 25) {
-                    cdisplayCount=*postCount;
+                    cdisplayCount = *postCount;
                 }
+                
                 // Basically a copy of the code above
-                int u;
-
-                clear();
                 start_color();
                 // init_pair(1,COLOR_CYAN,COLOR_MAGENTA);
 
                 char *ctext[cdisplayCount]; //Text buffer for each line
-                for(u = 0; u != cdisplayCount; ++u)
+                int u;
+                for(u = 0; u < cdisplayCount; u++)
                 {
-                    //printw("starting");
                     if(cList[u].id == 0 || cList[u].text == NULL || cList[u].id == NULL || cList[u].author == NULL)
                         continue;
-                    char cbuffer[2048];
                     printComment(cList[u].author, cList[u].text);
                     attroff(COLOR_PAIR(1));
                 }
@@ -161,18 +158,19 @@ void showSubreddit(char *subreddit)
 
                 wgetch(stdscr);
         }
-        buildScreen(text,selected,displayCount); //Print the updates!!
+        buildScreen(text, selected, displayCount); //Print the updates!!
     }
+
     // free text after printing
     int j;
     for (j = 0; j < displayCount; j++) {
+        free(text[j]);
         // free the post list
         free(posts[j].subreddit);
         free(posts[j].author);
         free(posts[j].title);
         free(posts[j].votes);
         free(posts[j].id);
-        free(text[j]);
     }
 }
 
