@@ -9,20 +9,25 @@
 
 #define SIZEOFELEM(x)  (sizeof(x) / sizeof(x[0]))
 
-
-void buildScreen(char **text, int selected, int size)
+/*
+   Prints a list of posts to the screen
+*/
+void buildScreen(char **posts, int selected, int numposts)
 {
     clear();
+    // setup colors for currently selected post
     start_color();
-    init_pair(1,COLOR_RED,COLOR_YELLOW);
-    int i = 0;
-    for(i = 0; i != size; ++i)
+    init_pair(1, COLOR_RED, COLOR_WHITE);
+
+    int i;
+    for(i = 0; i != numposts; i++)
     {
-        if(i == selected)
-            attron(COLOR_PAIR(1));
-        printw("%s\n",text[i]);
+        if(i == selected) attron(COLOR_PAIR(1));
+        printw("%s\n", posts[i]);
         attroff(COLOR_PAIR(1));
     }
+
+    // draw things on the screen
     refresh();
 }
 
@@ -42,45 +47,94 @@ void printHLine(int width) {
 void printComment(char *author, char *text) {
     printHLine(COLS);
     attron(COLOR_PAIR(1));
-    printw("%s\n",author);
+    printw("%s\n", author);
     attroff(COLOR_PAIR(1));
-    printw("    %s\n",text);
+    printw("    %s\n", text);
 }
 
 void showSubreddit(char *subreddit)
 {
-    post threads[25];//Our array with reddit threads
+    post posts[25];             //Our array with reddit posts
+    
     int *postCount;
     postCount = malloc(sizeof(int));
-    redditGetSubreddit(subreddit,"hot",threads,postCount);
-    //Just some ncurses testing
-    int i;
+    
+    redditGetSubreddit(subreddit, "hot", posts, postCount);
+    
     int displayCount = 25;
     if (*postCount < 25) {
-        displayCount=*postCount;
+        displayCount = *postCount;
     }
-    printw("%i\n", displayCount);
-    char *text[displayCount]; //Text buffer for each line
-    for(i = 0; i != displayCount; ++i)
+  
+    free(postCount); // done with postCount now
+
+    char *text[displayCount];    //Text buffer for each line
+   
+    // write the post list to the screen 
+    int i;
+    for(i = 0; i < displayCount; i++)
     {
-        if(threads[i].id == 0)
+        if(posts[i].id == 0)// because id 0 is the actual post?
             continue;
-        char buffer[2048]; //Lets make a bigg ass text buffer so we got enough space
-        strcpy(buffer,threads[i].id);
-        strcat(buffer," (");
-        strcat(buffer,threads[i].votes);
-        strcat(buffer,") ");
-        strcat(buffer,threads[i].title);
-        strcat(buffer," - ");
-        strcat(buffer,threads[i].author);
-        text[i] = (char*)malloc(strlen(buffer)); //Now lets make a small buffer that fits exacly!
-        strcpy(text[i],buffer); //And copy our data into it!
-        printw("%s\n",buffer);
-        refresh();
+        
+        char buffer[2048];      //Lets make a bigg ass text buffer so we got enough space
+        //strcpy(buffer, posts[i].id);
+        sprintf(buffer, "%d:", i+1);
+        
+        // add the votes with some janky formatting
+        strcat(buffer, " [");
+        //char str_votes[10];
+        //strcpy(str_votes, posts[i].votes);
+        //int votes = atoi(str_votes);
+        //if (votes < 10) strcat(buffer, " ");
+        //else strcat(buffer, "  ");
+        // switch (strlen(str_votes)) {
+        //     case 3: 
+        //         strcat(buffer, " ");
+        //         break;
+        //     case 2:
+        //         strcat(buffer, "  ");
+        //         break;
+        //     case 1:
+        //         strcat(buffer, "   ");
+        //         break;
+        //     deafult: break;
+        // }
+        //if (votes < 1000) strcat(buffer, " ");
+        // if (votes < 1000) {
+        //     strcat(buffer, " ");
+        //     if (votes < 100) {
+        //         strcat(buffer, " ");
+        //         if (votes < 10) strcat(buffer, " ");
+        //     }
+        // }
+        strcat(buffer, posts[i].votes);
+        strcat(buffer, "] ");
+        
+        strcat(buffer, posts[i].title);
+        strcat(buffer, " - ");
+        strcat(buffer, posts[i].author);
+
+        text[i] = (char*) malloc(strlen(buffer)); //Now lets make a small buffer that fits exacly!
+        strcpy(text[i], buffer); //And copy our data into it!
+        
+        // free the post list
+        free(posts[i].subreddit);
+        free(posts[i].author);
+        free(posts[i].title);
+        free(posts[i].votes);
+        free(posts[i].id);
     }
 
     int selected = 0; //Lets select the first post!
-    buildScreen(text,selected,displayCount); //And print it!
+    buildScreen(text, selected, displayCount); //And print it!
+
+    // free text after printing
+    int j;
+    for (j = 0; j < displayCount; j++) {
+        free(text[j]);
+    } 
+
     int c;
     comment cList[500];
     while(c = wgetch(stdscr))
@@ -103,7 +157,7 @@ void showSubreddit(char *subreddit)
                 refresh();
                 int *commentCount;
                 commentCount = malloc(sizeof(int));
-                redditGetThread(threads[selected].id,cList,commentCount);
+                redditGetThread(posts[selected].id, cList, commentCount);
                 int cdisplayCount = 25;
                 if (*commentCount < 25) {
                     cdisplayCount=*postCount;
@@ -131,7 +185,6 @@ void showSubreddit(char *subreddit)
         }
         buildScreen(text,selected,displayCount); //Print the updates!!
     }
-
 }
 
 int main(int argc, char *argv[])
