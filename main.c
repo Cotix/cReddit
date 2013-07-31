@@ -7,25 +7,33 @@
 #include <ncurses.h>
 #include <form.h>
 
-void buildScreen(char **text, int selected, int size)
+#define SIZEOFELEM(x)  (sizeof(x) / sizeof(x[0]))
+
+/*
+   Prints a list of posts to the screen
+   */
+void buildScreen(char **posts, int selected, int numposts)
 {
     clear();
+    // setup colors for currently selected post
     start_color();
-    init_pair(1,COLOR_RED,COLOR_YELLOW);
-    int i = 0;
-    for(i = 0; i != size; ++i)
+    init_pair(1, COLOR_RED, COLOR_WHITE);
+
+    int i;
+    for(i = 0; i < numposts; i++)
     {
-        if(i == selected)
-            attron(COLOR_PAIR(1));
-        printw("%s\n",text[i]);
+        if(i == selected) attron(COLOR_PAIR(1));
+        printw("%s\n", posts[i]);
         attroff(COLOR_PAIR(1));
     }
+
+    // draw things on the screen
     refresh();
 }
 
 /*
-    Prints horizontal line of dashes to screen
-*/
+   Prints horizontal line of dashes to screen
+   */
 void printHLine(int width) {
     int i;
     for (i = 0; i < width; i++) {
@@ -34,52 +42,80 @@ void printHLine(int width) {
 } 
 
 /*
-    Print comments separated by hline equal to width of term
-*/
+   Print comments separated by hline equal to width of term
+   */
 void printComment(char *author, char *text) {
     printHLine(COLS);
     attron(COLOR_PAIR(1));
-    printw("%s\n",author);
+    printw("%s\n", author);
     attroff(COLOR_PAIR(1));
-    printw("    %s\n",text);
+    printw("    %s\n", text);
 }
 
 void showSubreddit(char *subreddit)
 {
-    struct post threads[25];//Our array with reddit threads
-    int *postCount;
-    postCount = malloc(sizeof(int));
-    redditGetSubreddit(subreddit,"hot",threads,postCount);
-    //Just some ncurses testing
-    int i;
+    post posts[25];                         // array with reddit posts
+    int *postCount = malloc(sizeof(int));   // number of posts
+
+    redditGetSubreddit(subreddit, "hot", posts, postCount);
+
+    // we will display 25 posts at max right now
     int displayCount = 25;
     if (*postCount < 25) {
-        displayCount=*postCount;
+        displayCount = *postCount;
     }
-    printw("%i\n", displayCount);
-    char *text[displayCount]; //Text buffer for each line
-    for(i = 0; i != displayCount; ++i)
+    free(postCount);
+
+    char *text[displayCount];    //Text buffer for each line
+
+    // write the post list to the screen 
+    int i;
+    for(i = 0; i < displayCount; i++)
     {
-        if(threads[i].id == 0)
+        if(posts[i].id == 0) // first post actually has id of 1?
             continue;
-        char buffer[2048]; //Lets make a bigg ass text buffer so we got enough space
-        strcpy(buffer,threads[i].id);
-        strcat(buffer," (");
-        strcat(buffer,threads[i].votes);
-        strcat(buffer,") ");
-        strcat(buffer,threads[i].title);
-        strcat(buffer," - ");
-        strcat(buffer,threads[i].author);
-        text[i] = (char*)malloc(strlen(buffer)); //Now lets make a small buffer that fits exacly!
-        strcpy(text[i],buffer); //And copy our data into it!
-        printw("%s\n",buffer);
-        refresh();
+
+        char buffer[2048];      //Lets make a bigg ass text buffer so we got enough space
+
+        // add the post number with some formatting
+        //strcpy(buffer, posts[i].id);
+        if (i < 9) sprintf(buffer, " %d:", i+1);
+        else sprintf(buffer, "%d:", i+1);
+
+        // add the votes with some janky formatting
+        strcat(buffer, " [");
+        char str_votes[10];
+        strcpy(str_votes, posts[i].votes);
+        switch (strlen(str_votes)) {
+            case 3: 
+                strcat(buffer, " ");
+                break;
+            case 2:
+                strcat(buffer, "  ");
+                break;
+            case 1:
+                strcat(buffer, "   ");
+                break;
+deafult: break;
+        }
+        strcat(buffer, posts[i].votes);
+        strcat(buffer, "] ");
+
+        strcat(buffer, posts[i].title);
+        strcat(buffer, " - ");
+        strcat(buffer, posts[i].author);
+
+        text[i] = (char*) malloc(strlen(buffer)); //Now lets make a small buffer that fits exacly!
+        // And safely copy our data into it!
+        text[i][0] = '\0';
+        strncat(text[i], buffer, strlen(buffer) - 1);
     }
 
     int selected = 0; //Lets select the first post!
-    buildScreen(text,selected,displayCount); //And print it!
+    buildScreen(text, selected, displayCount); //And print the screen!
+
     int c;
-    struct comments cList[500];
+    comment cList[500];
     while(c = wgetch(stdscr))
     {
         if(c == 'q') //Lets make a break key, so i dont have to close the tab like last time :S
@@ -97,28 +133,24 @@ void showSubreddit(char *subreddit)
                 break;
 
             case 'l': case '\n': // Display selected thread
-                refresh();
-                int *commentCount;
-                commentCount = malloc(sizeof(int));
-                redditGetThread(threads[selected].id,cList,commentCount);
+                clear();
+                int *commentCount = malloc(sizeof(int));
+                redditGetThread(posts[selected].id, cList, commentCount);
                 int cdisplayCount = 25;
                 if (*commentCount < 25) {
-                    cdisplayCount=*commentCount;
+                    cdisplayCount = *postCount;
                 }
-                // Basically a copy of the code above
-                int u;
 
-                clear();
+                // Basically a copy of the code above
                 start_color();
                 // init_pair(1,COLOR_CYAN,COLOR_MAGENTA);
 
                 char *ctext[cdisplayCount]; //Text buffer for each line
-                for(u = 0; u != cdisplayCount; ++u)
+                int u;
+                for(u = 0; u < cdisplayCount; u++)
                 {
-                    //printw("starting");
-                    if(cList[u].id == 0)
+                    if(cList[u].id == 0 || cList[u].text == NULL || cList[u].id == NULL || cList[u].author == NULL)
                         continue;
-                    char cbuffer[2048];
                     printComment(cList[u].author, cList[u].text);
                     attroff(COLOR_PAIR(1));
                 }
@@ -126,9 +158,20 @@ void showSubreddit(char *subreddit)
 
                 wgetch(stdscr);
         }
-        buildScreen(text,selected,displayCount); //Print the updates!!
+        buildScreen(text, selected, displayCount); //Print the updates!!
     }
 
+    // free text after printing
+    int j;
+    for (j = 0; j < displayCount; j++) {
+        free(text[j]);
+        // free the post list
+        free(posts[j].subreddit);
+        free(posts[j].author);
+        free(posts[j].title);
+        free(posts[j].votes);
+        free(posts[j].id);
+    }
 }
 
 int main(int argc, char *argv[])
@@ -153,3 +196,4 @@ int main(int argc, char *argv[])
     endwin();
     return 0;
 }
+

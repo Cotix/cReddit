@@ -14,28 +14,28 @@
  * termination. */
 #define REDDIT_URL_BASE_LENGTH 24
 
-struct MemoryStruct {
+typedef struct {
   	char *memory;
   	size_t size;
-};
+} MemoryStruct;
 
-struct post {
+typedef struct {
 	char * title;
 	char * votes;
 	char * id;
 	char * author;
 	char * subreddit;
-};
+} post;
 
-struct comments {
+typedef struct {
 	char * text;
 	char * id;
 	char * author;
 	char * votes;
-};
+} comment;
 
-void redditGetThread(char * postid, struct comments * commentList, int * commentCount);
-void redditGetSubreddit(char * sub, char * sorting, struct post * postList, int * postCount);
+void redditGetThread(char * postid, comment * commentList, int * commentCount);
+void redditGetSubreddit(char * sub, char * sorting, post * postList, int * postCount);
 char *ask_for_subreddit();
 void showSubreddit(char *subreddit);
 void cleanup();
