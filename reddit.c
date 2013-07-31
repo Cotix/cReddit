@@ -11,7 +11,7 @@ int startsWith(char *pre, char *str)
 static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 {
     size_t realsize = size * nmemb;
-    struct MemoryStruct *mem = (struct MemoryStruct *)userp;
+    MemoryStruct *mem = (MemoryStruct *)userp;
 
     mem->memory = realloc(mem->memory, mem->size + realsize + 1);
     if (mem->memory == NULL) {
@@ -35,10 +35,10 @@ char* prepend(char *pre, char *str)
     return newString;
 } 
 
-void redditGetSubreddit(char * sub, char * sorting, struct post * postList, int * postCount)
+void redditGetSubreddit(char * sub, char * sorting, post * postList, int * postCount)
 {
     CURL *curl_handle;
-    struct MemoryStruct chunk;
+    MemoryStruct chunk;
     chunk.memory = malloc(1);  /* will be grown as needed by the realloc above */ 
     chunk.size = 0;   
     curl_handle = curl_easy_init();
@@ -148,10 +148,10 @@ void redditGetSubreddit(char * sub, char * sorting, struct post * postList, int 
     if(chunk.memory)
         free(chunk.memory);
 }
-void redditGetThread(char * postid, struct comments * commentList, int * commentCount)
+void redditGetThread(char * postid, comment * commentList, int * commentCount)
 {
     CURL *curl_handle;
-    struct MemoryStruct chunk;
+    MemoryStruct chunk;
     chunk.memory = malloc(1);  /* will be grown as needed by the realloc above */ 
     chunk.size = 0;   
     curl_handle = curl_easy_init();
