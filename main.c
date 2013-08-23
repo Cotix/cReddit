@@ -96,7 +96,7 @@ void showSubreddit(char *subreddit)
             case 1:
                 strcat(buffer, "   ");
                 break;
-            deafult: break;
+            default: break;
         }
         strcat(buffer, posts[i].votes);
         strcat(buffer, "] ");
