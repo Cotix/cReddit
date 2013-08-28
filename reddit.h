@@ -17,7 +17,7 @@
 typedef struct {
   	char *memory;
   	size_t size;
-} MemoryStruct;
+} memoryStruct;
 
 typedef struct {
 	char * title;
@@ -36,7 +36,7 @@ typedef struct {
 
 void redditGetThread(char * postid, comment * commentList, int * commentCount);
 void redditGetSubreddit(char * sub, char * sorting, post * postList, int * postCount);
-char *ask_for_subreddit();
+char *askForSubreddit();
 void showSubreddit(char *subreddit);
 void cleanup();
 int startsWith(char *pre, char *str);

@@ -8,10 +8,10 @@ int startsWith(char *pre, char *str)
     return lenstr < lenpre ? 0 : strncmp(pre, str, lenpre) == 0;
 }
 
-static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
+static size_t writeMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 {
     size_t realsize = size * nmemb;
-    MemoryStruct *mem = (MemoryStruct *)userp;
+    memoryStruct *mem = (memoryStruct *)userp;
 
     mem->memory = realloc(mem->memory, mem->size + realsize + 1);
     if (mem->memory == NULL) {
@@ -38,7 +38,7 @@ char* prepend(char *pre, char *str)
 void redditGetSubreddit(char * sub, char * sorting, post * postList, int * postCount)
 {
     CURL *curl_handle;
-    MemoryStruct chunk;
+    memoryStruct chunk;
     chunk.memory = malloc(1);  /* will be grown as needed by the realloc above */ 
     chunk.size = 0;   
     curl_handle = curl_easy_init();
@@ -55,7 +55,7 @@ void redditGetSubreddit(char * sub, char * sorting, post * postList, int * postC
     strcat(url,".json");
     curl_easy_setopt(curl_handle, CURLOPT_URL, url);
     curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
-    curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+    curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, writeMemoryCallback);
     curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&chunk);
     curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "cReddit/0.0.1 opensource mainline by /u/blacksmid"); //Our user-agent!
 
@@ -151,7 +151,7 @@ void redditGetSubreddit(char * sub, char * sorting, post * postList, int * postC
 void redditGetThread(char * postid, comment * commentList, int * commentCount)
 {
     CURL *curl_handle;
-    MemoryStruct chunk;
+    memoryStruct chunk;
     chunk.memory = malloc(1);  /* will be grown as needed by the realloc above */ 
     chunk.size = 0;   
     curl_handle = curl_easy_init();
@@ -165,7 +165,7 @@ void redditGetThread(char * postid, comment * commentList, int * commentCount)
     //getch();
     curl_easy_setopt(curl_handle, CURLOPT_URL, url);
     curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
-    curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+    curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, writeMemoryCallback);
     curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&chunk);
     curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "cReddit/0.0.1 opensource mainline by /u/blacksmid"); //Our user-agent!
 
@@ -252,7 +252,7 @@ void cleanup()
 	endwin();
 }
 
-char *ask_for_subreddit() {
+char *askForSubreddit() {
 	clear();
 	mvprintw(10, 6, "Subreddit: ");
 	int ch, i = 0;
