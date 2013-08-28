@@ -52,6 +52,49 @@ void printComment(char *author, char *text) {
     printw("    %s\n", text);
 }
 
+void showThread(post *posts, int selected, int displayCount, int *postCount) {
+    comment cList[500];
+    int *commentCount = malloc(sizeof(int));
+    redditGetThread(posts[selected].id, cList, commentCount);
+    int cdisplayCount = displayCount;
+    if (*commentCount < displayCount) {
+        cdisplayCount = *postCount;
+    }
+
+    // Basically a copy of the code above
+    start_color();
+    // init_pair(1,COLOR_CYAN,COLOR_MAGENTA);
+
+    char *ctext[cdisplayCount]; //Text buffer for each line
+    int u;
+    for(u = 0; u < cdisplayCount; u++)
+    {
+        if(cList[u].id == 0 || cList[u].text == NULL || cList[u].id == NULL || cList[u].author == NULL)
+            continue;
+        printComment(cList[u].author, cList[u].text);
+        attroff(COLOR_PAIR(1));
+    }
+
+    refresh();
+
+    int c;
+    while(c =wgetch(stdscr))
+    {
+        if(c == 'q')
+            break;
+        switch(c)
+        {
+            case 'j': case KEY_DOWN:
+                // Implement scrolling here
+                // if(scrollingVariable == selectedComment)
+                // showThread(posts, selected, 50, postCount);
+                // etc...
+                refresh();
+        }
+
+    }
+}
+
 void showSubreddit(char *subreddit)
 {
     post posts[25];                         // array with reddit posts
@@ -115,7 +158,7 @@ void showSubreddit(char *subreddit)
     buildScreen(text, selected, displayCount); //And print the screen!
 
     int c;
-    comment cList[500];
+    /*comment cList[500];*/
     while(c = wgetch(stdscr))
     {
         if(c == 'q') //Lets make a break key, so i dont have to close the tab like last time :S
@@ -133,6 +176,12 @@ void showSubreddit(char *subreddit)
                 break;
 
             case 'l': case '\n': // Display selected thread
+                showThread(posts, selected, 25, postCount);
+
+
+
+                /*
+                 * BEFORE FUNCTION WAS IMPLEMENTED, FOR REFERENCE
                 clear();
                 int *commentCount = malloc(sizeof(int));
                 redditGetThread(posts[selected].id, cList, commentCount);
@@ -156,7 +205,20 @@ void showSubreddit(char *subreddit)
                 }
                 refresh();
 
-                wgetch(stdscr);
+                while(c =wgetch(stdscr))
+                {
+                    if(c == 'q')
+                        break;
+                    switch(c)
+                    {
+                        case 'j': case KEY_DOWN:
+                            showThread(posts, selected, postCount);
+                            refresh()
+                    }
+                    
+                }
+                */
+
         }
         buildScreen(text, selected, displayCount); //Print the updates!!
     }
