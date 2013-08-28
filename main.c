@@ -96,11 +96,7 @@ void showSubreddit(char *subreddit)
             case 1:
                 strcat(buffer, "   ");
                 break;
-<<<<<<< HEAD
-deafult: break;
-=======
             default: break;
->>>>>>> 5b50a8727d3f571e01e4d6c21b3fc1e40edabba3
         }
         strcat(buffer, posts[i].votes);
         strcat(buffer, "] ");
