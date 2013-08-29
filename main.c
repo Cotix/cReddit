@@ -39,7 +39,7 @@ void printHLine(int width) {
     for (i = 0; i < width; i++) {
         printw("-");
     }
-} 
+}
 
 /*
     Print comments separated by hline equal to width of term
@@ -56,38 +56,38 @@ void showSubreddit(char *subreddit)
 {
     post posts[25];                         // array with reddit posts
     int *postCount = malloc(sizeof(int));   // number of posts
-    
+
     redditGetSubreddit(subreddit, "hot", posts, postCount);
-    
+
     // we will display 25 posts at max right now
     int displayCount = 25;
-    if (*postCount < 25) {
+    if (*postCount < 25)
         displayCount = *postCount;
-    }
+
     free(postCount);
 
     char *text[displayCount];    //Text buffer for each line
-   
-    // write the post list to the screen 
+
+    // write the post list to the screen
     int i;
     for(i = 0; i < displayCount; i++)
     {
         if(posts[i].id == 0) // first post actually has id of 1?
             continue;
-        
+
         char buffer[2048];      //Lets make a bigg ass text buffer so we got enough space
 
         // add the post number with some formatting
         //strcpy(buffer, posts[i].id);
-        if (i < 9) sprintf(buffer, " %d:", i+1);
-        else sprintf(buffer, "%d:", i+1);
-        
+        if (i < 9) sprintf(buffer, " %d:", i + 1);
+        else sprintf(buffer, "%d:", i + 1);
+
         // add the votes with some janky formatting
         strcat(buffer, " [");
         char str_votes[10];
         strcpy(str_votes, posts[i].votes);
         switch (strlen(str_votes)) {
-            case 3: 
+            case 3:
                 strcat(buffer, " ");
                 break;
             case 2:
@@ -100,7 +100,7 @@ void showSubreddit(char *subreddit)
         }
         strcat(buffer, posts[i].votes);
         strcat(buffer, "] ");
-        
+
         strcat(buffer, posts[i].title);
         strcat(buffer, " - ");
         strcat(buffer, posts[i].author);
@@ -140,7 +140,7 @@ void showSubreddit(char *subreddit)
                 if (*commentCount < 25) {
                     cdisplayCount = *postCount;
                 }
-                
+
                 // Basically a copy of the code above
                 start_color();
                 // init_pair(1,COLOR_CYAN,COLOR_MAGENTA);
@@ -178,8 +178,8 @@ int main(int argc, char *argv[])
 {
     initscr();
     raw();//We want character for character input
-    keypad(stdscr,1);//Enable extra keys like arrowkeys
-    noecho(); 
+    keypad(stdscr, 1);//Enable extra keys like arrowkeys
+    noecho();
     curl_global_init(CURL_GLOBAL_ALL);
 
     //Incase the user doesn't specify an argument
@@ -191,7 +191,7 @@ int main(int argc, char *argv[])
     }
 
     showSubreddit(argv[1]);
-    /* we're done with libcurl, so clean it up */ 
+    /* we're done with libcurl, so clean it up */
     curl_global_cleanup();
     endwin();
     return 0;

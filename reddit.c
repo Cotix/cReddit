@@ -15,7 +15,7 @@ static size_t writeMemoryCallback(void *contents, size_t size, size_t nmemb, voi
 
     mem->memory = realloc(mem->memory, mem->size + realsize + 1);
     if (mem->memory == NULL) {
-        /* out of memory! */ 
+        /* out of memory! */
         printf("not enough memory (realloc returned NULL)\n");
         exit(EXIT_FAILURE);
     }
@@ -27,32 +27,32 @@ static size_t writeMemoryCallback(void *contents, size_t size, size_t nmemb, voi
     return realsize;
 }
 
-char* prepend(char *pre, char *str) 
+char* prepend(char *pre, char *str)
 {
     char* newString = malloc(sizeof(char) * strlen(pre) + sizeof(char) * strlen(str));
-    strcpy(newString,pre);
-    strcat(newString,str);
+    strcpy(newString, pre);
+    strcat(newString, str);
     return newString;
-} 
+}
 
 void redditGetSubreddit(char * sub, char * sorting, post * postList, int * postCount)
 {
     CURL *curl_handle;
     memoryStruct chunk;
-    chunk.memory = malloc(1);  /* will be grown as needed by the realloc above */ 
-    chunk.size = 0;   
+    chunk.memory = malloc(1);  /* will be grown as needed by the realloc above */
+    chunk.size = 0;
     curl_handle = curl_easy_init();
-    if(!startsWith("/r/",sub)){
+    if (!startsWith("/r/",sub))
         sub = prepend("/r/",sub);
-    }   
-    //GET request 
+
+    //GET request
     int url_size = REDDIT_URL_BASE_LENGTH + strlen(sub) + strlen(sorting);
     char url[url_size];
-    strcpy(url,"http://reddit.com");
-    strcat(url,sub);
-    strcat(url,"/");
-    strcat(url,sorting);
-    strcat(url,".json");
+    strcpy(url, "http://reddit.com");
+    strcat(url, sub);
+    strcat(url, "/");
+    strcat(url, sorting);
+    strcat(url, ".json");
     curl_easy_setopt(curl_handle, CURLOPT_URL, url);
     curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, writeMemoryCallback);
@@ -75,71 +75,71 @@ void redditGetSubreddit(char * sub, char * sorting, post * postList, int * postC
     js = chunk.memory;
     jsmn_init(&p);
     r = jsmn_parse(&p, js, t, numtokens);
-    
+
     int i =0;
     char buffer[2048];
-    
+
     int atPost = 0;
 
     for(i = 0; i < numtokens; ++i)
     {
         if(t[i].start == -1) continue;
-        if(t[i].type == JSMN_OBJECT ) {i+=t[i].size;  continue;}
-        if(t[i].start >= t[i].end || t[i].end-t[i].start > 2040) continue;
-        memcpy(buffer,&chunk.memory[t[i].start],t[i].end-t[i].start);
-        buffer[t[i].end-t[i].start] = 0;
+        if(t[i].type == JSMN_OBJECT ) {i += t[i].size;  continue;}
+        if(t[i].start >= t[i].end || t[i].end - t[i].start > 2040) continue;
+        memcpy(buffer, &chunk.memory[t[i].start], t[i].end - t[i].start);
+        buffer[t[i].end - t[i].start] = 0;
 
-        if(strcmp("id",buffer) == 0)
+        if(strcmp("id", buffer) == 0)
         {
             i++;
-            char *tmp = malloc(t[i].end-t[i].start+1);
-            memcpy(tmp,&chunk.memory[t[i].start],t[i].end-t[i].start);
-            postList[atPost].id = malloc(t[i].end-t[i].start+1);
-            tmp[t[i].end-t[i].start] = 0;
-            strcpy(postList[atPost].id,tmp);
-            free(tmp);
-        }		
-        if(strcmp("title",buffer) == 0)
-        {
-            i++;
-            char *tmp = malloc(t[i].end-t[i].start+1);
-            memcpy(tmp,&chunk.memory[t[i].start],t[i].end-t[i].start);
-            postList[atPost].title = malloc(t[i].end-t[i].start+1);
-            tmp[t[i].end-t[i].start] = 0;
-            strcpy(postList[atPost].title,tmp);
+            char *tmp = malloc(t[i].end - t[i].start + 1);
+            memcpy(tmp, &chunk.memory[t[i].start], t[i].end - t[i].start);
+            postList[atPost].id = malloc(t[i].end - t[i].start + 1);
+            tmp[t[i].end - t[i].start] = 0;
+            strcpy(postList[atPost].id, tmp);
             free(tmp);
         }
-        if(strcmp("score",buffer) == 0)
+        if(strcmp("title", buffer) == 0)
         {
             i++;
-            char *tmp = malloc(t[i].end-t[i].start+1);
-            memcpy(tmp,&chunk.memory[t[i].start],t[i].end-t[i].start);
-            postList[atPost].votes = malloc(t[i].end-t[i].start+1);
+            char *tmp = malloc(t[i].end - t[i].start + 1);
+            memcpy(tmp, &chunk.memory[t[i].start], t[i].end - t[i].start);
+            postList[atPost].title = malloc(t[i].end - t[i].start + 1);
+            tmp[t[i].end - t[i].start] = 0;
+            strcpy(postList[atPost].title, tmp);
+            free(tmp);
+        }
+        if(strcmp("score", buffer) == 0)
+        {
+            i++;
+            char *tmp = malloc(t[i].end - t[i].start + 1);
+            memcpy(tmp, &chunk.memory[t[i].start], t[i].end - t[i].start);
+            postList[atPost].votes = malloc(t[i].end - t[i].start + 1);
             tmp[t[i].end-t[i].start] = 0;
             strcpy(postList[atPost].votes,tmp);
             free(tmp);
         }
-        if(strcmp("author",buffer) == 0)
+        if(strcmp("author", buffer) == 0)
         {
             i++;
-            char *tmp = malloc(t[i].end-t[i].start+1);
-            memcpy(tmp,&chunk.memory[t[i].start],t[i].end-t[i].start);
-            postList[atPost].author = malloc(t[i].end-t[i].start+1);
-            tmp[t[i].end-t[i].start] = 0;
-            strcpy(postList[atPost].author,tmp);
+            char *tmp = malloc(t[i].end - t[i].start + 1);
+            memcpy(tmp, &chunk.memory[t[i].start], t[i].end - t[i].start);
+            postList[atPost].author = malloc(t[i].end - t[i].start + 1);
+            tmp[t[i].end - t[i].start] = 0;
+            strcpy(postList[atPost].author, tmp);
             atPost++;
             free(tmp);
             if(atPost == 25)
                 break;
         }
-        if(strcmp("subreddit",buffer) == 0)
+        if(strcmp("subreddit", buffer) == 0)
         {
             i++;
-            char *tmp = malloc(t[i].end-t[i].start+1);
-            memcpy(tmp,&chunk.memory[t[i].start],t[i].end-t[i].start);
+            char *tmp = malloc(t[i].end - t[i].start + 1);
+            memcpy(tmp, &chunk.memory[t[i].start], t[i].end - t[i].start);
             tmp[t[i].end-t[i].start] = 0;
-            postList[atPost].subreddit = malloc(t[i].end-t[i].start+1);
-            strcpy(postList[atPost].subreddit,tmp);
+            postList[atPost].subreddit = malloc(t[i].end - t[i].start + 1);
+            strcpy(postList[atPost].subreddit, tmp);
             free(tmp);
         }
 
@@ -152,11 +152,11 @@ void redditGetThread(char * postid, comment * commentList, int * commentCount)
 {
     CURL *curl_handle;
     memoryStruct chunk;
-    chunk.memory = malloc(1);  /* will be grown as needed by the realloc above */ 
-    chunk.size = 0;   
+    chunk.memory = malloc(1);  /* will be grown as needed by the realloc above */
+    chunk.size = 0;
     curl_handle = curl_easy_init();
 
-    //GET request 
+    //GET request
     char url[256];
     strcpy(url,"http://reddit.com/comments/");
     strcat(url,postid);
@@ -191,20 +191,20 @@ void redditGetThread(char * postid, comment * commentList, int * commentCount)
         if(t[i].start == -1) continue;
         if(t[i].type == 1 ) {i+=t[i].size;  continue;}
         if(t[i].start >= t[i].end || t[i].end-t[i].start > 2040) continue;
-        memcpy(buffer,&chunk.memory[t[i].start],t[i].end-t[i].start);
-        buffer[t[i].end-t[i].start] = 0;
+        memcpy(buffer, &chunk.memory[t[i].start], t[i].end - t[i].start);
+        buffer[t[i].end - t[i].start] = 0;
         refresh();
 
-        if(strcmp("id",buffer) == 0)
+        if(strcmp("id", buffer) == 0)
         {
             i++;
-            char *tmp = malloc(t[i].end-t[i].start+1);
-            memcpy(tmp,&chunk.memory[t[i].start],t[i].end-t[i].start);
-            commentList[atPost].id = malloc(t[i].end-t[i].start+1);
-            tmp[t[i].end-t[i].start] = 0;
-            strcpy(commentList[atPost].id,tmp);
+            char *tmp = malloc(t[i].end - t[i].start + 1);
+            memcpy(tmp, &chunk.memory[t[i].start], t[i].end - t[i].start);
+            commentList[atPost].id = malloc(t[i].end - t[i].start + 1);
+            tmp[t[i].end - t[i].start] = 0;
+            strcpy(commentList[atPost].id, tmp);
             free(tmp);
-        }		
+        }
         /* Measured in ups and down votes, TODO
            if(strcmp("score",buffer) == 0)
            {
@@ -216,29 +216,29 @@ void redditGetThread(char * postid, comment * commentList, int * commentCount)
            strcpy(commentList[atPost].votes,tmp);
            free(tmp);
            }*/
-        if(strcmp("author",buffer) == 0)
+        if(strcmp("author", buffer) == 0)
         {
             i++;
-            char *tmp = malloc(t[i].end-t[i].start+1);
-            memcpy(tmp,&chunk.memory[t[i].start],t[i].end-t[i].start);
-            commentList[atPost].author = malloc(t[i].end-t[i].start+1);
-            tmp[t[i].end-t[i].start] = 0;
-            strcpy(commentList[atPost].author,tmp);
+            char *tmp = malloc(t[i].end - t[i].start + 1);
+            memcpy(tmp, &chunk.memory[t[i].start], t[i].end - t[i].start);
+            commentList[atPost].author = malloc(t[i].end - t[i].start + 1);
+            tmp[t[i].end - t[i].start] = 0;
+            strcpy(commentList[atPost].author, tmp);
             free(tmp);
         }
-        if(strcmp("body",buffer) == 0)
+        if(strcmp("body", buffer) == 0)
         {
             i++;
-            char *tmp = malloc(t[i].end-t[i].start+1);
-            memcpy(tmp,&chunk.memory[t[i].start],t[i].end-t[i].start);
-            tmp[t[i].end-t[i].start] = 0;
-            commentList[atPost].text = malloc(t[i].end-t[i].start+1);
-            strcpy(commentList[atPost].text,tmp);
+            char *tmp = malloc(t[i].end - t[i].start + 1);
+            memcpy(tmp, &chunk.memory[t[i].start], t[i].end - t[i].start);
+            tmp[t[i].end - t[i].start] = 0;
+            commentList[atPost].text = malloc(t[i].end - t[i].start + 1);
+            strcpy(commentList[atPost].text, tmp);
             atPost++;
             free(tmp);
             if(atPost == 25)
                 break;
-        } 
+        }
     }
     *commentCount = atPost;
     if(chunk.memory)
