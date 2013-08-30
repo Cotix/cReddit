@@ -176,19 +176,18 @@ void showSubreddit(char *subreddit)
 
 int main(int argc, char *argv[])
 {
+    //Incase the user doesn't specify an argument
+    if (!argv[1]) {
+        printf("Please supply a subreddit to go to e.g. /r/coding\n"); //Added a \n
+        exit(1);
+    }
+
     initscr();
     raw();//We want character for character input
     keypad(stdscr,1);//Enable extra keys like arrowkeys
     noecho(); 
     curl_global_init(CURL_GLOBAL_ALL);
 
-    //Incase the user doesn't specify an argument
-    if (!argv[1]) {
-        curl_global_cleanup(); //Dont forget to clean up!!! My whole terminal bugged cause you forgot this :)
-        endwin();
-        printf("Please supply a subreddit to go to e.g. /r/coding\n"); //Added a \n
-        exit(0);
-    }
 
     showSubreddit(argv[1]);
     /* we're done with libcurl, so clean it up */ 
