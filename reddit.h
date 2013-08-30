@@ -34,7 +34,7 @@ typedef struct {
 	char * votes;
 } comment;
 
-void redditGetThread(char * postid, comment * commentList, int * commentCount);
+void redditGetThread(char * postid, comment * commentList, int * commentCount, int maxComments);
 void redditGetSubreddit(char * sub, char * sorting, post * postList, int * postCount);
 char *ask_for_subreddit();
 void showSubreddit(char *subreddit);

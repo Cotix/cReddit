@@ -156,7 +156,7 @@ void redditGetSubreddit(char * sub, char * sorting, post * postList, int * postC
     if(chunk.memory)
         free(chunk.memory);
 }
-void redditGetThread(char * postid, comment * commentList, int * commentCount)
+void redditGetThread(char * postid, comment * commentList, int * commentCount, int maxComments)
 {
     CURL *curl_handle;
     MemoryStruct chunk;
@@ -242,7 +242,7 @@ void redditGetThread(char * postid, comment * commentList, int * commentCount)
         {
             i++;
             atPost++;
-            if(atPost == 25)
+            if(atPost == maxComments)
                 break;
         }
     }

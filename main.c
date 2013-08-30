@@ -11,7 +11,7 @@
 
 /*
    Prints a list of posts to the screen
-*/
+   */
 void buildScreen(char **posts, int selected, int numposts)
 {
     clear();
@@ -32,8 +32,8 @@ void buildScreen(char **posts, int selected, int numposts)
 }
 
 /*
-    Prints horizontal line of dashes to screen
-*/
+   Prints horizontal line of dashes to screen
+   */
 void printHLine(int width) {
     int i;
     for (i = 0; i < width; i++) {
@@ -42,8 +42,8 @@ void printHLine(int width) {
 } 
 
 /*
-    Print comments separated by hline equal to width of term
-*/
+   Print comments separated by hline equal to width of term
+   */
 void printComment(char *author, char *text) {
     printHLine(COLS);
     attron(COLOR_PAIR(1));
@@ -52,13 +52,96 @@ void printComment(char *author, char *text) {
     printw("    %s\n", text);
 }
 
+void buildCommentScreen(comment *comments, int selected, int numposts)
+{
+    clear();
+    // setup colors for currently selected post
+    start_color();
+    init_pair(1, COLOR_RED, COLOR_WHITE);
+
+    int i;
+    for(i = 0; i < numposts; i++)
+    {
+        if(i == selected) attron(COLOR_PAIR(1));
+
+        if(comments[i].author != NULL)
+            printw("%s\n", comments[i].author);
+
+        if(comments[i].text != NULL)
+            printw("%s\n", comments[i].text);
+
+        attroff(COLOR_PAIR(1));
+    }
+
+    // draw things on the screen
+    refresh();
+}
+
+void showThread(post *posts, int selected, int displayCount) {
+    clear();
+    // = {0} to avoid accessing unitialized memory
+    comment cList[500] = {0};
+    int *commentCount = malloc(sizeof(int));
+    redditGetThread(posts[selected].id, cList, commentCount, displayCount);
+    int cdisplayCount = displayCount;
+    if (*commentCount < displayCount) {
+        cdisplayCount = *commentCount;
+    }
+    free(commentCount);
+
+    // Basically a copy of the code above
+    start_color();
+    // init_pair(1,COLOR_CYAN,COLOR_MAGENTA);
+
+    char *ctext[cdisplayCount]; //Text buffer for each line
+    int u;
+    for(u = 0; u < cdisplayCount; u++)
+    {
+        if(cList[u].id == 0 || cList[u].text == NULL || cList[u].id == NULL || cList[u].author == NULL)
+            continue;
+        /*printComment(cList[u].author, cList[u].text);*/
+        /*attroff(COLOR_PAIR(1));*/
+    }
+    int selectedComment = 0;
+
+    refresh();
+    buildCommentScreen(cList, selectedComment, cdisplayCount);
+
+    int c;
+    while(c =wgetch(stdscr))
+    {
+        if(c == 'q')
+            break;
+        switch(c)
+        {
+            case 'j': case KEY_DOWN:
+                if (selectedComment == cdisplayCount-1) {
+                    showThread(posts, selected, displayCount+25);
+                } else {
+                    selectedComment++;
+                    refresh();
+                }
+                break;
+
+            case 'k': case KEY_UP:
+                if (selectedComment != 0){
+                    selectedComment--;
+                    refresh();
+                }
+                break;
+        }
+        buildCommentScreen(cList, selectedComment, cdisplayCount);
+
+    }
+}
+
 void showSubreddit(char *subreddit)
 {
     post posts[25];                         // array with reddit posts
     int *postCount = malloc(sizeof(int));   // number of posts
-    
+
     redditGetSubreddit(subreddit, "hot", posts, postCount);
-    
+
     // we will display 25 posts at max right now
     int displayCount = 25;
     if (*postCount < 25) {
@@ -67,21 +150,21 @@ void showSubreddit(char *subreddit)
     free(postCount);
 
     char *text[displayCount];    //Text buffer for each line
-   
+
     // write the post list to the screen 
     int i;
     for(i = 0; i < displayCount; i++)
     {
         if(posts[i].id == 0) // first post actually has id of 1?
             continue;
-        
+
         char buffer[2048];      //Lets make a bigg ass text buffer so we got enough space
 
         // add the post number with some formatting
         //strcpy(buffer, posts[i].id);
         if (i < 9) sprintf(buffer, " %d:", i+1);
         else sprintf(buffer, "%d:", i+1);
-        
+
         // add the votes with some janky formatting
         strcat(buffer, " [");
         char str_votes[10];
@@ -100,7 +183,7 @@ void showSubreddit(char *subreddit)
         }
         strcat(buffer, posts[i].votes);
         strcat(buffer, "] ");
-        
+
         strcat(buffer, posts[i].title);
         strcat(buffer, " - ");
         strcat(buffer, posts[i].author);
@@ -115,7 +198,7 @@ void showSubreddit(char *subreddit)
     buildScreen(text, selected, displayCount); //And print the screen!
 
     int c;
-    comment cList[500];
+    /*comment cList[500];*/
     while(c = wgetch(stdscr))
     {
         if(c == 'q') //Lets make a break key, so i dont have to close the tab like last time :S
@@ -133,30 +216,7 @@ void showSubreddit(char *subreddit)
                 break;
 
             case 'l': case '\n': // Display selected thread
-                clear();
-                int *commentCount = malloc(sizeof(int));
-                redditGetThread(posts[selected].id, cList, commentCount);
-                int cdisplayCount = 25;
-                if (*commentCount < 25) {
-                    cdisplayCount = *postCount;
-                }
-                
-                // Basically a copy of the code above
-                start_color();
-                // init_pair(1,COLOR_CYAN,COLOR_MAGENTA);
-
-                char *ctext[cdisplayCount]; //Text buffer for each line
-                int u;
-                for(u = 0; u < cdisplayCount; u++)
-                {
-                    if(cList[u].id == 0 || cList[u].text == NULL || cList[u].id == NULL || cList[u].author == NULL)
-                        continue;
-                    printComment(cList[u].author, cList[u].text);
-                    attroff(COLOR_PAIR(1));
-                }
-                refresh();
-
-                wgetch(stdscr);
+                showThread(posts, selected, 25);
         }
         buildScreen(text, selected, displayCount); //Print the updates!!
     }
@@ -196,3 +256,4 @@ int main(int argc, char *argv[])
     endwin();
     return 0;
 }
+
