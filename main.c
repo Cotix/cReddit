@@ -52,14 +52,41 @@ void printComment(char *author, char *text) {
     printw("    %s\n", text);
 }
 
-void showThread(post *posts, int selected, int displayCount, int *postCount) {
+void buildCommentScreen(comment *comments, int selected, int numposts)
+{
     clear();
-    comment cList[500];
+    // setup colors for currently selected post
+    start_color();
+    init_pair(1, COLOR_RED, COLOR_WHITE);
+
+    int i;
+    for(i = 0; i < numposts; i++)
+    {
+        if(i == selected) attron(COLOR_PAIR(1));
+
+        if(comments[i].author != NULL)
+            printw("%s\n", comments[i].author);
+
+        if(comments[i].text != NULL)
+            printw("%s\n", comments[i].text);
+
+        /*printComment(comments[i].author, comments[i].text);*/
+        attroff(COLOR_PAIR(1));
+    }
+
+    // draw things on the screen
+    refresh();
+}
+
+void showThread(post *posts, int selected, int displayCount) {
+    clear();
+    // = {0} to avoid accessing unitialized memory
+    comment cList[500] = {0};
     int *commentCount = malloc(sizeof(int));
-    redditGetThread(posts[selected].id, cList, commentCount);
+    redditGetThread(posts[selected].id, cList, commentCount, displayCount);
     int cdisplayCount = displayCount;
     if (*commentCount < displayCount) {
-        cdisplayCount = *postCount;
+        cdisplayCount = *commentCount;
     }
 
     // Basically a copy of the code above
@@ -72,11 +99,13 @@ void showThread(post *posts, int selected, int displayCount, int *postCount) {
     {
         if(cList[u].id == 0 || cList[u].text == NULL || cList[u].id == NULL || cList[u].author == NULL)
             continue;
-        printComment(cList[u].author, cList[u].text);
-        attroff(COLOR_PAIR(1));
+        /*printComment(cList[u].author, cList[u].text);*/
+        /*attroff(COLOR_PAIR(1));*/
     }
+    int selectedComment = 0;
 
     refresh();
+    buildCommentScreen(cList, selectedComment, cdisplayCount);
 
     int c;
     while(c =wgetch(stdscr))
@@ -90,8 +119,22 @@ void showThread(post *posts, int selected, int displayCount, int *postCount) {
                 // if(scrollingVariable == selectedComment)
                 // showThread(posts, selected, 50, postCount);
                 // etc...
-                refresh();
+                if (selectedComment == cdisplayCount-1) {
+                    showThread(posts, selected, displayCount+25);
+                } else {
+                    selectedComment++;
+                    refresh();
+                }
+                break;
+
+            case 'k': case KEY_UP:
+                if (selectedComment != 0){
+                    selectedComment--;
+                    refresh();
+                }
+                break;
         }
+        buildCommentScreen(cList, selectedComment, cdisplayCount);
 
     }
 }
@@ -177,7 +220,7 @@ void showSubreddit(char *subreddit)
                 break;
 
             case 'l': case '\n': // Display selected thread
-                showThread(posts, selected, 25, postCount);
+                showThread(posts, selected, 25);
 
 
 
