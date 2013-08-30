@@ -25,18 +25,18 @@ typedef struct {
 	char * id;
 	char * author;
 	char * subreddit;
-} post;
+} Post;
 
 typedef struct {
 	char * text;
 	char * id;
 	char * author;
 	char * votes;
-} comment;
+} Comment;
 
-void redditGetThread(char * postid, comment * commentList, int * commentCount);
-void redditGetSubreddit(char * sub, char * sorting, post * postList, int * postCount);
-char *ask_for_subreddit();
+void redditGetThread(char * postid, Comment * commentList, int * commentCount);
+void redditGetSubreddit(char * sub, char * sorting, Post * postList, int * postCount);
+char *askForSubreddit();
 void showSubreddit(char *subreddit);
 void cleanup();
 int startsWith(char *pre, char *str);
