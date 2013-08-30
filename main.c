@@ -54,7 +54,7 @@ void printComment(char *author, char *text) {
 
 void showSubreddit(char *subreddit)
 {
-    post posts[25];                         // array with reddit posts
+    Post posts[25];                         // array with reddit posts
     int *postCount = malloc(sizeof(int));   // number of posts
 
     redditGetSubreddit(subreddit, "hot", posts, postCount);
@@ -115,7 +115,7 @@ void showSubreddit(char *subreddit)
     buildScreen(text, selected, displayCount); //And print the screen!
 
     int c;
-    comment cList[500];
+    Comment cList[500];
     while(c = wgetch(stdscr))
     {
         if(c == 'q') //Lets make a break key, so i dont have to close the tab like last time :S
