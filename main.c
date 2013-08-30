@@ -70,7 +70,6 @@ void buildCommentScreen(comment *comments, int selected, int numposts)
         if(comments[i].text != NULL)
             printw("%s\n", comments[i].text);
 
-        /*printComment(comments[i].author, comments[i].text);*/
         attroff(COLOR_PAIR(1));
     }
 
@@ -88,6 +87,7 @@ void showThread(post *posts, int selected, int displayCount) {
     if (*commentCount < displayCount) {
         cdisplayCount = *commentCount;
     }
+    free(commentCount);
 
     // Basically a copy of the code above
     start_color();
@@ -115,10 +115,6 @@ void showThread(post *posts, int selected, int displayCount) {
         switch(c)
         {
             case 'j': case KEY_DOWN:
-                // Implement scrolling here
-                // if(scrollingVariable == selectedComment)
-                // showThread(posts, selected, 50, postCount);
-                // etc...
                 if (selectedComment == cdisplayCount-1) {
                     showThread(posts, selected, displayCount+25);
                 } else {
@@ -221,48 +217,6 @@ void showSubreddit(char *subreddit)
 
             case 'l': case '\n': // Display selected thread
                 showThread(posts, selected, 25);
-
-
-
-                /*
-                 * BEFORE FUNCTION WAS IMPLEMENTED, FOR REFERENCE
-                clear();
-                int *commentCount = malloc(sizeof(int));
-                redditGetThread(posts[selected].id, cList, commentCount);
-                int cdisplayCount = 25;
-                if (*commentCount < 25) {
-                    cdisplayCount = *postCount;
-                }
-
-                // Basically a copy of the code above
-                start_color();
-                // init_pair(1,COLOR_CYAN,COLOR_MAGENTA);
-
-                char *ctext[cdisplayCount]; //Text buffer for each line
-                int u;
-                for(u = 0; u < cdisplayCount; u++)
-                {
-                    if(cList[u].id == 0 || cList[u].text == NULL || cList[u].id == NULL || cList[u].author == NULL)
-                        continue;
-                    printComment(cList[u].author, cList[u].text);
-                    attroff(COLOR_PAIR(1));
-                }
-                refresh();
-
-                while(c =wgetch(stdscr))
-                {
-                    if(c == 'q')
-                        break;
-                    switch(c)
-                    {
-                        case 'j': case KEY_DOWN:
-                            showThread(posts, selected, postCount);
-                            refresh()
-                    }
-                    
-                }
-                */
-
         }
         buildScreen(text, selected, displayCount); //Print the updates!!
     }
