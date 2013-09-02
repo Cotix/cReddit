@@ -39,7 +39,7 @@ void printHLine(int width) {
     for (i = 0; i < width; i++) {
         printw("-");
     }
-} 
+}
 
 /*
    Print comments separated by hline equal to width of term
@@ -52,7 +52,7 @@ void printComment(char *author, char *text) {
     printw("    %s\n", text);
 }
 
-void buildCommentScreen(comment *comments, int selected, int numposts)
+void buildCommentScreen(Comment *comments, int selected, int numposts)
 {
     clear();
     // setup colors for currently selected post
@@ -77,10 +77,10 @@ void buildCommentScreen(comment *comments, int selected, int numposts)
     refresh();
 }
 
-void showThread(post *posts, int selected, int displayCount) {
+void showThread(Post *posts, int selected, int displayCount) {
     clear();
     // = {0} to avoid accessing unitialized memory
-    comment cList[500] = {0};
+    Comment cList[500] = {0};
     int *commentCount = malloc(sizeof(int));
     redditGetThread(posts[selected].id, cList, commentCount, displayCount);
     int cdisplayCount = displayCount;
@@ -137,21 +137,21 @@ void showThread(post *posts, int selected, int displayCount) {
 
 void showSubreddit(char *subreddit)
 {
-    post posts[25];                         // array with reddit posts
+    Post posts[25];                         // array with reddit posts
     int *postCount = malloc(sizeof(int));   // number of posts
 
     redditGetSubreddit(subreddit, "hot", posts, postCount);
 
     // we will display 25 posts at max right now
     int displayCount = 25;
-    if (*postCount < 25) {
+    if (*postCount < 25)
         displayCount = *postCount;
-    }
+
     free(postCount);
 
     char *text[displayCount];    //Text buffer for each line
 
-    // write the post list to the screen 
+    // write the post list to the screen
     int i;
     for(i = 0; i < displayCount; i++)
     {
@@ -162,15 +162,15 @@ void showSubreddit(char *subreddit)
 
         // add the post number with some formatting
         //strcpy(buffer, posts[i].id);
-        if (i < 9) sprintf(buffer, " %d:", i+1);
-        else sprintf(buffer, "%d:", i+1);
+        if (i < 9) sprintf(buffer, " %d:", i + 1);
+        else sprintf(buffer, "%d:", i + 1);
 
         // add the votes with some janky formatting
         strcat(buffer, " [");
         char str_votes[10];
         strcpy(str_votes, posts[i].votes);
         switch (strlen(str_votes)) {
-            case 3: 
+            case 3:
                 strcat(buffer, " ");
                 break;
             case 2:
@@ -198,7 +198,7 @@ void showSubreddit(char *subreddit)
     buildScreen(text, selected, displayCount); //And print the screen!
 
     int c;
-    /*comment cList[500];*/
+    /*Comment cList[500];*/
     while(c = wgetch(stdscr))
     {
         if(c == 'q') //Lets make a break key, so i dont have to close the tab like last time :S
@@ -216,6 +216,7 @@ void showSubreddit(char *subreddit)
                 break;
 
             case 'l': case '\n': // Display selected thread
+
                 showThread(posts, selected, 25);
         }
         buildScreen(text, selected, displayCount); //Print the updates!!
@@ -244,13 +245,13 @@ int main(int argc, char *argv[])
 
     initscr();
     raw();//We want character for character input
-    keypad(stdscr,1);//Enable extra keys like arrowkeys
-    noecho(); 
+    keypad(stdscr, 1);//Enable extra keys like arrowkeys
+    noecho();
     curl_global_init(CURL_GLOBAL_ALL);
 
 
     showSubreddit(argv[1]);
-    /* we're done with libcurl, so clean it up */ 
+    /* we're done with libcurl, so clean it up */
     curl_global_cleanup();
     endwin();
     return 0;
