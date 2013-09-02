@@ -148,6 +148,7 @@ void showSubreddit(char *subreddit)
         displayCount = *postCount;
 
     free(postCount);
+    postCount = NULL;
 
     char *text[displayCount];    //Text buffer for each line
 
