@@ -2,36 +2,96 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
-#include "jsmn.h"
 #include "reddit.h"
-#include <curl/curl.h>
 #include <ncurses.h>
 #include <form.h>
 
 #define SIZEOFELEM(x)  (sizeof(x) / sizeof(x[0]))
 
+
+typedef struct {
+    reddit_link_list *list;
+    int displayed;
+    int offset;
+    int selected;
+} link_screen;
+
+
+reddit_state *global_state;
+
+
+link_screen *link_screen_new()
+{
+    link_screen *screen = malloc(sizeof(link_screen));
+    memset(screen, 0, sizeof(link_screen));
+    screen->list = reddit_link_list_new();
+    return screen;
+}
+
+void link_screen_free(link_screen *screen)
+{
+    reddit_link_list_free(screen->list);
+    free(screen);
+}
+
+
 /*
    Prints a list of posts to the screen
    */
-void buildScreen(char **posts, int selected, int numposts)
+void drawScreen(link_screen *screen)
 {
+    int i;
+    reddit_link *link = NULL;
+    if (screen == NULL)
+        return ;
+
     erase();
     // setup colors for currently selected post
     start_color();
     init_pair(1, COLOR_RED, COLOR_WHITE);
 
-    int i;
-    for(i = 0; i < numposts; i++)
+    link = screen->list->first;
+    for(i = 0; i < screen->offset; i++){
+        link = link->next;
+    }
+
+    for(i = 0; i < screen->displayed; i++)
     {
-        if(i == selected) attron(COLOR_PAIR(1));
-        printw("%s\n", posts[i]);
+        if(i == screen->selected) attron(COLOR_PAIR(1));
+        printw("%d. [%4d] %s - %s\n", i + screen->offset + 1, link->score, link->author, link->title);
         attroff(COLOR_PAIR(1));
+        link = link->next;
     }
 
     // draw things on the screen
     refresh();
 }
 
+void linkScreenDown(link_screen *screen)
+{
+    screen->selected++;
+    if (screen->selected + 1 > screen->displayed) {
+        screen->selected--;
+        if (screen->offset + screen->displayed + 1 < screen->list->link_count)
+            screen->offset++;
+
+    }
+}
+
+void linkScreenUp(link_screen *screen)
+{
+    screen->selected--;
+    if (screen->selected < 0) {
+        screen->selected++;
+        if (screen->offset > 0)
+            screen->offset--;
+    }
+}
+
+/*
+ * FIXME: COMMENTS DO !NOT! WORK YET
+ */
+#if 0
 /*
    Prints horizontal line of dashes to screen
    */
@@ -159,109 +219,55 @@ bool showThread(Post *posts, int selected, int displayCount) {
 
     }
 }
+#endif
 
 void showSubreddit(char *subreddit)
 {
-    Post posts[25];                         // array with reddit posts
-    int *postCount = malloc(sizeof(int));   // number of posts
+    link_screen *screen;
+    screen = link_screen_new();
 
-    redditGetSubreddit(subreddit, "hot", posts, postCount);
+    screen->list->subreddit = reddit_copy_string(subreddit);
+    screen->list->type = REDDIT_HOT;
 
-    // we will display 25 posts at max right now
-    int displayCount = 25;
-    if (*postCount < 25)
-        displayCount = *postCount;
+    reddit_get_listing(screen->list);
 
-    free(postCount);
-    postCount = NULL;
+    screen->displayed = 25;
+    screen->offset = 0;
+    screen->selected = 0;
 
-    char *text[displayCount];    //Text buffer for each line
 
-    // write the post list to the screen
-    int i;
-    for(i = 0; i < displayCount; i++)
-    {
-        if(posts[i].id == 0) // first post actually has id of 1?
-            continue;
-
-        char buffer[2048];      //Lets make a bigg ass text buffer so we got enough space
-
-        // add the post number with some formatting
-        //strcpy(buffer, posts[i].id);
-        if (i < 9) sprintf(buffer, " %d:", i + 1);
-        else sprintf(buffer, "%d:", i + 1);
-
-        // add the votes with some janky formatting
-        strcat(buffer, " [");
-        char str_votes[10];
-        strcpy(str_votes, posts[i].votes);
-        switch (strlen(str_votes)) {
-            case 3:
-                strcat(buffer, " ");
-                break;
-            case 2:
-                strcat(buffer, "  ");
-                break;
-            case 1:
-                strcat(buffer, "   ");
-                break;
-            default: break;
-        }
-        strcat(buffer, posts[i].votes);
-        strcat(buffer, "] ");
-
-        strcat(buffer, posts[i].title);
-        strcat(buffer, " - ");
-        strcat(buffer, posts[i].author);
-
-        text[i] = (char*) malloc(strlen(buffer)); //Now lets make a small buffer that fits exacly!
-        // And safely copy our data into it!
-        text[i][0] = '\0';
-        strncat(text[i], buffer, strlen(buffer) - 1);
-    }
-
-    int selected = 0; //Lets select the first post!
-    buildScreen(text, selected, displayCount); //And print the screen!
+    drawScreen(screen); //And print the screen!
 
     int c;
-    /*Comment cList[500];*/
-    while(c = wgetch(stdscr))
+    while((c = wgetch(stdscr)))
     {
         if(c == 'q') //Lets make a break key, so i dont have to close the tab like last time :S
             break;//YEA FUCK YOU WHILE
         switch(c)
         {
             case 'k': case KEY_UP:
-                if(selected != 0)
-                    selected--;
+                linkScreenUp(screen);
+                drawScreen(screen);
                 break;
 
             case 'j': case KEY_DOWN:
-                if(selected != 24)
-                    selected++;
+                linkScreenDown(screen);
+                drawScreen(screen);
                 break;
 
             case 'l': case '\n': // Display selected thread
-                showThread(posts, selected, 25);
+                //showThread(posts, selected, 25);
+                drawScreen(screen);
+                break;
         }
-        buildScreen(text, selected, displayCount); //Print the updates!!
     }
 
-    // free text after printing
-    int j;
-    for (j = 0; j < displayCount; j++) {
-        free(text[j]);
-        // free the post list
-        free(posts[j].subreddit);
-        free(posts[j].author);
-        free(posts[j].title);
-        free(posts[j].votes);
-        free(posts[j].id);
-    }
+    link_screen_free(screen);
 }
 
 int main(int argc, char *argv[])
 {
+    reddit_user_logged *user = reddit_user_logged_new();
     //Incase the user doesn't specify an argument
     if (!argv[1]) {
         printf("Please supply a subreddit to go to e.g. /r/coding\n"); //Added a \n
@@ -270,14 +276,23 @@ int main(int argc, char *argv[])
 
     initscr();
     raw();//We want character for character input
-    keypad(stdscr, 1);//Enable extra keys like arrowkeys
+    keypad(stdscr,1);//Enable extra keys like arrowkeys
     noecho();
-    curl_global_init(CURL_GLOBAL_ALL);
 
+    /* Start libreddit */
+    reddit_global_init();
+
+    global_state = reddit_state_new();
+
+    /* If you want to try logging in as your user
+     * Replace 'username' and 'password' with the approiate fields */
+    //reddit_user_logged_login(user, "username", "password");
 
     showSubreddit(argv[1]);
-    /* we're done with libcurl, so clean it up */
-    curl_global_cleanup();
+
+    reddit_user_logged_free(user);
+    reddit_state_free(global_state);
+    reddit_global_cleanup();
     endwin();
     return 0;
 }
