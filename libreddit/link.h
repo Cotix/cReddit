@@ -5,6 +5,6 @@
 #include "jsmn.h"
 #include "token.h"
 
-reddit_link *reddit_get_link (token_parser *parser);
+RedditLink *reddit_get_link (TokenParser *parser);
 
 #endif

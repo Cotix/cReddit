@@ -14,7 +14,7 @@
  */
 void reddit_cookie_new(char *name, char *data)
 {
-    reddit_cookie_link *link = rmalloc(sizeof(reddit_cookie_link));
+    RedditCookieLink *link = rmalloc(sizeof(RedditCookieLink));
 
     link->name = rmalloc(strlen(name) + 1);
     link->data = rmalloc(strlen(data) + 1);
@@ -40,7 +40,7 @@ void reddit_cookie_new(char *name, char *data)
  *
  * This function does no clean-up on the linked-list as a whole, just frees a single link
  */
-void reddit_cookie_free(reddit_cookie_link *link)
+void reddit_cookie_free(RedditCookieLink *link)
 {
     free(link->name);
     free(link->data);
@@ -52,7 +52,7 @@ void reddit_cookie_free(reddit_cookie_link *link)
  */
 void reddit_remove_cookie(char *name)
 {
-    reddit_cookie_link *prev = NULL, *node;
+    RedditCookieLink *prev = NULL, *node;
 
     /* Incase no state has yet been set */
     if (current_reddit_state == NULL) return ;
@@ -81,7 +81,7 @@ char *reddit_get_cookie_string()
 {
     char *cookie_str = NULL;
     int current_length = 0;
-    reddit_cookie_link *node;
+    RedditCookieLink *node;
 
     if (current_reddit_state == NULL) return NULL;
 

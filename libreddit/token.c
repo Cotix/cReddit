@@ -12,9 +12,9 @@
 /*
  * Returns a pointer to valid newalized memory_block
  */
-memory_block *memory_block_new()
+MemoryBlock *memory_block_new()
 {
-    memory_block *block = rmalloc(sizeof(memory_block));
+    MemoryBlock *block = rmalloc(sizeof(MemoryBlock));
     block->memory = rmalloc(1);
     block->memory[0] = 0;
     block->size   = 0;
@@ -24,29 +24,29 @@ memory_block *memory_block_new()
 /*
  * Frees a memory_block returned by memory_block_new()
  */
-void memory_block_free(memory_block *block)
+void memory_block_free(MemoryBlock *block)
 {
     free(block->memory);
     free(block);
 }
 
 
-token_parser *token_parser_new()
+TokenParser *token_parser_new()
 {
-    token_parser *parser = rmalloc(sizeof(token_parser));
-    memset(parser, 0, sizeof(token_parser));
+    TokenParser *parser = rmalloc(sizeof(TokenParser));
+    memset(parser, 0, sizeof(TokenParser));
     parser->block = memory_block_new();
     return parser;
 }
 
-void token_parser_free(token_parser *parser)
+void token_parser_free(TokenParser *parser)
 {
     memory_block_free(parser->block);
     free(parser->tokens);
     free(parser);
 }
 
-jsmnerr_t token_parser_create_tokens(token_parser *parser)
+jsmnerr_t token_parser_create_tokens(TokenParser *parser)
 {
     jsmn_parser jsmn_parser;
     jsmnerr_t result;
@@ -54,22 +54,22 @@ jsmnerr_t token_parser_create_tokens(token_parser *parser)
 
     if (parser->tokens == NULL) {
         parser->tokens = rmalloc(chunk_size * sizeof(jsmntok_t));
-        parser->token_count = chunk_size;
+        parser->tokenCount = chunk_size;
     }
 
-    memset(parser->tokens, 0, parser->token_count * sizeof(jsmntok_t));
+    memset(parser->tokens, 0, parser->tokenCount * sizeof(jsmntok_t));
     jsmn_init(&jsmn_parser);
 
-    while ((result = jsmn_parse(&jsmn_parser, parser->block->memory, parser->tokens, parser->token_count)) == JSMN_ERROR_NOMEM) {
-        parser->token_count += chunk_size;
-        parser->tokens = rrealloc(parser->tokens, parser->token_count * sizeof(jsmntok_t));
-        memset(parser->tokens + parser->token_count - chunk_size, 0, chunk_size * sizeof(jsmntok_t));
+    while ((result = jsmn_parse(&jsmn_parser, parser->block->memory, parser->tokens, parser->tokenCount)) == JSMN_ERROR_NOMEM) {
+        parser->tokenCount += chunk_size;
+        parser->tokens = rrealloc(parser->tokens, parser->tokenCount * sizeof(jsmntok_t));
+        memset(parser->tokens + parser->tokenCount - chunk_size, 0, chunk_size * sizeof(jsmntok_t));
     }
 
     if (result != JSMN_SUCCESS)
-        parser->token_count = 0;
+        parser->tokenCount = 0;
     else
-        parser->token_count = jsmn_parser.toknext - 1;
+        parser->tokenCount = jsmn_parser.toknext - 1;
 
     return result;
 }
@@ -93,7 +93,7 @@ char *get_copy_of_token(const char *json, jsmntok_t token)
 size_t write_to_parser(void *contents, size_t size, size_t nmemb, void *userp)
 {
     size_t realsize = size * nmemb;
-    token_parser *parser = (token_parser*)userp;
+    TokenParser *parser = (TokenParser*)userp;
 
     parser->block->memory = rrealloc(parser->block->memory, parser->block->size + realsize + 1);
 
@@ -135,30 +135,30 @@ char *reddit_copy_string(const char *string)
         va_end(args_copy);                                       \
     } while (0)
 
-int perform_ident_action(token_parser *p, token_ident *identifiers, int i, va_list args)
+int perform_ident_action(TokenParser *p, TokenIdent *identifiers, int i, va_list args)
 {
     char *tmp = NULL;
     int performed_action = 0;
 
-    READ_TOKEN_TO_TMP(p->block->memory, tmp, p->tokens[p->current_token]);
+    READ_TOKEN_TO_TMP(p->block->memory, tmp, p->tokens[p->currentToken]);
 
     if (TOKEN_EQUALS(tmp, identifiers[i].name)) {
         switch(identifiers[i].action) {
         case TOKEN_CHECK_CALL:
-            (p->current_token)++;
-            CALL_TOKEN_FUNC(identifiers[i].func_callback, p, identifiers, args);
+            (p->currentToken)++;
+            CALL_TOKEN_FUNC(identifiers[i].funcCallback, p, identifiers, args);
             performed_action = 1;
             break;
 
         case TOKEN_SET:
-            (p->current_token)++;
-            READ_TOKEN_TO_TMP(p->block->memory, tmp, p->tokens[p->current_token]);
+            (p->currentToken)++;
+            READ_TOKEN_TO_TMP(p->block->memory, tmp, p->tokens[p->currentToken]);
             switch(identifiers[i].type) {
             case TOKEN_BOOL:
-                if (TOKEN_IS_TRUE(p->block->memory, p->tokens[p->current_token]))
-                    *((unsigned int *)identifiers[i].value) |= identifiers[i].bit_mask;
+                if (TOKEN_IS_TRUE(p->block->memory, p->tokens[p->currentToken]))
+                    *((unsigned int *)identifiers[i].value) |= identifiers[i].bitMask;
                 else
-                    *((unsigned int *)identifiers[i].value) &= ~identifiers[i].bit_mask;
+                    *((unsigned int *)identifiers[i].value) &= ~identifiers[i].bitMask;
 
                 break;
             case TOKEN_INT:
@@ -166,10 +166,10 @@ int perform_ident_action(token_parser *p, token_ident *identifiers, int i, va_li
                 break;
             case TOKEN_STRING:
             case TOKEN_OBJECT:
-                if (identifiers[i].free_flag)
+                if (identifiers[i].freeFlag)
                     free(*((char**)identifiers[i].value));
 
-                *((char**)identifiers[i].value) = get_copy_of_token(p->block->memory, p->tokens[p->current_token]);
+                *((char**)identifiers[i].value) = get_copy_of_token(p->block->memory, p->tokens[p->currentToken]);
                 break;
             }
             performed_action = 1;
@@ -192,7 +192,7 @@ int perform_ident_action(token_parser *p, token_ident *identifiers, int i, va_li
  * The intention is that the 'tokens' pointer will be incremented to the object you want to
  * parse when calling this
  */
-void vparse_tokens (token_parser *p, token_ident *identifiers, va_list args)
+void vparse_tokens (TokenParser *p, TokenIdent *identifiers, va_list args)
 {
     int token_count = 0, i;
     int ident_count = 0;
@@ -204,18 +204,18 @@ void vparse_tokens (token_parser *p, token_ident *identifiers, va_list args)
     if (ident_count == 0)
         return ;
 
-    token_count = p->tokens[p->current_token].full_size;
+    token_count = p->tokens[p->currentToken].full_size;
     if (token_count == 0)
         return ;
 
-    token_count += p->current_token;
+    token_count += p->currentToken;
 
-    for (; p->current_token < token_count; (p->current_token)++) {
-        if (p->tokens[p->current_token].type == JSMN_OBJECT || p->tokens[p->current_token].type == JSMN_ARRAY)
+    for (; p->currentToken < token_count; (p->currentToken)++) {
+        if (p->tokens[p->currentToken].type == JSMN_OBJECT || p->tokens[p->currentToken].type == JSMN_ARRAY)
             continue;
 
         /* We only need to check key values */
-        if (!p->tokens[p->current_token].is_key)
+        if (!p->tokens[p->currentToken].is_key)
             continue;
 
         for (i = 0; i < ident_count; i++)
@@ -227,7 +227,7 @@ void vparse_tokens (token_parser *p, token_ident *identifiers, va_list args)
     return ;
 }
 
-void parse_tokens (token_parser *parser, token_ident *identifiers, ...)
+void parse_tokens (TokenParser *parser, TokenIdent *identifiers, ...)
 {
     va_list args;
     va_start(args, identifiers);
@@ -236,14 +236,14 @@ void parse_tokens (token_parser *parser, token_ident *identifiers, ...)
 }
 
 
-token_parser_result redditv_run_parser(char *url, char *post, token_ident *idents, va_list args)
+TokenParserResult redditv_run_parser(char *url, char *post, TokenIdent *idents, va_list args)
 {
-    token_parser *parser = token_parser_new();
+    TokenParser *parser = token_parser_new();
     char *cookie_str = NULL;
     CURL *reddit_handle = curl_easy_init();
     jsmnerr_t jsmn_result;
 
-    token_parser_result result = TOKEN_PARSER_SUCCESS;
+    TokenParserResult result = TOKEN_PARSER_SUCCESS;
 
     curl_easy_setopt(reddit_handle, CURLOPT_URL, url);
     curl_easy_setopt(reddit_handle, CURLOPT_FOLLOWLOCATION, 1L);
@@ -294,9 +294,9 @@ cleanup:;
     return result;
 }
 
-token_parser_result reddit_run_parser(char *url, char *post, token_ident *idents, ...)
+TokenParserResult reddit_run_parser(char *url, char *post, TokenIdent *idents, ...)
 {
-    token_parser_result result;
+    TokenParserResult result;
     va_list args;
     va_start(args, idents);
     result = redditv_run_parser(url, post, idents, args);

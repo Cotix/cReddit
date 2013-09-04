@@ -10,25 +10,25 @@
 
 
 typedef struct {
-    reddit_link_list *list;
+    RedditLinkList *list;
     int displayed;
     int offset;
     int selected;
-} link_screen;
+} LinkScreen;
 
 
-reddit_state *global_state;
+RedditState *global_state;
 
 
-link_screen *link_screen_new()
+LinkScreen *link_screen_new()
 {
-    link_screen *screen = malloc(sizeof(link_screen));
-    memset(screen, 0, sizeof(link_screen));
+    LinkScreen *screen = malloc(sizeof(LinkScreen));
+    memset(screen, 0, sizeof(LinkScreen));
     screen->list = reddit_link_list_new();
     return screen;
 }
 
-void link_screen_free(link_screen *screen)
+void link_screen_free(LinkScreen *screen)
 {
     reddit_link_list_free(screen->list);
     free(screen);
@@ -38,10 +38,10 @@ void link_screen_free(link_screen *screen)
 /*
    Prints a list of posts to the screen
    */
-void drawScreen(link_screen *screen)
+void drawScreen(LinkScreen *screen)
 {
     int i;
-    reddit_link *link = NULL;
+    RedditLink *link = NULL;
     if (screen == NULL)
         return ;
 
@@ -67,18 +67,18 @@ void drawScreen(link_screen *screen)
     refresh();
 }
 
-void linkScreenDown(link_screen *screen)
+void linkScreenDown(LinkScreen *screen)
 {
     screen->selected++;
     if (screen->selected + 1 > screen->displayed) {
         screen->selected--;
-        if (screen->offset + screen->displayed + 1 < screen->list->link_count)
+        if (screen->offset + screen->displayed + 1 < screen->list->linkCount)
             screen->offset++;
 
     }
 }
 
-void linkScreenUp(link_screen *screen)
+void linkScreenUp(LinkScreen *screen)
 {
     screen->selected--;
     if (screen->selected < 0) {
@@ -223,7 +223,7 @@ bool showThread(Post *posts, int selected, int displayCount) {
 
 void showSubreddit(char *subreddit)
 {
-    link_screen *screen;
+    LinkScreen *screen;
     screen = link_screen_new();
 
     screen->list->subreddit = reddit_copy_string(subreddit);
@@ -267,7 +267,7 @@ void showSubreddit(char *subreddit)
 
 int main(int argc, char *argv[])
 {
-    reddit_user_logged *user = reddit_user_logged_new();
+    RedditUserLogged *user = reddit_user_logged_new();
     //Incase the user doesn't specify an argument
     if (!argv[1]) {
         printf("Please supply a subreddit to go to e.g. /r/coding\n"); //Added a \n

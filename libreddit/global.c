@@ -6,7 +6,7 @@
 
 #include "global.h"
 
-reddit_state *current_reddit_state = NULL;
+RedditState *current_reddit_state = NULL;
 
 /*
  * Just a small wrapper around malloc -- It checks for NULL and if a malloc

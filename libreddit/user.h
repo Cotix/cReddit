@@ -4,6 +4,6 @@
 #include "reddit.h"
 #include "jsmn.h"
 
-reddit_user *reddit_get_user(token_parser *parser);
+RedditUser *reddit_get_user(TokenParser *parser);
 
 #endif

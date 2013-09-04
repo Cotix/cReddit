@@ -1,6 +1,8 @@
 #ifndef _REDDIT_GLOBAL_H_
 #define _REDDIT_GLOBAL_H_
 
+#include <stdlib.h>
+
 #include "state.h"
 #include "token.h"
 
@@ -18,7 +20,7 @@
  * requiring it every call it much easier.
  *
  */
-extern reddit_state *current_reddit_state;
+extern RedditState *current_reddit_state;
 
 void *rmalloc (size_t bytes);
 void *rrealloc (void *old, size_t bytes);

@@ -12,23 +12,23 @@
 /*
  * Structure representing a block of memory and it's current size
  */
-typedef struct memory_block {
+typedef struct MemoryBlock {
     char   *memory;
     size_t  size;
-} memory_block;
+} MemoryBlock;
 
-typedef struct token_parser {
-    memory_block *block;
+typedef struct TokenParser {
+    MemoryBlock *block;
     jsmntok_t *tokens;
-    int       token_count;
-    int       current_token;
-} token_parser;
+    int       tokenCount;
+    int       currentToken;
+} TokenParser;
 
-typedef enum token_parser_result {
+typedef enum TokenParserResult {
     TOKEN_PARSER_SUCCESS   = 0,
     TOKEN_PARSER_CURL_FAIL,
     TOKEN_PARSER_JSON_FAIL
-} token_parser_result;
+} TokenParserResult;
 
 /*
  * This is an identifier for a token contained inside of a json
@@ -48,7 +48,7 @@ typedef enum token_parser_result {
  *   A char* to the full json text being parsed
  *
  */
-typedef struct token_ident {
+typedef struct TokenIdent {
 
     /* Token identifier */
     char  *name;
@@ -76,12 +76,12 @@ typedef struct token_ident {
 
     /* If using 'TOKEN_BOOL', then if the token is 'true', *value will be cast as an
      * unsigned int, and |= with bit_mask. If 'false', it will be &= ~bit_mask */
-    unsigned int bit_mask;
+    unsigned int bitMask;
 
     /* Simple flag -- This handles the case fo 'TOKEN_STRING' in combo with 'TOKEN_SET'
      * In that case, if this is set to '1' then free() will be called on var_ptr
      * before it is overwritten to avoid a memory leak */
-    bool free_flag;
+    bool freeFlag;
 
     /* A function to call when this token is found
      *
@@ -93,26 +93,26 @@ typedef struct token_ident {
      *     in the array
      *   A temporary buffer (Which is already malloced and can be realloced as much as wanted)
      *   The extra arguments send over to parse_tokens */
-    void (*func_callback) (token_parser       *parser,
-                           struct token_ident *idents,
+    void (*funcCallback) (TokenParser       *parser,
+                           struct TokenIdent *idents,
                            va_list             args
                            );
 
-} token_ident;
+} TokenIdent;
 
-token_parser *token_parser_new();
-void          token_parser_free(token_parser *parser);
+TokenParser *token_parser_new();
+void          token_parser_free(TokenParser *parser);
 
 char *get_copy_of_token(const char *json, jsmntok_t token);
-memory_block *memory_block_new();
-void memory_block_free(memory_block *block);
+MemoryBlock *memory_block_new();
+void memory_block_free(MemoryBlock *block);
 char *true_false_string(char *string, bool tf);
 
-token_parser_result redditv_run_parser(char *url, char *post, token_ident *idents, va_list args);
-token_parser_result reddit_run_parser(char *url, char *post, token_ident *idents, ...);
+TokenParserResult redditv_run_parser(char *url, char *post, TokenIdent *idents, va_list args);
+TokenParserResult reddit_run_parser(char *url, char *post, TokenIdent *idents, ...);
 
-void vparse_tokens (token_parser *parser, token_ident *identifiers, va_list args);
-void parse_tokens  (token_parser *parser, token_ident *identifiers, ...);
+void vparse_tokens (TokenParser *parser, TokenIdent *identifiers, va_list args);
+void parse_tokens  (TokenParser *parser, TokenIdent *identifiers, ...);
 
 /*
  * Small #define macro to allocate space for a token and then read the data from
@@ -149,7 +149,7 @@ void parse_tokens  (token_parser *parser, token_ident *identifiers, ...);
  * A basic prototype for a callback function for the token parser
  */
 #define DEF_TOKEN_CALLBACK(name) \
-    static void name (token_parser *parser, token_ident *idents, va_list args)
+    static void name (TokenParser *parser, TokenIdent *idents, va_list args)
 
 /*
  * This macro is a quick way to create token_ident entrys which simply set
@@ -161,7 +161,7 @@ void parse_tokens  (token_parser *parser, token_ident *identifiers, ...);
      .type = TOKEN_STRING,                       \
      .action = TOKEN_SET,                        \
      .value = &(member),                         \
-     .free_flag = 1}
+     .freeFlag = 1}
 
 /*
  * Same as above ADD_TOKEN_IDENT_STRING, but for integers instead of strings
@@ -181,7 +181,7 @@ void parse_tokens  (token_parser *parser, token_ident *identifiers, ...);
      .type = TOKEN_BOOL,                             \
      .action = TOKEN_SET,                            \
      .value = &(member),                             \
-     .bit_mask = mask}
+     .bitMask = mask}
 
 /*
  * Again, another similar macro. This time, it creates a callback instead
@@ -190,7 +190,7 @@ void parse_tokens  (token_parser *parser, token_ident *identifiers, ...);
     {.name = key_name,                       \
      .type = TOKEN_OBJECT,                   \
      .action = TOKEN_CHECK_CALL,             \
-     .func_callback = &(func)}
+     .funcCallback = &(func)}
 
 
 #endif
