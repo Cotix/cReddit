@@ -18,9 +18,7 @@ reddit_state *reddit_state_new()
 {
     reddit_state *state;
     state = rmalloc(sizeof(reddit_state));
-
     state->base = NULL;
-    state->end  = NULL;
 
     return state;
 }
@@ -37,7 +35,6 @@ void reddit_state_free(reddit_state *state)
     reddit_cookie_link *node;
     for(node = state->base; node != NULL; node = tmp) {
         tmp = node->next;
-
         reddit_cookie_free(node);
     }
 

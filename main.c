@@ -284,9 +284,11 @@ int main(int argc, char *argv[])
 
     global_state = reddit_state_new();
 
+    reddit_state_set(global_state);
+
     /* If you want to try logging in as your user
      * Replace 'username' and 'password' with the approiate fields */
-    //reddit_user_logged_login(user, "username", "password");
+    reddit_user_logged_login(user, "creddit_test_user", "password");
 
     showSubreddit(argv[1]);
 

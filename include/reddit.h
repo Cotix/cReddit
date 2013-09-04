@@ -4,7 +4,7 @@
 #include <ctype.h>
 #include <stdbool.h>
 
-typedef enum {
+typedef enum reddit_errno {
     /* This response indicates no error happened */
     REDDIT_SUCCESS = 0,
 
@@ -34,7 +34,6 @@ typedef struct reddit_cookie_link {
 
 typedef struct reddit_state {
     reddit_cookie_link *base;
-    reddit_cookie_link *end;
 } reddit_state;
 
 

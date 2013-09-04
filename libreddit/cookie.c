@@ -14,17 +14,13 @@
  */
 void reddit_cookie_new(char *name, char *data)
 {
-
     reddit_cookie_link *link = rmalloc(sizeof(reddit_cookie_link));
-    //reddit_cookie_link *node;
 
     link->name = rmalloc(strlen(name) + 1);
     link->data = rmalloc(strlen(data) + 1);
 
     strcpy(link->name, name);
     strcpy(link->data, data);
-
-    link->next = NULL;
 
     /*
      * If for whatever reason we don't have an allocated reddit-state yet
@@ -34,13 +30,8 @@ void reddit_cookie_new(char *name, char *data)
         current_reddit_state = reddit_state_new();
 
     /* Attach the link */
-    if (current_reddit_state->end != NULL) {
-        current_reddit_state->end->next = link;
-        current_reddit_state->end = link; /* Replace our current end */
-    } else {
-        current_reddit_state->base = link;
-        current_reddit_state->end = link;
-    }
+    link->next = current_reddit_state->base;
+    current_reddit_state->base = link;
 }
 
 /*
@@ -69,11 +60,11 @@ void reddit_remove_cookie(char *name)
     for(node = current_reddit_state->base; node != NULL; prev = node, node = node->next) {
         if (strcmp(node->name, name) == 0) {
             /* Found the node */
-            if (prev != NULL) {
+            if (prev != NULL)
                 prev->next = node->next;
-            } else {
+            else
                 current_reddit_state->base = node->next;
-            }
+
             reddit_cookie_free(node);
             break;
         }
@@ -98,11 +89,11 @@ char *reddit_get_cookie_string()
         int add_size = strlen(node->name) + strlen(node->data) + 2;
         current_length += add_size;
         cookie_str = rrealloc(cookie_str, current_length);
-        if (node != current_reddit_state->base) {
+        if (node != current_reddit_state->base)
             strcat(cookie_str, "&");
-        } else {
+        else
             cookie_str[0] = 0;
-        }
+
         strcat(cookie_str, node->name);
         strcat(cookie_str, "=");
         strcat(cookie_str, node->data);
