@@ -20,7 +20,7 @@
  * requiring it every call it much easier.
  *
  */
-extern RedditState *current_reddit_state;
+extern RedditState *currentRedditState;
 
 void *rmalloc (size_t bytes);
 void *rrealloc (void *old, size_t bytes);

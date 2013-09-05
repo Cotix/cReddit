@@ -14,7 +14,7 @@
 /*
  * Allocate a new reddit_state and set any needed values to defaults
  */
-RedditState *reddit_state_new()
+RedditState *redditStateNew()
 {
     RedditState *state;
     state = rmalloc(sizeof(RedditState));
@@ -27,7 +27,7 @@ RedditState *reddit_state_new()
  * Frees a reddit_state returned by reddit_state_new()
  * Also frees anything attached to the reddit_state, such as the cookie linked-list
  */
-void reddit_state_free(RedditState *state)
+void redditStateFree(RedditState *state)
 {
 
     /* First free the linked-list of cookies */
@@ -35,7 +35,7 @@ void reddit_state_free(RedditState *state)
     RedditCookieLink *node;
     for(node = state->base; node != NULL; node = tmp) {
         tmp = node->next;
-        reddit_cookie_free(node);
+        redditCookieFree(node);
     }
 
     /* Free the actual state */
@@ -45,17 +45,17 @@ void reddit_state_free(RedditState *state)
 /*
  * Returns the current reddit_state the library is using
  */
-RedditState *reddit_state_get()
+RedditState *redditStateGet()
 {
-    return current_reddit_state;
+    return currentRedditState;
 }
 
 /*
  * Sets the current reddit_state that the library will use
  */
-void reddit_state_set(RedditState *state)
+void redditStateSet(RedditState *state)
 {
-    current_reddit_state = state;
+    currentRedditState = state;
 }
 
 

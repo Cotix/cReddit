@@ -14,7 +14,7 @@
  *
  * A 'reddit_user' represents any and all users
  */
-RedditUser *reddit_user_new()
+RedditUser *redditUserNew()
 {
     RedditUser *log = rmalloc(sizeof(RedditUser));
 
@@ -25,7 +25,7 @@ RedditUser *reddit_user_new()
     return log;
 }
 
-void reddit_user_free (RedditUser *log)
+void redditUserFree (RedditUser *log)
 {
     free(log->name);
     free(log->id);
@@ -37,13 +37,13 @@ void reddit_user_free (RedditUser *log)
  * allocates and creates a new 'reddit_user_logged'
  * It's a superset of 'reddit_user', representing a logged-in user
  */
-RedditUserLogged *reddit_user_logged_new()
+RedditUserLogged *redditUserLoggedNew()
 {
     RedditUserLogged *user = rmalloc(sizeof(RedditUserLogged));
 
-    user->userInfo = reddit_user_new();
+    user->userInfo     = redditUserNew();
     user->stayLoggedOn = false;
-    user->userState     = REDDIT_USER_OFFLINE;
+    user->userState    = REDDIT_USER_OFFLINE;
 
     return user;
 }
@@ -51,15 +51,15 @@ RedditUserLogged *reddit_user_logged_new()
 /*
  * Frees a 'reddit_user_logged' and everything attached to it
  */
-void reddit_user_logged_free(RedditUserLogged *user)
+void redditUserLoggedFree(RedditUserLogged *user)
 {
-    reddit_user_free(user->userInfo);
+    redditUserFree(user->userInfo);
     free(user);
 }
 
-RedditUser *reddit_get_user(TokenParser *parser)
+RedditUser *redditGetUser(TokenParser *parser)
 {
-    RedditUser *user = reddit_user_new();
+    RedditUser *user = redditUserNew();
 
     TokenIdent ids[] = {
         ADD_TOKEN_IDENT_STRING("modhash",       user->modhash),
@@ -76,7 +76,7 @@ RedditUser *reddit_get_user(TokenParser *parser)
         {0}
     };
 
-    parse_tokens(parser, ids);
+    parseTokens(parser, ids);
 
     return user;
 }
@@ -91,7 +91,7 @@ RedditUser *reddit_get_user(TokenParser *parser)
     RedditErrno *response = va_arg(args, RedditErrno*);
 
 
-DEF_TOKEN_CALLBACK(handle_error_array)
+DEF_TOKEN_CALLBACK(handleErrorArray)
 {
     ARG_LIST_LOGIN
 
@@ -100,12 +100,12 @@ DEF_TOKEN_CALLBACK(handle_error_array)
 
 }
 
-DEF_TOKEN_CALLBACK(handle_cookie)
+DEF_TOKEN_CALLBACK(handleCookie)
 {
     char *tmp = NULL;
 
     READ_TOKEN_TO_TMP(parser->block->memory, tmp, parser->tokens[parser->currentToken]);
-    reddit_cookie_new("reddit_session", tmp);
+    redditCookieNew("reddit_session", tmp);
     free(tmp);
 }
 
@@ -116,17 +116,17 @@ DEF_TOKEN_CALLBACK(handle_cookie)
  * Also if successful adds the 'reddit_session' cookie to the global state
  *
  */
-RedditErrno reddit_user_logged_login (RedditUserLogged *log, char *name, char *passwd)
+RedditErrno redditUserLoggedLogin (RedditUserLogged *log, char *name, char *passwd)
 {
-    char login_info[4096];
+    char loginInfo[4096];
     char tf[6];
     RedditErrno response = REDDIT_SUCCESS;
 
     TokenParserResult res;
 
     TokenIdent ids[] = {
-        ADD_TOKEN_IDENT_FUNC("errors", handle_error_array),
-        ADD_TOKEN_IDENT_FUNC("cookie", handle_cookie),
+        ADD_TOKEN_IDENT_FUNC("errors", handleErrorArray),
+        ADD_TOKEN_IDENT_FUNC("cookie", handleCookie),
         {0}
     };
 
@@ -137,12 +137,12 @@ RedditErrno reddit_user_logged_login (RedditUserLogged *log, char *name, char *p
     /* Remove any session cookie we may still have -- We'll get a new one after login
      * If you want to handle multiple-users logged on, make sure to switch out the global
      * state */
-    reddit_remove_cookie("reddit_session");
+    redditRemoveCookie("reddit_session");
 
-    sprintf(login_info, "api_type=json&rem=%s&user=%s&passwd=%s", true_false_string(tf, log->stayLoggedOn), name, passwd);
+    sprintf(loginInfo, "api_type=json&rem=%s&user=%s&passwd=%s", trueFalseString(tf, log->stayLoggedOn), name, passwd);
 
 
-    res = reddit_run_parser("http://www.reddit.com/api/login", login_info, ids, &response);
+    res = redditRunParser("http://www.reddit.com/api/login", loginInfo, ids, &response);
 
     if (res != TOKEN_PARSER_SUCCESS)
         response = REDDIT_ERROR_RESPONSE;
@@ -158,7 +158,7 @@ RedditErrno reddit_user_logged_login (RedditUserLogged *log, char *name, char *p
 #define ARG_LIST_USER_UPDATE \
     RedditUser **user = va_arg(args, RedditUser**);
 
-DEF_TOKEN_CALLBACK(user_update_helper)
+DEF_TOKEN_CALLBACK(userUpdateHelper)
 {
     ARG_LIST_USER_UPDATE
 
@@ -170,9 +170,9 @@ DEF_TOKEN_CALLBACK(user_update_helper)
              */
             if (idents[i].value != NULL && strcmp(*((char**)idents[i].value), "t2") == 0) {
                 if (*user != NULL)
-                    reddit_user_free(*user);
+                    redditUserFree(*user);
 
-                *user = reddit_get_user(parser);
+                *user = redditGetUser(parser);
             }
 
             break;
@@ -180,19 +180,19 @@ DEF_TOKEN_CALLBACK(user_update_helper)
     }
 }
 
-RedditErrno reddit_user_logged_update (RedditUserLogged *user)
+RedditErrno redditUserLoggedUpdate (RedditUserLogged *user)
 {
     TokenParserResult res;
-    char *kind_str = NULL;
+    char *kindStr = NULL;
 
     TokenIdent ids[] = {
-        ADD_TOKEN_IDENT_STRING("kind", kind_str),
-        ADD_TOKEN_IDENT_FUNC("data", user_update_helper),
+        ADD_TOKEN_IDENT_STRING("kind", kindStr),
+        ADD_TOKEN_IDENT_FUNC("data", userUpdateHelper),
         {0}
     };
 
-    res = reddit_run_parser("http://www.reddit.com/api/me.json", NULL, ids, &(user->userInfo));
-    free(kind_str);
+    res = redditRunParser("http://www.reddit.com/api/me.json", NULL, ids, &(user->userInfo));
+    free(kindStr);
 
     if (res == TOKEN_PARSER_SUCCESS)
         return REDDIT_SUCCESS;

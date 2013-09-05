@@ -12,7 +12,7 @@
 /*
  * Adds a new cookie to current_reddit_state
  */
-void reddit_cookie_new(char *name, char *data)
+void redditCookieNew(char *name, char *data)
 {
     RedditCookieLink *link = rmalloc(sizeof(RedditCookieLink));
 
@@ -26,12 +26,12 @@ void reddit_cookie_new(char *name, char *data)
      * If for whatever reason we don't have an allocated reddit-state yet
      * Make a new one
      */
-    if (current_reddit_state == NULL)
-        current_reddit_state = reddit_state_new();
+    if (currentRedditState == NULL)
+        currentRedditState = redditStateNew();
 
     /* Attach the link */
-    link->next = current_reddit_state->base;
-    current_reddit_state->base = link;
+    link->next = currentRedditState->base;
+    currentRedditState->base = link;
 }
 
 /*
@@ -40,7 +40,7 @@ void reddit_cookie_new(char *name, char *data)
  *
  * This function does no clean-up on the linked-list as a whole, just frees a single link
  */
-void reddit_cookie_free(RedditCookieLink *link)
+void redditCookieFree(RedditCookieLink *link)
 {
     free(link->name);
     free(link->data);
@@ -50,22 +50,22 @@ void reddit_cookie_free(RedditCookieLink *link)
 /*
  * Removes a cookie with the given name from current_reddit_state
  */
-void reddit_remove_cookie(char *name)
+void redditRemoveCookie(char *name)
 {
     RedditCookieLink *prev = NULL, *node;
 
     /* Incase no state has yet been set */
-    if (current_reddit_state == NULL) return ;
+    if (currentRedditState == NULL) return ;
 
-    for(node = current_reddit_state->base; node != NULL; prev = node, node = node->next) {
+    for(node = currentRedditState->base; node != NULL; prev = node, node = node->next) {
         if (strcmp(node->name, name) == 0) {
             /* Found the node */
             if (prev != NULL)
                 prev->next = node->next;
             else
-                current_reddit_state->base = node->next;
+                currentRedditState->base = node->next;
 
-            reddit_cookie_free(node);
+            redditCookieFree(node);
             break;
         }
     }
@@ -77,29 +77,29 @@ void reddit_remove_cookie(char *name)
  * The returned pointer will be NULL if there are currently no cookies
  * The returned pointer should be freed if not NULL
  */
-char *reddit_get_cookie_string()
+char *redditGetCookieString()
 {
-    char *cookie_str = NULL;
-    int current_length = 0;
+    char *cookieStr = NULL;
+    int currentLength = 0;
     RedditCookieLink *node;
 
-    if (current_reddit_state == NULL) return NULL;
+    if (currentRedditState == NULL) return NULL;
 
-    for(node = current_reddit_state->base; node != NULL; node = node->next) {
+    for(node = currentRedditState->base; node != NULL; node = node->next) {
         int add_size = strlen(node->name) + strlen(node->data) + 2;
-        current_length += add_size;
-        cookie_str = rrealloc(cookie_str, current_length);
-        if (node != current_reddit_state->base)
-            strcat(cookie_str, "&");
+        currentLength += add_size;
+        cookieStr = rrealloc(cookieStr, currentLength);
+        if (node != currentRedditState->base)
+            strcat(cookieStr, "&");
         else
-            cookie_str[0] = 0;
+            cookieStr[0] = 0;
 
-        strcat(cookie_str, node->name);
-        strcat(cookie_str, "=");
-        strcat(cookie_str, node->data);
+        strcat(cookieStr, node->name);
+        strcat(cookieStr, "=");
+        strcat(cookieStr, node->data);
     }
 
-    return cookie_str;
+    return cookieStr;
 }
 
 #endif

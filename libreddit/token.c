@@ -12,7 +12,7 @@
 /*
  * Returns a pointer to valid newalized memory_block
  */
-MemoryBlock *memory_block_new()
+MemoryBlock *memoryBlockNew()
 {
     MemoryBlock *block = rmalloc(sizeof(MemoryBlock));
     block->memory = rmalloc(1);
@@ -24,31 +24,31 @@ MemoryBlock *memory_block_new()
 /*
  * Frees a memory_block returned by memory_block_new()
  */
-void memory_block_free(MemoryBlock *block)
+void memoryBlockFree(MemoryBlock *block)
 {
     free(block->memory);
     free(block);
 }
 
 
-TokenParser *token_parser_new()
+TokenParser *tokenParserNew()
 {
     TokenParser *parser = rmalloc(sizeof(TokenParser));
     memset(parser, 0, sizeof(TokenParser));
-    parser->block = memory_block_new();
+    parser->block = memoryBlockNew();
     return parser;
 }
 
-void token_parser_free(TokenParser *parser)
+void tokenParserFree(TokenParser *parser)
 {
-    memory_block_free(parser->block);
+    memoryBlockFree(parser->block);
     free(parser->tokens);
     free(parser);
 }
 
-jsmnerr_t token_parser_create_tokens(TokenParser *parser)
+jsmnerr_t tokenParserCreateTokens(TokenParser *parser)
 {
-    jsmn_parser jsmn_parser;
+    jsmn_parser jsmnParser;
     jsmnerr_t result;
     const int chunk_size = 100;
 
@@ -58,9 +58,9 @@ jsmnerr_t token_parser_create_tokens(TokenParser *parser)
     }
 
     memset(parser->tokens, 0, parser->tokenCount * sizeof(jsmntok_t));
-    jsmn_init(&jsmn_parser);
+    jsmn_init(&jsmnParser);
 
-    while ((result = jsmn_parse(&jsmn_parser, parser->block->memory, parser->tokens, parser->tokenCount)) == JSMN_ERROR_NOMEM) {
+    while ((result = jsmn_parse(&jsmnParser, parser->block->memory, parser->tokens, parser->tokenCount)) == JSMN_ERROR_NOMEM) {
         parser->tokenCount += chunk_size;
         parser->tokens = rrealloc(parser->tokens, parser->tokenCount * sizeof(jsmntok_t));
         memset(parser->tokens + parser->tokenCount - chunk_size, 0, chunk_size * sizeof(jsmntok_t));
@@ -69,7 +69,7 @@ jsmnerr_t token_parser_create_tokens(TokenParser *parser)
     if (result != JSMN_SUCCESS)
         parser->tokenCount = 0;
     else
-        parser->tokenCount = jsmn_parser.toknext - 1;
+        parser->tokenCount = jsmnParser.toknext - 1;
 
     return result;
 }
@@ -78,7 +78,7 @@ jsmnerr_t token_parser_create_tokens(TokenParser *parser)
  * Returns a allocated copy of the contents of a token.
  * Handy since it's a pretty common need.
  */
-char *get_copy_of_token(const char *json, jsmntok_t token)
+char *getCopyOfToken(const char *json, jsmntok_t token)
 {
     char *copy;
     if (token.end - token.start + 1 < 1)
@@ -90,7 +90,7 @@ char *get_copy_of_token(const char *json, jsmntok_t token)
     return copy;
 }
 
-size_t write_to_parser(void *contents, size_t size, size_t nmemb, void *userp)
+size_t writeToParser(void *contents, size_t size, size_t nmemb, void *userp)
 {
     size_t realsize = size * nmemb;
     TokenParser *parser = (TokenParser*)userp;
@@ -110,7 +110,7 @@ size_t write_to_parser(void *contents, size_t size, size_t nmemb, void *userp)
  * The return value is always the exact same pointer of 'string'
  * Note -- 'string' should be already allocated to atleast a length of 6
  */
-char *true_false_string(char *string, bool tf)
+char *trueFalseString(char *string, bool tf)
 {
     if (tf) {
         strcpy(string, "true");
@@ -120,25 +120,25 @@ char *true_false_string(char *string, bool tf)
     return string;
 }
 
-char *reddit_copy_string(const char *string)
+char *redditCopyString(const char *string)
 {
-    char *new_str = rmalloc(strlen(string) + 1);
-    strcpy(new_str, string);
-    return new_str;
+    char *newStr = rmalloc(strlen(string) + 1);
+    strcpy(newStr, string);
+    return newStr;
 }
 
 #define CALL_TOKEN_FUNC(func, parser, idents, args)              \
     do {                                                         \
-        va_list args_copy;                                       \
-        va_copy(args_copy, args);                                \
-        (func) (parser, idents, args_copy);                      \
-        va_end(args_copy);                                       \
+        va_list argsCopy;                                       \
+        va_copy(argsCopy, args);                                \
+        (func) (parser, idents, argsCopy);                      \
+        va_end(argsCopy);                                       \
     } while (0)
 
-int perform_ident_action(TokenParser *p, TokenIdent *identifiers, int i, va_list args)
+int performIdentAction(TokenParser *p, TokenIdent *identifiers, int i, va_list args)
 {
     char *tmp = NULL;
-    int performed_action = 0;
+    int performedAction = 0;
 
     READ_TOKEN_TO_TMP(p->block->memory, tmp, p->tokens[p->currentToken]);
 
@@ -147,7 +147,7 @@ int perform_ident_action(TokenParser *p, TokenIdent *identifiers, int i, va_list
         case TOKEN_CHECK_CALL:
             (p->currentToken)++;
             CALL_TOKEN_FUNC(identifiers[i].funcCallback, p, identifiers, args);
-            performed_action = 1;
+            performedAction = 1;
             break;
 
         case TOKEN_SET:
@@ -169,17 +169,17 @@ int perform_ident_action(TokenParser *p, TokenIdent *identifiers, int i, va_list
                 if (identifiers[i].freeFlag)
                     free(*((char**)identifiers[i].value));
 
-                *((char**)identifiers[i].value) = get_copy_of_token(p->block->memory, p->tokens[p->currentToken]);
+                *((char**)identifiers[i].value) = getCopyOfToken(p->block->memory, p->tokens[p->currentToken]);
                 break;
             }
-            performed_action = 1;
+            performedAction = 1;
 
             break;
         }
     }
 
     free(tmp);
-    return performed_action;
+    return performedAction;
 }
 
 /*
@@ -192,25 +192,25 @@ int perform_ident_action(TokenParser *p, TokenIdent *identifiers, int i, va_list
  * The intention is that the 'tokens' pointer will be incremented to the object you want to
  * parse when calling this
  */
-void vparse_tokens (TokenParser *p, TokenIdent *identifiers, va_list args)
+void vparseTokens (TokenParser *p, TokenIdent *identifiers, va_list args)
 {
-    int token_count = 0, i;
-    int ident_count = 0;
+    int tokenCount = 0, i;
+    int identCount = 0;
 
-    while (identifiers[ident_count].name != NULL) {
-        ident_count++;
+    while (identifiers[identCount].name != NULL) {
+        identCount++;
     }
 
-    if (ident_count == 0)
+    if (identCount == 0)
         return ;
 
-    token_count = p->tokens[p->currentToken].full_size;
-    if (token_count == 0)
+    tokenCount = p->tokens[p->currentToken].full_size;
+    if (tokenCount == 0)
         return ;
 
-    token_count += p->currentToken;
+    tokenCount += p->currentToken;
 
-    for (; p->currentToken < token_count; (p->currentToken)++) {
+    for (; p->currentToken < tokenCount; (p->currentToken)++) {
         if (p->tokens[p->currentToken].type == JSMN_OBJECT || p->tokens[p->currentToken].type == JSMN_ARRAY)
             continue;
 
@@ -218,8 +218,8 @@ void vparse_tokens (TokenParser *p, TokenIdent *identifiers, va_list args)
         if (!p->tokens[p->currentToken].is_key)
             continue;
 
-        for (i = 0; i < ident_count; i++)
-            if (perform_ident_action(p, identifiers, i, args))
+        for (i = 0; i < identCount; i++)
+            if (performIdentAction(p, identifiers, i, args))
                 break;
 
     }
@@ -227,42 +227,42 @@ void vparse_tokens (TokenParser *p, TokenIdent *identifiers, va_list args)
     return ;
 }
 
-void parse_tokens (TokenParser *parser, TokenIdent *identifiers, ...)
+void parseTokens (TokenParser *parser, TokenIdent *identifiers, ...)
 {
     va_list args;
     va_start(args, identifiers);
-    vparse_tokens (parser, identifiers, args);
+    vparseTokens (parser, identifiers, args);
     va_end(args);
 }
 
 
-TokenParserResult redditv_run_parser(char *url, char *post, TokenIdent *idents, va_list args)
+TokenParserResult redditvRunParser(char *url, char *post, TokenIdent *idents, va_list args)
 {
-    TokenParser *parser = token_parser_new();
-    char *cookie_str = NULL;
-    CURL *reddit_handle = curl_easy_init();
-    jsmnerr_t jsmn_result;
+    TokenParser *parser = tokenParserNew();
+    char *cookieStr = NULL;
+    CURL *redditHandle = curl_easy_init();
+    jsmnerr_t jsmnResult;
 
     TokenParserResult result = TOKEN_PARSER_SUCCESS;
 
-    curl_easy_setopt(reddit_handle, CURLOPT_URL, url);
-    curl_easy_setopt(reddit_handle, CURLOPT_FOLLOWLOCATION, 1L);
-    curl_easy_setopt(reddit_handle, CURLOPT_WRITEFUNCTION, write_to_parser);
-    curl_easy_setopt(reddit_handle, CURLOPT_WRITEDATA, (void *)parser);
+    curl_easy_setopt(redditHandle, CURLOPT_URL, url);
+    curl_easy_setopt(redditHandle, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(redditHandle, CURLOPT_WRITEFUNCTION, writeToParser);
+    curl_easy_setopt(redditHandle, CURLOPT_WRITEDATA, (void *)parser);
 
-    cookie_str = reddit_get_cookie_string();
-    if (cookie_str != NULL)
-        curl_easy_setopt(reddit_handle, CURLOPT_COOKIE, cookie_str);
+    cookieStr = redditGetCookieString();
+    if (cookieStr != NULL)
+        curl_easy_setopt(redditHandle, CURLOPT_COOKIE, cookieStr);
 
     if (post != NULL) {
-        curl_easy_setopt(reddit_handle, CURLOPT_POST, 1);
-        curl_easy_setopt(reddit_handle, CURLOPT_POSTFIELDS, (void *)post);
+        curl_easy_setopt(redditHandle, CURLOPT_POST, 1);
+        curl_easy_setopt(redditHandle, CURLOPT_POSTFIELDS, (void *)post);
     }
 
-    curl_easy_setopt(reddit_handle, CURLOPT_USERAGENT, CREDDIT_USERAGENT);
+    curl_easy_setopt(redditHandle, CURLOPT_USERAGENT, CREDDIT_USERAGENT);
 
-    curl_easy_perform(reddit_handle);
-    curl_easy_cleanup(reddit_handle);
+    curl_easy_perform(redditHandle);
+    curl_easy_cleanup(redditHandle);
 
     if (parser->block->size <= 0 || parser->block->memory == NULL) {
         result = TOKEN_PARSER_CURL_FAIL;
@@ -273,14 +273,14 @@ TokenParserResult redditv_run_parser(char *url, char *post, TokenIdent *idents, 
         printf("Stuff: %s\n", parser->block->memory);
     }
 
-    jsmn_result = token_parser_create_tokens(parser);
+    jsmnResult = tokenParserCreateTokens(parser);
 
-    if (jsmn_result != JSMN_SUCCESS) {
+    if (jsmnResult != JSMN_SUCCESS) {
         result = TOKEN_PARSER_JSON_FAIL;
         goto cleanup;
     }
 
-    vparse_tokens(parser, idents, args);
+    vparseTokens(parser, idents, args);
 
     result = TOKEN_PARSER_SUCCESS;
 
@@ -288,18 +288,18 @@ TokenParserResult redditv_run_parser(char *url, char *post, TokenIdent *idents, 
 
 cleanup:;
 
-    free(cookie_str);
-    token_parser_free(parser);
+    free(cookieStr);
+    tokenParserFree(parser);
 
     return result;
 }
 
-TokenParserResult reddit_run_parser(char *url, char *post, TokenIdent *idents, ...)
+TokenParserResult redditRunParser(char *url, char *post, TokenIdent *idents, ...)
 {
     TokenParserResult result;
     va_list args;
     va_start(args, idents);
-    result = redditv_run_parser(url, post, idents, args);
+    result = redditvRunParser(url, post, idents, args);
     va_end(args);
     return result;
 }

@@ -17,20 +17,20 @@ typedef struct {
 } LinkScreen;
 
 
-RedditState *global_state;
+RedditState *globalState;
 
 
-LinkScreen *link_screen_new()
+LinkScreen *linkScreenNew()
 {
     LinkScreen *screen = malloc(sizeof(LinkScreen));
     memset(screen, 0, sizeof(LinkScreen));
-    screen->list = reddit_link_list_new();
+    screen->list = redditLinkListNew();
     return screen;
 }
 
-void link_screen_free(LinkScreen *screen)
+void linkScreenFree(LinkScreen *screen)
 {
-    reddit_link_list_free(screen->list);
+    redditLinkListFree(screen->list);
     free(screen);
 }
 
@@ -224,12 +224,12 @@ bool showThread(Post *posts, int selected, int displayCount) {
 void showSubreddit(char *subreddit)
 {
     LinkScreen *screen;
-    screen = link_screen_new();
+    screen = linkScreenNew();
 
-    screen->list->subreddit = reddit_copy_string(subreddit);
+    screen->list->subreddit = redditCopyString(subreddit);
     screen->list->type = REDDIT_HOT;
 
-    reddit_get_listing(screen->list);
+    redditGetListing(screen->list);
 
     screen->displayed = 25;
     screen->offset = 0;
@@ -262,12 +262,12 @@ void showSubreddit(char *subreddit)
         }
     }
 
-    link_screen_free(screen);
+    linkScreenFree(screen);
 }
 
 int main(int argc, char *argv[])
 {
-    RedditUserLogged *user = reddit_user_logged_new();
+    RedditUserLogged *user = redditUserLoggedNew();
     //Incase the user doesn't specify an argument
     if (!argv[1]) {
         printf("Please supply a subreddit to go to e.g. /r/coding\n"); //Added a \n
@@ -280,21 +280,21 @@ int main(int argc, char *argv[])
     noecho();
 
     /* Start libreddit */
-    reddit_global_init();
+    redditGlobalInit();
 
-    global_state = reddit_state_new();
+    globalState = redditStateNew();
 
-    reddit_state_set(global_state);
+    redditStateSet(globalState);
 
     /* If you want to try logging in as your user
      * Replace 'username' and 'password' with the approiate fields */
-    reddit_user_logged_login(user, "creddit_test_user", "password");
+    redditUserLoggedLogin(user, "creddit_test_user", "password");
 
     showSubreddit(argv[1]);
 
-    reddit_user_logged_free(user);
-    reddit_state_free(global_state);
-    reddit_global_cleanup();
+    redditUserLoggedFree(user);
+    redditStateFree(globalState);
+    redditGlobalCleanup();
     endwin();
     return 0;
 }

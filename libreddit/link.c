@@ -14,7 +14,7 @@
 /*
  * Allocates an empty reddit_link structure
  */
-RedditLink *reddit_link_new()
+RedditLink *redditLinkNew()
 {
     RedditLink *link = rmalloc(sizeof(RedditLink));
 
@@ -28,7 +28,7 @@ RedditLink *reddit_link_new()
  * Frees a single reddit_link structure
  * Note: Doesn't free the reddit_link at 'link->next'
  */
-void reddit_link_free (RedditLink *link)
+void redditLinkFree (RedditLink *link)
 {
     free(link->selftext);
     free(link->id);
@@ -43,7 +43,7 @@ void reddit_link_free (RedditLink *link)
 /*
  * Allocates an empty reddit_link_list structure
  */
-RedditLinkList *reddit_link_list_new()
+RedditLinkList *redditLinkListNew()
 {
     RedditLinkList *list = rmalloc(sizeof(RedditLinkList));
     memset(list, 0, sizeof(RedditLinkList));
@@ -54,12 +54,12 @@ RedditLinkList *reddit_link_list_new()
  * Frees the 'reddit_list' linked-list from a reddit_link_list, freeing it to be used again without
  * clearing the list's info
  */
-void reddit_link_list_free_links (RedditLinkList *list)
+void redditLinkListFreeLinks (RedditLinkList *list)
 {
     RedditLink *link, *tmp;
     for (link = list->first; link != NULL; link = tmp) {
         tmp = link->next;
-        reddit_link_free(link);
+        redditLinkFree(link);
     }
     list->linkCount = 0;
     list->first = NULL;
@@ -69,29 +69,28 @@ void reddit_link_list_free_links (RedditLinkList *list)
 /*
  * Fress a reddit_link_list as well as free's all reddit_link structures attached.
  */
-void reddit_link_list_free (RedditLinkList *list)
+void redditLinkListFree (RedditLinkList *list)
 {
-    reddit_link_list_free_links(list);
+    redditLinkListFreeLinks(list);
     free(list->subreddit);
     free(list->modhash);
     free(list);
 }
 
-void reddit_link_list_add_link (RedditLinkList *list, RedditLink *link)
+void redditLinkListAddLink (RedditLinkList *list, RedditLink *link)
 {
     list->linkCount++;
-    if (list->last == NULL) {
+    if (list->last == NULL)
         list->first = link;
-        list->last  = link;
-    } else {
+    else
         list->last->next = link;
-        list->last = link;
-    }
+
+    list->last  = link;
 }
 
-RedditLink *reddit_get_link(TokenParser *parser)
+RedditLink *redditGetLink(TokenParser *parser)
 {
-    RedditLink *link = reddit_link_new();
+    RedditLink *link = redditLinkNew();
 
     TokenIdent ids[] = {
         ADD_TOKEN_IDENT_STRING("selftext",      link->selftext),
@@ -115,7 +114,7 @@ RedditLink *reddit_get_link(TokenParser *parser)
         {0}
     };
 
-    parse_tokens(parser, ids);
+    parseTokens(parser, ids);
 
     return link;
 }
@@ -123,7 +122,7 @@ RedditLink *reddit_get_link(TokenParser *parser)
 #define ARG_LIST_GET_LISTING \
     RedditLinkList *list = va_arg(args, RedditLinkList*);
 
-DEF_TOKEN_CALLBACK(get_listing_helper)
+DEF_TOKEN_CALLBACK(getListingHelper)
 {
     ARG_LIST_GET_LISTING
 
@@ -135,7 +134,7 @@ DEF_TOKEN_CALLBACK(get_listing_helper)
     for (i = 0; idents[i].name != NULL; i++)
         if (strcmp(idents[i].name, "kind") == 0)
             if (idents[i].value != NULL && strcmp(*((char**)idents[i].value), "t3") == 0)
-                reddit_link_list_add_link(list, reddit_get_link(parser));
+                redditLinkListAddLink(list, redditGetLink(parser));
 
 }
 
@@ -145,15 +144,15 @@ DEF_TOKEN_CALLBACK(get_listing_helper)
  *
  * 'subreddit' should be in the form '/r/subreddit' or empty to indicate 'front'
  */
-RedditErrno reddit_get_listing (RedditLinkList *list)
+RedditErrno redditGetListing (RedditLinkList *list)
 {
-    char subred[1024], *kind_str = NULL;
+    char subred[1024], *kindStr = NULL;
     TokenParserResult res;
 
     TokenIdent ids[] = {
         ADD_TOKEN_IDENT_STRING("modhash", list->modhash),
-        ADD_TOKEN_IDENT_STRING("kind", kind_str),
-        ADD_TOKEN_IDENT_FUNC("data", get_listing_helper),
+        ADD_TOKEN_IDENT_STRING("kind", kindStr),
+        ADD_TOKEN_IDENT_FUNC("data", getListingHelper),
         {0}
     };
 
@@ -175,9 +174,9 @@ RedditErrno reddit_get_listing (RedditLinkList *list)
     if (list->linkCount > 0)
         sprintf(subred + strlen(subred), "?after=t3_%s", list->last->id);
 
-    res = reddit_run_parser(subred, NULL, ids, list);
+    res = redditRunParser(subred, NULL, ids, list);
 
-    free(kind_str);
+    free(kindStr);
 
     if (res == TOKEN_PARSER_SUCCESS)
         return REDDIT_SUCCESS;

@@ -6,7 +6,7 @@
 
 #include "global.h"
 
-RedditState *current_reddit_state = NULL;
+RedditState *currentRedditState = NULL;
 
 /*
  * Just a small wrapper around malloc -- It checks for NULL and if a malloc
@@ -31,12 +31,12 @@ void *rrealloc(void *old, size_t bytes)
     return m;
 }
 
-void reddit_global_init()
+void redditGlobalInit()
 {
     curl_global_init(CURL_GLOBAL_ALL);
 }
 
-void reddit_global_cleanup()
+void redditGlobalCleanup()
 {
     curl_global_cleanup();
 }

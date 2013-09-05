@@ -6,6 +6,6 @@
 #include "jsmn.h"
 #include "token.h"
 
-RedditComment *reddit_get_comment(TokenParser *parser, RedditCommentList *list);
+RedditComment *redditGetComment(TokenParser *parser, RedditCommentList *list);
 
 #endif

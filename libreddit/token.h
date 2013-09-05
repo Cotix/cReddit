@@ -100,19 +100,19 @@ typedef struct TokenIdent {
 
 } TokenIdent;
 
-TokenParser *token_parser_new();
-void          token_parser_free(TokenParser *parser);
+TokenParser *tokenParserNew();
+void          tokenParserFree(TokenParser *parser);
 
-char *get_copy_of_token(const char *json, jsmntok_t token);
-MemoryBlock *memory_block_new();
-void memory_block_free(MemoryBlock *block);
-char *true_false_string(char *string, bool tf);
+char *getCopyOfToken(const char *json, jsmntok_t token);
+MemoryBlock *memoryBlockNew();
+void memoryBlockFree(MemoryBlock *block);
+char *trueFalseString(char *string, bool tf);
 
-TokenParserResult redditv_run_parser(char *url, char *post, TokenIdent *idents, va_list args);
-TokenParserResult reddit_run_parser(char *url, char *post, TokenIdent *idents, ...);
+TokenParserResult redditvRunParser(char *url, char *post, TokenIdent *idents, va_list args);
+TokenParserResult redditRunParser(char *url, char *post, TokenIdent *idents, ...);
 
-void vparse_tokens (TokenParser *parser, TokenIdent *identifiers, va_list args);
-void parse_tokens  (TokenParser *parser, TokenIdent *identifiers, ...);
+void vparseTokens (TokenParser *parser, TokenIdent *identifiers, va_list args);
+void parseTokens  (TokenParser *parser, TokenIdent *identifiers, ...);
 
 /*
  * Small #define macro to allocate space for a token and then read the data from
@@ -131,7 +131,7 @@ void parse_tokens  (TokenParser *parser, TokenIdent *identifiers, ...);
 
 #define READ_TOKEN_AS_STRING(string, json, token)     \
     do {                                              \
-        string = get_copy_of_token(json, token);      \
+        string = getCopyOfToken(json, token);      \
     } while (0)
 
 #define READ_TOKEN_AS_NUMBER(number, json, token, tmp)   \

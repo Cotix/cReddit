@@ -167,7 +167,7 @@ typedef enum RedditCommentSortType {
 } RedditCommentSortType;
 
 typedef struct RedditCommentList {
-    RedditComment *base_comment;
+    RedditComment *baseComment;
 
     RedditLink *post;
     char *permalink;
@@ -175,43 +175,43 @@ typedef struct RedditCommentList {
 } RedditCommentList;
 
 
-extern void  reddit_cookie_new        (char *name, char *data);
-extern void  reddit_cookie_free       (RedditCookieLink *link);
-extern void  reddit_remove_cookie     (char *name);
-extern char *reddit_get_cookie_string ();
+extern void  redditCookieNew        (char *name, char *data);
+extern void  redditCookieFree       (RedditCookieLink *link);
+extern void  redditRemoveCookie     (char *name);
+extern char *redditGetCookieString  ();
 
-extern RedditState *reddit_state_new  ();
-extern void         reddit_state_free (RedditState *state);
-extern RedditState *reddit_state_get  ();
-extern void         reddit_state_set  (RedditState *state);
+extern RedditState *redditStateNew  ();
+extern void         redditStateFree (RedditState *state);
+extern RedditState *redditStateGet  ();
+extern void         redditStateSet  (RedditState *state);
 
-extern RedditUser        *reddit_user_new           ();
-extern void               reddit_user_free          (RedditUser  *log);
+extern RedditUser        *redditUserNew         ();
+extern void               redditUserFree        (RedditUser  *log);
 
-extern RedditUserLogged *reddit_user_logged_new    ();
-extern void              reddit_user_logged_free   (RedditUserLogged *user);
-extern RedditErrno       reddit_user_logged_login  (RedditUserLogged *log, char *name, char *passwd);
-extern RedditErrno       reddit_user_logged_update (RedditUserLogged *user);
+extern RedditUserLogged *redditUserLoggedNew    ();
+extern void              redditUserLoggedFree   (RedditUserLogged *user);
+extern RedditErrno       redditUserLoggedLogin  (RedditUserLogged *log, char *name, char *passwd);
+extern RedditErrno       redditUserLoggedUpdate (RedditUserLogged *user);
 
-extern RedditLink        *reddit_link_new                ();
-extern void               reddit_link_free               (RedditLink *link);
-extern RedditLinkList    *reddit_link_list_new           ();
-extern void               reddit_link_list_free          (RedditLinkList *list);
-extern void               reddit_link_list_free_links    (RedditLinkList *list);
+extern RedditLink        *redditLinkNew              ();
+extern void               redditLinkFree             (RedditLink *link);
+extern RedditLinkList    *redditLinkListNew          ();
+extern void               redditLinkListFree         (RedditLinkList *list);
+extern void               redditLinkListFreeLinks    (RedditLinkList *list);
 
-extern RedditErrno         reddit_get_listing             (RedditLinkList *list);
+extern RedditErrno        redditGetListing           (RedditLinkList *list);
 
 
-extern RedditComment      *reddit_comment_new             ();
-extern void                 reddit_comment_free            (RedditComment *comment);
-extern void                 reddit_comment_add_reply       (RedditComment *comment, RedditComment *reply);
-extern RedditCommentList *reddit_comment_list_new        ();
-extern void                 reddit_comment_list_free       (RedditCommentList *list);
-extern RedditErrno         reddit_get_comment_list        (RedditCommentList *list);
-extern RedditErrno         reddit_get_comment_children    (RedditCommentList *list, RedditComment *parent);
-extern char                *reddit_copy_string(const char *string);
+extern RedditComment       *redditCommentNew            ();
+extern void                 redditCommentFree           (RedditComment *comment);
+extern void                 redditCommentAddReply       (RedditComment *comment, RedditComment *reply);
+extern RedditCommentList   *redditCommentListNew        ();
+extern void                 redditCommentListFree       (RedditCommentList *list);
+extern RedditErrno         redditGetCommentList         (RedditCommentList *list);
+extern RedditErrno         redditGetCommentChildren     (RedditCommentList *list, RedditComment *parent);
+extern char                *redditCopyString            (const char *string);
 
-extern void   reddit_global_init();
-extern void   reddit_global_cleanup();
+extern void   redditGlobalInit();
+extern void   redditGlobalCleanup();
 
 #endif
