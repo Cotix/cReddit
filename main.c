@@ -1,3 +1,5 @@
+#define _XOPEN_SOURCE_EXTENDED
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -5,6 +7,7 @@
 #include "reddit.h"
 #include <ncurses.h>
 #include <form.h>
+#include <locale.h>
 
 #define SIZEOFELEM(x)  (sizeof(x) / sizeof(x[0]))
 
@@ -57,8 +60,10 @@ void drawScreen(LinkScreen *screen)
 
     for(i = 0; i < screen->displayed; i++)
     {
+        wchar_t buffer[2048];
         if(i == screen->selected) attron(COLOR_PAIR(1));
-        printw("%d. [%4d] %s - %s\n", i + screen->offset + 1, link->score, link->author, link->title);
+        swprintf(buffer, 2048, L"%d. [%4d] %s - %ls\n", i + screen->offset + 1, link->score, link->author, link->wtitle);
+        addwstr(buffer);
         attroff(COLOR_PAIR(1));
         link = link->next;
     }
@@ -231,7 +236,7 @@ void showSubreddit(char *subreddit)
 
     redditGetListing(screen->list);
 
-    screen->displayed = 25;
+    screen->displayed = screen->list->linkCount;
     screen->offset = 0;
     screen->selected = 0;
 
@@ -270,9 +275,12 @@ int main(int argc, char *argv[])
     RedditUserLogged *user = redditUserLoggedNew();
     //Incase the user doesn't specify an argument
     if (!argv[1]) {
-        printf("Please supply a subreddit to go to e.g. /r/coding\n"); //Added a \n
+        wprintf(L"Please supply a subreddit to go to e.g. /r/coding\n"); //Added a \n
         exit(1);
     }
+
+    setlocale(LC_CTYPE, "");
+
 
     initscr();
     raw();//We want character for character input

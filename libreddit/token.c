@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <curl/curl.h>
+#include <wchar.h>
 
 #include "global.h"
 #include "token.h"
@@ -304,6 +305,79 @@ TokenParserResult redditRunParser(char *url, char *post, TokenIdent *idents, ...
     return result;
 }
 
+
+
+char *redditParseEscCodes (const char *text)
+{
+    int i, len = strlen(text), offset = 0;
+    char *new_text = rmalloc(len + 1);
+
+    if (text == NULL)
+        return NULL;
+
+    for (i = 0; i < len; i++) {
+        switch(text[i]) {
+        case '\\':
+            i++;
+            switch(text[i]) {
+            case 'n':
+                new_text[offset] = '\n';
+                offset++;
+                break;
+            case 'u':
+                i+=4;
+                break;
+            }
+            break;
+        default:
+            new_text[offset] = text[i];
+            offset++;
+        }
+    }
+    new_text[offset] = '\0';
+    return new_text;
+}
+
+wchar_t *redditParseEscCodesWide (const char *text)
+{
+    int i, k, len = strlen(text), offset = 0;
+    wchar_t *new_text = rmalloc((len + 1) * sizeof(wchar_t));
+    wchar_t temp;
+
+    if (text == NULL)
+        return NULL;
+
+    for (i = 0; i < len; i++) {
+        switch(text[i]) {
+        case L'\\':
+            i++;
+            switch(text[i]) {
+            case 'n':
+                new_text[offset] = L'\n';
+                offset++;
+                break;
+            case 'u':
+                temp = L'\0';
+                for (k = 3; k >= 0; k--) {
+                    i++;
+                    /* This weird piece of code converts a hex character (0-9 and a-f) into
+                     * it's decimal equivelent, and then shits it over the correct number of
+                     * bits coresponding to it's position in the wchar_t */
+                    temp |= (((text[i] < 58)? text[i] - 48: ((text[i] & 0x0F) + 9))) << (k << 2);
+                }
+                new_text[offset] = temp;
+                offset++;
+                break;
+            }
+            break;
+        default:
+            new_text[offset] = btowc(text[i]);
+            offset++;
+        }
+    }
+    new_text[offset] = L'\0';
+    return new_text;
+}
 
 
 #endif

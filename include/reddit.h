@@ -3,6 +3,7 @@
 
 #include <ctype.h>
 #include <stdbool.h>
+#include <wchar.h>
 
 typedef enum RedditErrno {
     /* This response indicates no error happened */
@@ -95,6 +96,9 @@ typedef struct RedditLink {
     char *author;
     char *url;
 
+    wchar_t *wtitle;
+    wchar_t *wselftext;
+
     int score;
     int downs;
     int ups;
@@ -140,6 +144,8 @@ typedef struct RedditComment {
     char *author;
     char *parentId;
     char *body;
+
+    wchar_t *wbody;
 
     int ups;
     int downs;
@@ -213,5 +219,8 @@ extern char                *redditCopyString            (const char *string);
 
 extern void   redditGlobalInit();
 extern void   redditGlobalCleanup();
+
+extern char *redditParseEscCodes (const char *text);
+extern wchar_t *redditParseEscCodesWide (const char *text);
 
 #endif

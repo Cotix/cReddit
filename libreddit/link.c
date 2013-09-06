@@ -36,6 +36,8 @@ void redditLinkFree (RedditLink *link)
     free(link->author);
     free(link->url);
     free(link->title);
+    free(link->wtitle);
+    free(link->wselftext);
 
     free(link);
 }
@@ -90,6 +92,7 @@ void redditLinkListAddLink (RedditLinkList *list, RedditLink *link)
 
 RedditLink *redditGetLink(TokenParser *parser)
 {
+    char *tmp;
     RedditLink *link = redditLinkNew();
 
     TokenIdent ids[] = {
@@ -115,6 +118,16 @@ RedditLink *redditGetLink(TokenParser *parser)
     };
 
     parseTokens(parser, ids);
+
+    tmp = link->selftext;
+    link->selftext = redditParseEscCodes(tmp);
+    link->wselftext = redditParseEscCodesWide(tmp);
+    free(tmp);
+
+    tmp = link->title;
+    link->title = redditParseEscCodes(tmp);
+    link->wtitle = redditParseEscCodesWide(tmp);
+    free(tmp);
 
     return link;
 }

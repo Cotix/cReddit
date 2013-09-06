@@ -42,6 +42,7 @@ void redditCommentFree (RedditComment *comment)
     free(comment->author);
     free(comment->parentId);
     free(comment->body);
+    free(comment->wbody);
     for (i = 0; i < comment->directChildrenCount; i++)
         free(comment->directChildrenIds[i]);
 
@@ -160,6 +161,7 @@ DEF_TOKEN_CALLBACK(getCommentReplies)
 
 RedditComment *redditGetComment(TokenParser *parser, RedditCommentList *list)
 {
+    char *tmp;
     RedditComment *comment = redditCommentNew();
 
     TokenIdent ids[] = {
@@ -178,6 +180,11 @@ RedditComment *redditGetComment(TokenParser *parser, RedditCommentList *list)
     };
 
     parseTokens(parser, ids, list, comment);
+
+    tmp = comment->body;
+    comment->body = redditParseEscCodes(tmp);
+    comment->wbody = redditParseEscCodesWide(tmp);
+    free(tmp);
 
     return comment;
 }
