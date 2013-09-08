@@ -132,8 +132,7 @@ typedef struct RedditLinkList {
     RedditListType type;
 
     int linkCount;
-    RedditLink *first;
-    RedditLink *last;
+    RedditLink **links;
 } RedditLinkList;
 
 typedef struct RedditComment {
@@ -219,8 +218,5 @@ extern char                *redditCopyString            (const char *string);
 
 extern void   redditGlobalInit();
 extern void   redditGlobalCleanup();
-
-extern char *redditParseEscCodes (const char *text);
-extern wchar_t *redditParseEscCodesWide (const char *text);
 
 #endif

@@ -11,13 +11,17 @@
 
 #define SIZEOFELEM(x)  (sizeof(x) / sizeof(x[0]))
 
-
 typedef struct {
     RedditLinkList *list;
     int displayed;
     int offset;
     int selected;
 } LinkScreen;
+
+typedef struct {
+    RedditCommentList *list;
+
+} CommentStr;
 
 
 RedditState *globalState;
@@ -43,42 +47,52 @@ void linkScreenFree(LinkScreen *screen)
    */
 void drawScreen(LinkScreen *screen)
 {
-    int i;
-    RedditLink *link = NULL;
+    int i, screenLines;
+    wchar_t buffer[COLS + 1];
+    wchar_t format[2048];
+
     if (screen == NULL)
         return ;
 
     erase();
     // setup colors for currently selected post
-    start_color();
-    init_pair(1, COLOR_RED, COLOR_WHITE);
 
-    link = screen->list->first;
-    for(i = 0; i < screen->offset; i++){
-        link = link->next;
-    }
 
-    for(i = 0; i < screen->displayed; i++)
-    {
-        wchar_t buffer[2048];
-        if(i == screen->selected) attron(COLOR_PAIR(1));
-        swprintf(buffer, 2048, L"%d. [%4d] %s - %ls\n", i + screen->offset + 1, link->score, link->author, link->wtitle);
+    screenLines = screen->offset + screen->displayed + 1;
+
+    attron(COLOR_PAIR(1));
+
+    for(i = screen->offset; i < screenLines; i++) {
+        size_t bufLen;
+        if(i == screen->selected) {
+            attroff(COLOR_PAIR(1));
+            attron(COLOR_PAIR(2));
+        } else {
+            attron(COLOR_PAIR(1));
+        }
+        swprintf(buffer, COLS + 1, L"%d. [%4d] %20s - ", i + 1, screen->list->links[i]->score, screen->list->links[i]->author); //, screen->list->links[i]->wtitle);
+        bufLen = wcslen(buffer);
+        swprintf(format, 2048, L"%%-%dls\n", COLS - bufLen);
+        swprintf(buffer + bufLen, COLS - bufLen + 1, format, screen->list->links[i]->wtitle);
+
         addwstr(buffer);
-        attroff(COLOR_PAIR(1));
-        link = link->next;
+        if (i == screen->selected)
+            attroff(COLOR_PAIR(2));
     }
 
     // draw things on the screen
+    touchwin(stdscr);
     refresh();
 }
 
 void linkScreenDown(LinkScreen *screen)
 {
     screen->selected++;
-    if (screen->selected + 1 > screen->displayed) {
-        screen->selected--;
+    if (screen->selected > screen->offset + screen->displayed) {
         if (screen->offset + screen->displayed + 1 < screen->list->linkCount)
             screen->offset++;
+        else
+            screen->selected--;
 
     }
 }
@@ -86,11 +100,10 @@ void linkScreenDown(LinkScreen *screen)
 void linkScreenUp(LinkScreen *screen)
 {
     screen->selected--;
-    if (screen->selected < 0) {
+    if (screen->selected < 0)
         screen->selected++;
-        if (screen->offset > 0)
-            screen->offset--;
-    }
+    if (screen->selected < screen->offset)
+        screen->offset--;
 }
 
 /*
@@ -236,7 +249,11 @@ void showSubreddit(char *subreddit)
 
     redditGetListing(screen->list);
 
-    screen->displayed = screen->list->linkCount;
+    if (screen->list->linkCount < LINES - 1)
+        screen->displayed = screen->list->linkCount - 1;
+    else
+        screen->displayed = LINES - 1;
+
     screen->offset = 0;
     screen->selected = 0;
 
@@ -286,6 +303,10 @@ int main(int argc, char *argv[])
     raw();//We want character for character input
     keypad(stdscr,1);//Enable extra keys like arrowkeys
     noecho();
+    start_color();
+    use_default_colors();
+    init_pair(1, -1, -1);
+    init_pair(2, COLOR_BLACK, COLOR_WHITE);
 
     /* Start libreddit */
     redditGlobalInit();
@@ -296,7 +317,7 @@ int main(int argc, char *argv[])
 
     /* If you want to try logging in as your user
      * Replace 'username' and 'password' with the approiate fields */
-    redditUserLoggedLogin(user, "creddit_test_user", "password");
+    //redditUserLoggedLogin(user, "", "");
 
     showSubreddit(argv[1]);
 

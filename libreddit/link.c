@@ -53,27 +53,15 @@ RedditLinkList *redditLinkListNew()
 }
 
 /*
- * Frees the 'reddit_list' linked-list from a reddit_link_list, freeing it to be used again without
- * clearing the list's info
- */
-void redditLinkListFreeLinks (RedditLinkList *list)
-{
-    RedditLink *link, *tmp;
-    for (link = list->first; link != NULL; link = tmp) {
-        tmp = link->next;
-        redditLinkFree(link);
-    }
-    list->linkCount = 0;
-    list->first = NULL;
-    list->last = NULL;
-}
-
-/*
  * Fress a reddit_link_list as well as free's all reddit_link structures attached.
  */
 void redditLinkListFree (RedditLinkList *list)
 {
-    redditLinkListFreeLinks(list);
+    int i;
+    for (i = 0; i < list->linkCount; i++)
+        redditLinkFree(list->links[i]);
+
+    free(list->links);
     free(list->subreddit);
     free(list->modhash);
     free(list);
@@ -82,22 +70,38 @@ void redditLinkListFree (RedditLinkList *list)
 void redditLinkListAddLink (RedditLinkList *list, RedditLink *link)
 {
     list->linkCount++;
-    if (list->last == NULL)
-        list->first = link;
-    else
-        list->last->next = link;
+    list->links = rrealloc(list->links, list->linkCount * sizeof(RedditLink*));
+    list->links[list->linkCount - 1] = link;
+}
 
-    list->last  = link;
+#define ARG_LINK_GET_LINK \
+    RedditLink *link = va_arg(args, RedditLink*);
+
+DEF_TOKEN_CALLBACK(parseSelftext)
+{
+    ARG_LINK_GET_LINK
+
+    link->selftext = redditParseEscCodes(parser->block->memory, parser->tokens[parser->currentToken]);
+    link->wselftext = redditParseEscCodesWide(parser->block->memory, parser->tokens[parser->currentToken]);
+}
+
+DEF_TOKEN_CALLBACK(parseTitle)
+{
+    ARG_LINK_GET_LINK
+
+    free(link->title);
+    free(link->wtitle);
+    link->title  = redditParseEscCodes(parser->block->memory, parser->tokens[parser->currentToken]);
+    link->wtitle = redditParseEscCodesWide(parser->block->memory, parser->tokens[parser->currentToken]);
 }
 
 RedditLink *redditGetLink(TokenParser *parser)
 {
-    char *tmp;
     RedditLink *link = redditLinkNew();
 
     TokenIdent ids[] = {
-        ADD_TOKEN_IDENT_STRING("selftext",      link->selftext),
-        ADD_TOKEN_IDENT_STRING("title",         link->title),
+        ADD_TOKEN_IDENT_FUNC  ("selftext",      parseSelftext),
+        ADD_TOKEN_IDENT_FUNC  ("title",         parseTitle),
         ADD_TOKEN_IDENT_STRING("id",            link->id),
         ADD_TOKEN_IDENT_STRING("permalink",     link->permalink),
         ADD_TOKEN_IDENT_STRING("author",        link->author),
@@ -117,17 +121,7 @@ RedditLink *redditGetLink(TokenParser *parser)
         {0}
     };
 
-    parseTokens(parser, ids);
-
-    tmp = link->selftext;
-    link->selftext = redditParseEscCodes(tmp);
-    link->wselftext = redditParseEscCodesWide(tmp);
-    free(tmp);
-
-    tmp = link->title;
-    link->title = redditParseEscCodes(tmp);
-    link->wtitle = redditParseEscCodesWide(tmp);
-    free(tmp);
+    parseTokens(parser, ids, link);
 
     return link;
 }
@@ -164,8 +158,8 @@ RedditErrno redditGetListing (RedditLinkList *list)
 
     TokenIdent ids[] = {
         ADD_TOKEN_IDENT_STRING("modhash", list->modhash),
-        ADD_TOKEN_IDENT_STRING("kind", kindStr),
-        ADD_TOKEN_IDENT_FUNC("data", getListingHelper),
+        ADD_TOKEN_IDENT_STRING("kind",    kindStr),
+        ADD_TOKEN_IDENT_FUNC  ("data",    getListingHelper),
         {0}
     };
 
@@ -185,7 +179,7 @@ RedditErrno redditGetListing (RedditLinkList *list)
     strcat(subred, "/.json");
 
     if (list->linkCount > 0)
-        sprintf(subred + strlen(subred), "?after=t3_%s", list->last->id);
+        sprintf(subred + strlen(subred), "?after=t3_%s", list->links[list->linkCount - 1]->id);
 
     res = redditRunParser(subred, NULL, ids, list);
 

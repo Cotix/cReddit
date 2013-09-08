@@ -307,19 +307,22 @@ TokenParserResult redditRunParser(char *url, char *post, TokenIdent *idents, ...
 
 
 
-char *redditParseEscCodes (const char *text)
+char *redditParseEscCodes (char *json, jsmntok_t token)
 {
-    int i, len = strlen(text), offset = 0;
-    char *new_text = rmalloc(len + 1);
+    int i, len = token.end - token.start, offset = 0;
+    char *new_text;
 
-    if (text == NULL)
+    if (len == 0)
         return NULL;
 
-    for (i = 0; i < len; i++) {
-        switch(text[i]) {
+    new_text = rmalloc(len + 1);
+
+    len += token.start;
+    for (i = token.start; i < len; i++) {
+        switch(json[i]) {
         case '\\':
             i++;
-            switch(text[i]) {
+            switch(json[i]) {
             case 'n':
                 new_text[offset] = '\n';
                 offset++;
@@ -330,7 +333,7 @@ char *redditParseEscCodes (const char *text)
             }
             break;
         default:
-            new_text[offset] = text[i];
+            new_text[offset] = json[i];
             offset++;
         }
     }
@@ -338,20 +341,22 @@ char *redditParseEscCodes (const char *text)
     return new_text;
 }
 
-wchar_t *redditParseEscCodesWide (const char *text)
+wchar_t *redditParseEscCodesWide (char *json, jsmntok_t token)
 {
-    int i, k, len = strlen(text), offset = 0;
-    wchar_t *new_text = rmalloc((len + 1) * sizeof(wchar_t));
-    wchar_t temp;
+    int i, k, len = token.end - token.start, offset = 0;
+    wchar_t *new_text, temp;
 
-    if (text == NULL)
+    if (len== 0)
         return NULL;
 
-    for (i = 0; i < len; i++) {
-        switch(text[i]) {
-        case L'\\':
+    new_text = rmalloc((len + 1) * sizeof(wchar_t));
+
+    len += token.start;
+    for (i = token.start; i < len; i++) {
+        switch(json[i]) {
+        case '\\':
             i++;
-            switch(text[i]) {
+            switch(json[i]) {
             case 'n':
                 new_text[offset] = L'\n';
                 offset++;
@@ -363,7 +368,7 @@ wchar_t *redditParseEscCodesWide (const char *text)
                     /* This weird piece of code converts a hex character (0-9 and a-f) into
                      * it's decimal equivelent, and then shits it over the correct number of
                      * bits coresponding to it's position in the wchar_t */
-                    temp |= (((text[i] < 58)? text[i] - 48: ((text[i] & 0x0F) + 9))) << (k << 2);
+                    temp |= (((json[i] < 58)? json[i] - 48: ((json[i] & 0x0F) + 9))) << (k << 2);
                 }
                 new_text[offset] = temp;
                 offset++;
@@ -371,7 +376,7 @@ wchar_t *redditParseEscCodesWide (const char *text)
             }
             break;
         default:
-            new_text[offset] = btowc(text[i]);
+            new_text[offset] = btowc(json[i]);
             offset++;
         }
     }

@@ -111,6 +111,9 @@ char *trueFalseString(char *string, bool tf);
 TokenParserResult redditvRunParser(char *url, char *post, TokenIdent *idents, va_list args);
 TokenParserResult redditRunParser(char *url, char *post, TokenIdent *idents, ...);
 
+char *redditParseEscCodes (char *json, jsmntok_t token);
+wchar_t *redditParseEscCodesWide (char *json, jsmntok_t token);
+
 void vparseTokens (TokenParser *parser, TokenIdent *identifiers, va_list args);
 void parseTokens  (TokenParser *parser, TokenIdent *identifiers, ...);
 
