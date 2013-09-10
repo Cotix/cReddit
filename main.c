@@ -14,7 +14,7 @@
    */
 void buildScreen(char **posts, int selected, int numposts)
 {
-    clear();
+    erase();
     // setup colors for currently selected post
     start_color();
     init_pair(1, COLOR_RED, COLOR_WHITE);
@@ -54,7 +54,7 @@ void printComment(char *author, char *text) {
 
 void buildCommentScreen(Comment *comments, int selected, int numposts)
 {
-    clear();
+    erase();
     // setup colors for currently selected post
     start_color();
     init_pair(1, COLOR_RED, COLOR_WHITE);
@@ -78,7 +78,7 @@ void buildCommentScreen(Comment *comments, int selected, int numposts)
 }
 
 void showThread(Post *posts, int selected, int displayCount) {
-    clear();
+    erase();
     // = {0} to avoid accessing unitialized memory
     Comment cList[500] = {0};
     int *commentCount = malloc(sizeof(int));

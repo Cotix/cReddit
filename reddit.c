@@ -257,7 +257,7 @@ void cleanup()
 }
 
 char *askForSubreddit() {
-	clear();
+	erase();
 	mvprintw(10, 6, "Subreddit: ");
 	int ch, i = 0;
 	char *buffer = malloc(sizeof(int) * 128);
