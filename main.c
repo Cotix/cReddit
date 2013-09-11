@@ -110,7 +110,7 @@ void showThread(Post *posts, int selected, int displayCount) {
     int c;
     while(c =wgetch(stdscr))
     {
-        if(c == 'q')
+        if (c == 'q' || c ==  'h')
             break;
         switch(c)
         {
@@ -122,7 +122,6 @@ void showThread(Post *posts, int selected, int displayCount) {
                     refresh();
                 }
                 break;
-
             case 'k': case KEY_UP:
                 if (selectedComment != 0){
                     selectedComment--;
