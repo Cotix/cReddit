@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 #include "jsmn.h"
 #include "reddit.h"
 #include <curl/curl.h>
@@ -77,7 +78,7 @@ void buildCommentScreen(Comment *comments, int selected, int numposts)
     refresh();
 }
 
-void showThread(Post *posts, int selected, int displayCount) {
+bool showThread(Post *posts, int selected, int displayCount) {
     erase();
     // = {0} to avoid accessing unitialized memory
     Comment cList[500] = {0};
@@ -108,24 +109,29 @@ void showThread(Post *posts, int selected, int displayCount) {
     buildCommentScreen(cList, selectedComment, cdisplayCount);
 
     int c;
-    while(c =wgetch(stdscr))
+    bool breakNow = false;
+    while(c = wgetch(stdscr))
     {
-        if (c == 'q' || c ==  'h')
-            break;
+        if (c == 'q' || c ==  'h' || breakNow == true)
+            return true;
+
         switch(c)
         {
             case 'j': case KEY_DOWN:
                 if (selectedComment == cdisplayCount-1) {
-                    showThread(posts, selected, displayCount+25);
+                    if (true == showThread(posts, selected, displayCount+25)) {
+                        return true;
+                    }
+
                 } else {
                     selectedComment++;
-                    refresh();
+                    /*refresh();*/
                 }
                 break;
             case 'k': case KEY_UP:
                 if (selectedComment != 0){
                     selectedComment--;
-                    refresh();
+                    /*refresh();*/
                 }
                 break;
         }
@@ -216,7 +222,6 @@ void showSubreddit(char *subreddit)
                 break;
 
             case 'l': case '\n': // Display selected thread
-
                 showThread(posts, selected, 25);
         }
         buildScreen(text, selected, displayCount); //Print the updates!!
