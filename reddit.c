@@ -194,6 +194,7 @@ void redditGetThread(char * postid, Comment * commentList, int * commentCount, i
     char buffer[2048];
 
     int atPost = 0;
+    char *isSelf;
     for(i = 0; i < 2500; i++)
     {
         if(t[i].start == -1)
@@ -235,6 +236,33 @@ void redditGetThread(char * postid, Comment * commentList, int * commentCount, i
             commentList[atPost].text = malloc(tokenLength + 1);
             memcpy(commentList[atPost].text, &chunk.memory[t[i].start], tokenLength);
             commentList[atPost].text[tokenLength] = 0;
+        }
+        else if(strcmp("selftext", buffer) == 0)
+        {
+            i++;
+            tokenLength = (t[i].end) - (t[i].start);
+            commentList[atPost].text = malloc(tokenLength + 1);
+            memcpy(commentList[atPost].text, &chunk.memory[t[i].start], tokenLength);
+            commentList[atPost].text[tokenLength] = 0;
+        }
+        else if(strcmp("is_self", buffer) == 0)
+        {
+            i++;
+            tokenLength = (t[i].end) - (t[i].start);
+            isSelf = malloc(tokenLength + 1);
+            memcpy(isSelf, &chunk.memory[t[i].start], tokenLength);
+            isSelf[tokenLength] = 0;
+        }
+        else if(strcmp("url",buffer) == 0)
+        {
+            if (strcmp("false", isSelf) == 0)
+            {
+                i++;
+                tokenLength = (t[i].end) - (t[i].start);
+                commentList[atPost].text = malloc(tokenLength + 1);
+                memcpy(commentList[atPost].text, &chunk.memory[t[i].start], tokenLength);
+                commentList[atPost].text[tokenLength] = 0;
+            }
         }
         else if(strcmp("ups",buffer) == 0)
         {

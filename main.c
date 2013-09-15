@@ -65,11 +65,20 @@ void buildCommentScreen(Comment *comments, int selected, int numposts)
     {
         if(i == selected) attron(COLOR_PAIR(1));
 
-        if(comments[i].author != NULL)
-            printw("%s\n", comments[i].author);
+        // Make the op look different
+        if (i == 0) {
+            // Here pass the contents of the author's post on as a comment and format it differently if you like
+            printComment(comments[i].author, comments[i].text);
+            continue;
+        }
 
-        if(comments[i].text != NULL)
-            printw("%s\n", comments[i].text);
+        // Handle all other commenters
+        if (comments[i].author != NULL && comments[i].text != NULL)
+            printComment(comments[i].author, comments[i].text);
+        else if (comments[i].author != NULL)
+            printComment(comments[i].author, "");
+        else if (comments[i].text != NULL)
+            printComment("Unkown", comments[i].text);
 
         attroff(COLOR_PAIR(1));
     }
@@ -80,7 +89,7 @@ void buildCommentScreen(Comment *comments, int selected, int numposts)
 
 bool showThread(Post *posts, int selected, int displayCount) {
     erase();
-    // = {0} to avoid accessing unitialized memory
+    // = {0} sets all to NULL to avoid accessing unitialized memory
     Comment cList[500] = {0};
     int *commentCount = malloc(sizeof(int));
     redditGetThread(posts[selected].id, cList, commentCount, displayCount);
@@ -103,7 +112,11 @@ bool showThread(Post *posts, int selected, int displayCount) {
         /*printComment(cList[u].author, cList[u].text);*/
         /*attroff(COLOR_PAIR(1));*/
     }
-    int selectedComment = 0;
+    int selectedComment = displayCount-26;
+    if (selectedComment > cdisplayCount)
+        selectedComment = cdisplayCount-1;
+    if (selectedComment < 0)
+        selectedComment++;
 
     refresh();
     buildCommentScreen(cList, selectedComment, cdisplayCount);
@@ -133,6 +146,13 @@ bool showThread(Post *posts, int selected, int displayCount) {
                     selectedComment--;
                     /*refresh();*/
                 }
+                break;
+
+            case 'l': case '\n': 
+                // TODO
+                // Open link/image/whateveryawant
+                // if(selectedComment == 0)
+                    // getUrlImageWhatevs(cList[0].text);
                 break;
         }
         buildCommentScreen(cList, selectedComment, cdisplayCount);
