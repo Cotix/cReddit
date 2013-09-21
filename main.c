@@ -147,13 +147,6 @@ bool showThread(Post *posts, int selected, int displayCount) {
                     /*refresh();*/
                 }
                 break;
-
-            case 'l': case '\n': 
-                // TODO
-                // Open link/image/whateveryawant
-                // if(selectedComment == 0)
-                    // getUrlImageWhatevs(cList[0].text);
-                break;
         }
         buildCommentScreen(cList, selectedComment, cdisplayCount);
 
