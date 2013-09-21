@@ -16,6 +16,8 @@ typedef struct {
     int displayed;
     int offset;
     int selected;
+    int screenLineCount;
+    wchar_t **screenLines;
 } LinkScreen;
 
 typedef struct {
@@ -37,10 +39,47 @@ LinkScreen *linkScreenNew()
 
 void linkScreenFree(LinkScreen *screen)
 {
+    int i;
     redditLinkListFree(screen->list);
+    for (i = 0; i < screen->screenLineCount; i++)
+        free(screen->screenLines[i]);
+
+    free(screen->screenLines);
     free(screen);
 }
 
+/*
+ * This function renders a single line on a link screen into that LinkScreen's
+ * line buffer. If this is called on an already rendered line, it will be
+ * rendered again.
+ *
+ * 'line' should be zero-based.
+ * 'width' is one-based, should be the width to render the line at.
+ */
+void linkScreenRenderLine (LinkScreen *screen, int line, int width)
+{
+    size_t tmp, title;
+    size_t offset;
+    if (screen->screenLineCount <= line) {
+        screen->screenLineCount = line + 1;
+        screen->screenLines = realloc(screen->screenLines, (line + 1) * sizeof(wchar_t*));
+        screen->screenLines[line] = 0;
+    }
+
+    screen->screenLines[line] = realloc(screen->screenLines[line], (width + 1) * sizeof(wchar_t));
+
+    swprintf(screen->screenLines[line], width + 1, L"%d. [%4d] %20s - ", line + 1, screen->list->links[line]->score, screen->list->links[line]->author);
+
+    offset = wcslen(screen->screenLines[line]);
+    title = wcslen(screen->list->links[line]->wtitle);
+    for (tmp = 0; tmp <= width - offset; tmp++)
+        if (tmp >= title)
+            screen->screenLines[line][tmp + offset] = (wchar_t)32;
+        else
+            screen->screenLines[line][tmp + offset] = screen->list->links[line]->wtitle[tmp];
+
+    screen->screenLines[line][width] = (wchar_t)0;
+}
 
 /*
    Prints a list of posts to the screen
@@ -48,8 +87,6 @@ void linkScreenFree(LinkScreen *screen)
 void drawScreen(LinkScreen *screen)
 {
     int i, screenLines;
-    wchar_t buffer[COLS + 1];
-    wchar_t format[2048];
 
     if (screen == NULL)
         return ;
@@ -63,19 +100,14 @@ void drawScreen(LinkScreen *screen)
     attron(COLOR_PAIR(1));
 
     for(i = screen->offset; i < screenLines; i++) {
-        size_t bufLen;
-        if(i == screen->selected) {
-            attroff(COLOR_PAIR(1));
+        if(i == screen->selected)
             attron(COLOR_PAIR(2));
-        } else {
-            attron(COLOR_PAIR(1));
-        }
-        swprintf(buffer, COLS + 1, L"%d. [%4d] %20s - ", i + 1, screen->list->links[i]->score, screen->list->links[i]->author); //, screen->list->links[i]->wtitle);
-        bufLen = wcslen(buffer);
-        swprintf(format, 2048, L"%%-%dls\n", COLS - bufLen);
-        swprintf(buffer + bufLen, COLS - bufLen + 1, format, screen->list->links[i]->wtitle);
 
-        addwstr(buffer);
+        if (screen->screenLineCount <= i)
+            linkScreenRenderLine(screen, i, COLS);
+
+        mvaddwstr(i - screen->offset, 0, screen->screenLines[i]);
+
         if (i == screen->selected)
             attroff(COLOR_PAIR(2));
     }
