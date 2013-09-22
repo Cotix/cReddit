@@ -26,6 +26,15 @@ typedef enum RedditErrno {
 
 } RedditErrno;
 
+/*
+ * This structure holds data on a cookie recieved from Reddit.  In general,
+ * these are allocated and stored automatically in the current global state, so
+ * allocating them directly isn't nessisary. The only real use it has
+ * externally is reading the name and data from a cookie in the current state
+ * so you can save it for later use. Cookies should be added to the current
+ * global state by a separate API call, and removed by another separate API
+ * call, so allocating them directly shouldn't be nessisary
+ */
 typedef struct RedditCookieLink {
     struct RedditCookieLink *next;
     char *name;
@@ -33,33 +42,46 @@ typedef struct RedditCookieLink {
 } RedditCookieLink;
 
 
+/*
+ * This structure repreents the current state of the library, or more specefically
+ * of the Reddit Session.
+ *
+ * Currently, all it does is contain a linked-list of cookies being used in the session
+ */
 typedef struct RedditState {
     RedditCookieLink *base;
 } RedditState;
 
-
+/*
+ * This is a simple enum for the current state of a logged user, representing
+ * whether or not they are currently logged-on
+ */
 typedef enum RedditUserState {
     REDDIT_USER_LOGGED_ON = 0,
     REDDIT_USER_OFFLINE   = -1
 } RedditUserState;
 
 /*
- * coresponds to a 'i3' datatype
- *
- * This structure represents data on any user.
+ * This structure represents data on any user, Ex. a logged-in user, a user who
+ * posted a comment, a user who posted a link, etc.
  */
 typedef struct RedditUser {
-    char *name;
-    char *modhash;
+    char *name; /* Username / reddit handle */
+    char *modhash; /* modhash returned in conjunction with the userdata */
 
-    char *id;
+    char *id; /* The user's unique Base-36 ID */
 
-    int commentKarma;
-    int linkKarma;
+    int commentKarma; /* User's current comment karma count */
+    int linkKarma; /* User's current link karma count */
 
-    unsigned int flags;
+    unsigned int flags; /* used as a bitfield for the define's below */
 } RedditUser;
 
+/*
+ * bitfield values for the RedditUser flags value. | (or) these values together
+ * with flags to set them, and & (and) against the ! (not) of this value to
+ * unset them.  Use & (and) against the define and flags to see if it is set
+ */
 #define REDDIT_USER_HAS_MAIL       1
 #define REDDIT_USER_HAS_MOD_MAIL   2
 #define REDDIT_USER_OVER_18        4
@@ -69,14 +91,15 @@ typedef struct RedditUser {
 
 
 /*
- * Structure representing a currently logged-on user
- *
- * Technically a superset of 'reddit_user', coresponds to
- * a user that is or is going to log-in.
+ * A superset of 'reddit_user', coresponds to a user that is or is going to
+ * log-in. Includes a full RedditUser as well as extra info related to
+ * logged-in state
  */
 typedef struct RedditUserLogged {
     RedditUserState userState;
-    bool stayLoggedOn;
+    bool stayLoggedOn; /* If this is set when logged-in, the API will request
+                        * a persistant cookie, which you can then save and use
+                        * again later-on */
 
     RedditUser *userInfo;
 } RedditUserLogged;
@@ -84,7 +107,10 @@ typedef struct RedditUserLogged {
 
 
 /*
- * Structure representing a comment on a reddit link or post
+ * Structure representing a comment on a reddit link or selfpost
+ *
+ * The members themselves related directly to what they store. The structure
+ * itself wroks exactly like RedditUser as far as the 'flags' variable goes.
  */
 typedef struct RedditLink {
     struct RedditLink *next;
@@ -96,6 +122,11 @@ typedef struct RedditLink {
     char *author;
     char *url;
 
+    /*
+     * These members are versions of title and selftext in wchar_t* format. The only
+     * difference from the char* versions is that unicode characters are only in
+     * the wchar_t* versions. Everything else is the same.
+     */
     wchar_t *wtitle;
     wchar_t *wselftext;
 
@@ -117,7 +148,10 @@ typedef struct RedditLink {
 #define REDDIT_LINK_HIDDEN        32
 #define REDDIT_LINK_DISTINGUISHED 64
 
-
+/*
+ * This enum represents the sorting to be requested when getting a list
+ * of links from Reddit.
+ */
 typedef enum RedditListType {
     REDDIT_HOT = 0,
     REDDIT_NEW = 1,
@@ -126,6 +160,13 @@ typedef enum RedditListType {
     REDDIT_TOP = 4
 } RedditListType;
 
+/*
+ * This structure represents a full list of RedditLink's. The big reason it's here
+ * is because you can use the API call for getting a list of RedditLink's from a subreddit
+ * more then once on the same list to get more Links.
+ *
+ * 'subreddit' should be a string with the name of the subreddit, Ex. '/','/r/linux',etc.
+ */
 typedef struct RedditLinkList {
     char *subreddit;
     char *modhash;
@@ -135,6 +176,31 @@ typedef struct RedditLinkList {
     RedditLink **links;
 } RedditLinkList;
 
+/*
+ * Similar to RedditUser in structure, but it's use is a bit more complex:
+ *
+ * Reddit has two ways of informing about comments. Specefically, in any
+ * comment listing from Reddit, you'll have directly displayed comments and
+ * hidden comments.  'hidden comments' are simply the 'click to see more
+ * replies' on the webpage which aren't displayed by default unless you click
+ * to see them. A RedditComment can have any number of actual, full comment's
+ * in replies, and also any number of 'stub' children which aren't displayed
+ * but can be requested via the 'morechildren' API call.
+ *
+ * The replies array is simply an array of pointers to RedditComment structures
+ * of the full replies to this current comment. 'replyCount' tells you how many
+ * direct replies we have in full to this comment, and is also the list of
+ * comments that should be displayed.
+ *
+ * 'totalReplyCount' represents the total number of hidden replies to this
+ * comment.  This includes any replies to our comment, any replies to replies
+ * to our comment, and so on.
+ *
+ * The 'directChildrenCount' is both the number of char*'s in
+ * 'directChildrenIds' and the number of direct replies to our current comment.
+ * The array 'directChildrenIds' is a string array of the Base-36 id's of the
+ * comments, for use in the 'morechildren' API call.
+ */
 typedef struct RedditComment {
     int replyCount;
     struct RedditComment **replies;
@@ -144,6 +210,7 @@ typedef struct RedditComment {
     char *parentId;
     char *body;
 
+    /* copy of 'body' text which includes unicode characters */
     wchar_t *wbody;
 
     int ups;
@@ -162,6 +229,9 @@ typedef struct RedditComment {
 #define REDDIT_COMMENT_EDITED        4
 #define REDDIT_COMMENT_NEED_TO_GET   8
 
+/*
+ * The type of sorting that should be used when getting the list of comments
+ */
 typedef enum RedditCommentSortType {
     REDDIT_SORT_BEST = 0,
     REDDIT_SORT_TOP,
@@ -171,6 +241,12 @@ typedef enum RedditCommentSortType {
     REDDIT_SORT_RANDOM
 } RedditCommentSortType;
 
+/*
+ * A structure representing a full list of comments to a link/post.
+ *
+ * The 'baseComment' is a RedditComment structure that has no data except replies.
+ * The replies to baseComment are the top-level comments to the link/post.
+ */
 typedef struct RedditCommentList {
     RedditComment *baseComment;
 
@@ -180,43 +256,76 @@ typedef struct RedditCommentList {
 } RedditCommentList;
 
 
-extern void  redditCookieNew        (char *name, char *data);
-extern void  redditCookieFree       (RedditCookieLink *link);
-extern void  redditRemoveCookie     (char *name);
+/*
+ * calls to create and free a cookie
+ */
+extern void  redditCookieNew  (char *name, char *data);
+extern void  redditCookieFree (RedditCookieLink *link);
+
+/* This removes a cookie which has the name 'name' from the global state */
+extern void  redditRemoveCookie (char *name);
+
+/* This returns a formatted string of all the cookies in the current global
+ * state.  Ex. 'reddit_session=205858&cookie2=stuff' */
 extern char *redditGetCookieString  ();
 
+/* These functions are for creating, free, and changing the global state in the
+ * library */
 extern RedditState *redditStateNew  ();
 extern void         redditStateFree (RedditState *state);
 extern RedditState *redditStateGet  ();
 extern void         redditStateSet  (RedditState *state);
 
-extern RedditUser        *redditUserNew         ();
-extern void               redditUserFree        (RedditUser  *log);
+/* These two functions create a blank user and free an existing user */
+extern RedditUser *redditUserNew  ();
+extern void        redditUserFree (RedditUser  *log);
 
-extern RedditUserLogged *redditUserLoggedNew    ();
-extern void              redditUserLoggedFree   (RedditUserLogged *user);
-extern RedditErrno       redditUserLoggedLogin  (RedditUserLogged *log, char *name, char *passwd);
-extern RedditErrno       redditUserLoggedUpdate (RedditUserLogged *user);
+/* Creates a new logged user as well as creates a new RedditUser in the logged
+ * user structure */
+extern RedditUserLogged *redditUserLoggedNew  ();
+extern void              redditUserLoggedFree (RedditUserLogged *user);
 
-extern RedditLink        *redditLinkNew              ();
-extern void               redditLinkFree             (RedditLink *link);
-extern RedditLinkList    *redditLinkListNew          ();
-extern void               redditLinkListFree         (RedditLinkList *list);
-extern void               redditLinkListFreeLinks    (RedditLinkList *list);
+/* This logs a logged user in via 'name' and 'passwd' The status is returned
+ * via the RedditErrno and the RedditUserState enum in a RedditUserLogged */
+extern RedditErrno redditUserLoggedLogin  (RedditUserLogged *log, char *name, char *passwd);
+extern RedditErrno redditUserLoggedUpdate (RedditUserLogged *user);
 
-extern RedditErrno        redditGetListing           (RedditLinkList *list);
+/* functions to create a new blank link and free it */
+extern RedditLink *redditLinkNew  ();
+extern void        redditLinkFree (RedditLink *link);
 
+/* Functions to Create a new list of Links, free that list, and just free the
+ * links creating the list */
+extern RedditLinkList *redditLinkListNew       ();
+extern void            redditLinkListFree      (RedditLinkList *list);
+extern void            redditLinkListFreeLinks (RedditLinkList *list);
 
-extern RedditComment       *redditCommentNew            ();
-extern void                 redditCommentFree           (RedditComment *comment);
-extern void                 redditCommentAddReply       (RedditComment *comment, RedditComment *reply);
-extern RedditCommentList   *redditCommentListNew        ();
-extern void                 redditCommentListFree       (RedditCommentList *list);
-extern RedditErrno         redditGetCommentList         (RedditCommentList *list);
-extern RedditErrno         redditGetCommentChildren     (RedditCommentList *list, RedditComment *parent);
-extern char                *redditCopyString            (const char *string);
+/* Returns a list of Links for a subreddit, using the settings in 'list' */
+extern RedditErrno redditGetListing (RedditLinkList *list);
 
-extern void   redditGlobalInit();
-extern void   redditGlobalCleanup();
+/* Create a new blank comment, free a comment, and add a comment structure as a
+ * reply to a comment: NOTE: redditCommentAddReply doesn't add the comment as a reply
+ * on Reddit.com. */
+extern RedditComment *redditCommentNew      ();
+extern void           redditCommentFree     (RedditComment *comment);
+extern void           redditCommentAddReply (RedditComment *comment, RedditComment *reply);
+
+/* Create and free a list of comments */
+extern RedditCommentList *redditCommentListNew  ();
+extern void               redditCommentListFree (RedditCommentList *list);
+
+/* Call Reddit to get a list of comments */
+extern RedditErrno redditGetCommentList (RedditCommentList *list);
+
+/* Call the morechildren API to get children of 'parent' */
+extern RedditErrno redditGetCommentChildren (RedditCommentList *list, RedditComment *parent);
+
+/* simply returns an allocated copy of a string. */
+extern char *redditCopyString (const char *string);
+
+/* Global init and clean-up functions. These should be called at the start and
+ * end of a program, respectivly. */
+extern void redditGlobalInit();
+extern void redditGlobalCleanup();
 
 #endif
