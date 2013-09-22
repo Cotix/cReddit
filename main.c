@@ -53,7 +53,7 @@ void printComment(char *author, char *text) {
     printw("    %s\n", text);
 }
 
-void buildCommentScreen(Comment *comments, int selected, int numposts)
+void buildCommentScreen(Comment *comments, int selected, int numposts, int offset)
 {
     erase();
     // setup colors for currently selected post
@@ -61,8 +61,9 @@ void buildCommentScreen(Comment *comments, int selected, int numposts)
     init_pair(1, COLOR_RED, COLOR_WHITE);
 
     int i;
-    for(i = 0; i < numposts; i++)
+    for (i = 0; i < numposts; i++)
     {
+        i += offset;
         if(i == selected) attron(COLOR_PAIR(1));
 
         // Make the op look different
@@ -81,6 +82,7 @@ void buildCommentScreen(Comment *comments, int selected, int numposts)
             printComment("Unkown", comments[i].text);
 
         attroff(COLOR_PAIR(1));
+        i -= offset;
     }
 
     // draw things on the screen
@@ -119,7 +121,12 @@ bool showThread(Post *posts, int selected, int displayCount) {
         selectedComment++;
 
     refresh();
-    buildCommentScreen(cList, selectedComment, cdisplayCount);
+
+    int offset;
+    offset = displayCount-26;
+    if (offset < 0)
+        offset = 0;
+    buildCommentScreen(cList, selectedComment, cdisplayCount, offset);
 
     int c;
     bool breakNow = false;
@@ -138,17 +145,19 @@ bool showThread(Post *posts, int selected, int displayCount) {
 
                 } else {
                     selectedComment++;
-                    /*refresh();*/
                 }
                 break;
             case 'k': case KEY_UP:
-                if (selectedComment != 0){
-                    selectedComment--;
-                    /*refresh();*/
+                if (selectedComment == offset && selectedComment != 0){
+                    if (true == showThread(posts, selectedComment, displayCount-25)) {
+                        return true;
+                    }
                 }
+                else if (selectedComment != 0)
+                    selectedComment--;
                 break;
         }
-        buildCommentScreen(cList, selectedComment, cdisplayCount);
+        buildCommentScreen(cList, selectedComment, cdisplayCount, offset);
 
     }
 }
