@@ -12,7 +12,7 @@
 
 
 /*
- * Allocate a new reddit_state and set any needed values to defaults
+ * Allocate a new RedditState and set any needed values to defaults
  */
 RedditState *redditStateNew()
 {
@@ -24,8 +24,8 @@ RedditState *redditStateNew()
 }
 
 /*
- * Frees a reddit_state returned by reddit_state_new()
- * Also frees anything attached to the reddit_state, such as the cookie linked-list
+ * Frees a RedditState returned by redditStateNew()
+ * Also frees anything attached to the RedditState, such as the cookie linked-list
  */
 void redditStateFree(RedditState *state)
 {
@@ -43,7 +43,7 @@ void redditStateFree(RedditState *state)
 }
 
 /*
- * Returns the current reddit_state the library is using
+ * Returns the current RedditState the library is using
  */
 RedditState *redditStateGet()
 {
@@ -51,7 +51,7 @@ RedditState *redditStateGet()
 }
 
 /*
- * Sets the current reddit_state that the library will use
+ * Sets the current RedditState that the library will use
  */
 void redditStateSet(RedditState *state)
 {

@@ -6,6 +6,9 @@
 
 #include "global.h"
 
+/*
+ * The definition of the currentRedditState variable. See global.h for info
+ */
 RedditState *currentRedditState = NULL;
 
 /*
@@ -31,6 +34,11 @@ void *rrealloc(void *old, size_t bytes)
     return m;
 }
 
+/*
+ * These initalize the library and close the library
+ *
+ * Currently they just start and end the curl library
+ */
 void redditGlobalInit()
 {
     curl_global_init(CURL_GLOBAL_ALL);

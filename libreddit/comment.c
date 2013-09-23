@@ -10,7 +10,7 @@
 #include "token.h"
 
 /*
- * Creates a new reddit_comment
+ * Creates a new redditComment
  */
 RedditComment *redditCommentNew ()
 {
@@ -21,7 +21,7 @@ RedditComment *redditCommentNew ()
 }
 
 /*
- * Recurrisivly free's all replys on a reddit_comment
+ * Recurrisivly free's all replys on a RedditComment
  */
 void redditCommentFreeReplies (RedditComment *comment)
 {
@@ -33,7 +33,7 @@ void redditCommentFreeReplies (RedditComment *comment)
 }
 
 /*
- * Frees all of a comment as well as all of it's replies
+ * Frees all of a RedditComment as well as all of it's replies
  */
 void redditCommentFree (RedditComment *comment)
 {
@@ -53,7 +53,7 @@ void redditCommentFree (RedditComment *comment)
 }
 
 /*
- * Chains a comment as a reply on another comment.
+ * Chains a RedditComment as a reply on another RedditComment.
  */
 void redditCommentAddReply (RedditComment *comment, RedditComment *reply)
 {
@@ -63,6 +63,9 @@ void redditCommentAddReply (RedditComment *comment, RedditComment *reply)
 
 }
 
+/*
+ * Creates a new blank list of comments
+ */
 RedditCommentList *redditCommentListNew ()
 {
     RedditCommentList *list = rmalloc(sizeof(RedditCommentList));
@@ -70,6 +73,9 @@ RedditCommentList *redditCommentListNew ()
     return list;
 }
 
+/*
+ * Frees that list of comments
+ */
 void redditCommentListFree (RedditCommentList *list)
 {
     redditCommentFree(list->baseComment);
@@ -79,6 +85,8 @@ void redditCommentListFree (RedditCommentList *list)
     free(list);
 }
 
+/* Simple macro which expands to to the definitions of the varidic arguments
+ * set to parseTokens */
 #define ARG_COMMENT_LISTING \
     RedditCommentList *list = va_arg(args, RedditCommentList*); \
     RedditComment *comment = va_arg(args, RedditComment*);
@@ -86,7 +94,7 @@ void redditCommentListFree (RedditCommentList *list)
 /*
  * Not really sure there is a good way to avoid the fact that to parse the array
  * requires directly going over the tokens (Which you don't really want to have to do,
- * it's best to let the token_parser handle the actual parsing of the tokens).
+ * it's best to let the TokenParser handle the actual parsing of the tokens).
  *
  * Either way, this function simply loops over an array of id's for comments which are
  * attached to the current comment, but not displayed, and adds a copy of that string
@@ -107,6 +115,13 @@ DEF_TOKEN_CALLBACK(getCommentRepliesMore)
     }
 }
 
+/*
+ * This callback is sort of a 'dispatch' which simply deligates what to do to the relevant functions
+ *
+ * In the event of a 't3' datatype, we have a RedditLink and call redditGetLink to parse it
+ * A 't1' is a comment, so we use redditGetComment, and then redditCommentAddReply
+ * A 'more' type means that it's list of comment 'stubs' for a morechildren API call.
+ */
 DEF_TOKEN_CALLBACK(getCommentListHelper)
 {
     ARG_COMMENT_LISTING
@@ -143,6 +158,11 @@ DEF_TOKEN_CALLBACK(getCommentListHelper)
     }
 }
 
+/*
+ * Simple callback, which is called when we encounter a "replies" field.
+ * It simply calls another callback everytime a 'data' key is found, which
+ * may or may not refer to a reply or a RedditLink.
+ */
 DEF_TOKEN_CALLBACK(getCommentReplies)
 {
     ARG_COMMENT_LISTING
@@ -158,7 +178,15 @@ DEF_TOKEN_CALLBACK(getCommentReplies)
     free(kindStr);
 }
 
-
+/*
+ * This code parses a JSON object to pull out a RedditComment. The 'getCommentReplies' 
+ * callback makes this all work, as it handles the case where 'replies' contains a 
+ * number of more RedditComment structures. That callback calls redditGetComment on
+ * those objects in a recursive fashion to parse them.
+ *
+ * Beyond that, the list of TokenIdent's is fairly self-explainatory, it simply maps
+ * the variables of a RedditComment to it's key in the JSON.
+ */
 RedditComment *redditGetComment(TokenParser *parser, RedditCommentList *list)
 {
     RedditComment *comment = redditCommentNew();
@@ -180,19 +208,15 @@ RedditComment *redditGetComment(TokenParser *parser, RedditCommentList *list)
 
     parseTokens(parser, ids, list, comment);
 
-    /*
-    tmp = comment->body;
-    comment->body = redditParseEscCodes(tmp);
-    comment->wbody = redditParseEscCodesWide(tmp);
-    free(tmp);
-    */
-
     return comment;
 }
 
 /*
- * TODO: implement sorting via the 'reddit_comment_sort_type' enum setting in a
- * reddit_comment_list
+ * TODO: implement sorting via the 'RedditCommentSortType' enum setting in a
+ * RedditCommentList
+ *
+ * This function calls Reddit to get the list of comments on a link, and then stores them
+ * in a RedditCommentList.
  */
 RedditErrno redditGetCommentList (RedditCommentList *list)
 {
@@ -228,6 +252,9 @@ RedditErrno redditGetCommentList (RedditCommentList *list)
 /*
  * This function makes a 'morechildren' API call and retrieves all the
  * children assosiated with 'parent'
+ *
+ * FIXME: Doesn't yet work correctly, it needs separate callbacks, the format
+ * is slightly different then the getCommentListHelper callback is expecting.
  */
 RedditErrno redditGetCommentChildren (RedditCommentList *list, RedditComment *parent)
 {

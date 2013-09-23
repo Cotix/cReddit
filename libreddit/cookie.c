@@ -10,7 +10,7 @@
 
 
 /*
- * Adds a new cookie to current_reddit_state
+ * Adds a new cookie to currentRedditState
  */
 void redditCookieNew(char *name, char *data)
 {
@@ -35,7 +35,7 @@ void redditCookieNew(char *name, char *data)
 }
 
 /*
- * Free's a cookie link -- Both reddit_state_free and reddit_remove_cookie call this
+ * Free's a cookie link -- Both redditStateFree and redditRemoveCookie call this
  * function. You should probably use one of those for what you need.
  *
  * This function does no clean-up on the linked-list as a whole, just frees a single link
@@ -48,7 +48,7 @@ void redditCookieFree(RedditCookieLink *link)
 }
 
 /*
- * Removes a cookie with the given name from current_reddit_state
+ * Removes a cookie with the given name from currentRedditState
  */
 void redditRemoveCookie(char *name)
 {

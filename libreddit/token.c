@@ -11,7 +11,7 @@
 #include "cookie.h"
 
 /*
- * Returns a pointer to valid newalized memory_block
+ * Returns a pointer to valid new MemoryBlock
  */
 MemoryBlock *memoryBlockNew()
 {
@@ -23,7 +23,7 @@ MemoryBlock *memoryBlockNew()
 }
 
 /*
- * Frees a memory_block returned by memory_block_new()
+ * Frees a MemoryBlock returned by memoryBlockNew()
  */
 void memoryBlockFree(MemoryBlock *block)
 {
@@ -31,7 +31,9 @@ void memoryBlockFree(MemoryBlock *block)
     free(block);
 }
 
-
+/*
+ * Returns an empty allocated TokenParser
+ */
 TokenParser *tokenParserNew()
 {
     TokenParser *parser = rmalloc(sizeof(TokenParser));
@@ -40,13 +42,24 @@ TokenParser *tokenParserNew()
     return parser;
 }
 
+/*
+ * Frees a TokenParser as well as it's memory block
+ */
 void tokenParserFree(TokenParser *parser)
 {
     memoryBlockFree(parser->block);
     free(parser->tokens);
     free(parser);
 }
-
+/*
+ * This function takes a TokenParser with an already full MemoryBlock
+ * and runs jsmn over it to tokenize the JSON. Because jsmn doesn't do
+ * any allocation on it's own, this function keeps looping over jsmn_parse
+ * while it returns out of memory errors and then allocates more memory
+ * and runs it again
+ *
+ * It returns the state jsmn_parse returned.
+ */
 jsmnerr_t tokenParserCreateTokens(TokenParser *parser)
 {
     jsmn_parser jsmnParser;
@@ -91,6 +104,12 @@ char *getCopyOfToken(const char *json, jsmntok_t token)
     return copy;
 }
 
+/*
+ * Callback used by curl. The userp is a pointer to a TokenParser. This
+ * callback stores the JSON text that curl got back into the TokenParser. It
+ * reallocates the size of the memory buffer as more memory is needed for the
+ * JSON.
+ */
 size_t writeToParser(void *contents, size_t size, size_t nmemb, void *userp)
 {
     size_t realsize = size * nmemb;
@@ -113,14 +132,19 @@ size_t writeToParser(void *contents, size_t size, size_t nmemb, void *userp)
  */
 char *trueFalseString(char *string, bool tf)
 {
-    if (tf) {
+    if (tf)
         strcpy(string, "true");
-    } else {
+    else
         strcpy(string, "false");
-    }
+ 
     return string;
 }
 
+/*
+ * Takes in a string (const or not) and returns an allocated version of it. Since
+ * all the structures the library uses assumes allocated strings, this function
+ * allows literals to be used easily by wrapping them with this function.
+ */
 char *redditCopyString(const char *string)
 {
     char *newStr = rmalloc(strlen(string) + 1);
@@ -128,14 +152,27 @@ char *redditCopyString(const char *string)
     return newStr;
 }
 
-#define CALL_TOKEN_FUNC(func, parser, idents, args)              \
-    do {                                                         \
+/*
+ * Small macro for calling a function callback It creates a copy of the va_list,
+ * runs the callback with that copy, and then ends the list.
+ */
+#define CALL_TOKEN_FUNC(func, parser, idents, args)             \
+    do {                                                        \
         va_list argsCopy;                                       \
         va_copy(argsCopy, args);                                \
         (func) (parser, idents, argsCopy);                      \
         va_end(argsCopy);                                       \
     } while (0)
 
+/*
+ * This function handles the bulk of the token parser work. It 'performs' the action
+ * specified by a TokenIdent.
+ *
+ * When called, it checks if the current token has an equal name to the current
+ * TokenIdent. If it does, then it checks the tokens action and calls the
+ * callback on a TOKEN_CHECK_CALL, else it checks for TOKEN_SET and does proper
+ * casting and assignments in those cases depending on the type of token.
+ */
 int performIdentAction(TokenParser *p, TokenIdent *identifiers, int i, va_list args)
 {
     char *tmp = NULL;
@@ -187,20 +224,20 @@ int performIdentAction(TokenParser *p, TokenIdent *identifiers, int i, va_list a
  * This function parses a json object, looking for tokens and calling the proper
  * function callback if nessisary
  *
- * When called, this function will assume tokens[0] points to the start of an object, and
- * will return if this is not the case
+ * When called, this function will assume p->tokens[p->currentToken] points to
+ * the start of an object, and will return if this is not the case
  *
- * The intention is that the 'tokens' pointer will be incremented to the object you want to
- * parse when calling this
+ * The intention is that the 'p->currentToken' count will be incremented to the object
+ * you want to parse when calling this, and the parser will loop over every token inside
+ * of that object.
  */
 void vparseTokens (TokenParser *p, TokenIdent *identifiers, va_list args)
 {
     int tokenCount = 0, i;
     int identCount = 0;
 
-    while (identifiers[identCount].name != NULL) {
+    while (identifiers[identCount].name != NULL)
         identCount++;
-    }
 
     if (identCount == 0)
         return ;
@@ -228,6 +265,11 @@ void vparseTokens (TokenParser *p, TokenIdent *identifiers, va_list args)
     return ;
 }
 
+/*
+ * A varidic version of vparseTokens. It is simply a wrapper around
+ * vparseTokens which turns the arguments into a va_list, calls vparseTokens
+ * with it, and then end's the list after the function exists.
+ */
 void parseTokens (TokenParser *parser, TokenIdent *identifiers, ...)
 {
     va_list args;
@@ -236,44 +278,62 @@ void parseTokens (TokenParser *parser, TokenIdent *identifiers, ...)
     va_end(args);
 }
 
-
+/*
+ * This function controls the actual parsing, by calling curl to get the JSON,
+ * creating the jsmn tokens, and then calling the parser.
+ *
+ * 'url' is the url of the JSON you want. Ex. www.reddit.com/.json
+ * 'post' is any text that should be sent in a POST request. If you want to
+ *        do a GET, set this to NULL.
+ * 'idents' is the list of token identifiers to use when running the parser
+ * 'args' is any extra arguments to be passed on to the parser. (Normally used
+ *        by callbacks)
+ */
 TokenParserResult redditvRunParser(char *url, char *post, TokenIdent *idents, va_list args)
 {
+    /* Initalize various pieces that are needed to get and parse the JSON */
     TokenParser *parser = tokenParserNew();
     char *cookieStr = NULL;
     CURL *redditHandle = curl_easy_init();
     jsmnerr_t jsmnResult;
 
+    /* Set default response */
     TokenParserResult result = TOKEN_PARSER_SUCCESS;
 
+    /* Sets up curl to get 'url' and use writeToParser as the callback writer */
     curl_easy_setopt(redditHandle, CURLOPT_URL, url);
     curl_easy_setopt(redditHandle, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(redditHandle, CURLOPT_WRITEFUNCTION, writeToParser);
     curl_easy_setopt(redditHandle, CURLOPT_WRITEDATA, (void *)parser);
 
+    /* This gets and sets any cookies, if any are currently in the global state */
     cookieStr = redditGetCookieString();
     if (cookieStr != NULL)
         curl_easy_setopt(redditHandle, CURLOPT_COOKIE, cookieStr);
 
+    /* If we're doing a POST, then this sets curl to use POST and tells it what
+     * text to use */
     if (post != NULL) {
         curl_easy_setopt(redditHandle, CURLOPT_POST, 1);
         curl_easy_setopt(redditHandle, CURLOPT_POSTFIELDS, (void *)post);
     }
 
+    /* Set the user agent, defined in global.h */
     curl_easy_setopt(redditHandle, CURLOPT_USERAGENT, CREDDIT_USERAGENT);
 
+    /* Run curl, which will run the callback and store our text in the parser
+     * then cleanup */
     curl_easy_perform(redditHandle);
     curl_easy_cleanup(redditHandle);
 
+    /* If we didn't get any memory back for whatever reason, set our
+     * result to an error and jump to cleanup code. */
     if (parser->block->size <= 0 || parser->block->memory == NULL) {
         result = TOKEN_PARSER_CURL_FAIL;
         goto cleanup;
     }
 
-    if (strcmp(url, "http://www.reddit.com/api/morechildren") == 0) {
-        printf("Stuff: %s\n", parser->block->memory);
-    }
-
+    /* Create our tokens */
     jsmnResult = tokenParserCreateTokens(parser);
 
     if (jsmnResult != JSMN_SUCCESS) {
@@ -281,12 +341,15 @@ TokenParserResult redditvRunParser(char *url, char *post, TokenIdent *idents, va
         goto cleanup;
     }
 
+    /* Run the parser over our tokens using the idents */
     vparseTokens(parser, idents, args);
 
+    /* We're done, set the response and then goto cleanup code */
     result = TOKEN_PARSER_SUCCESS;
 
 
 
+    /* Simply frees any allocated memory used in the function */
 cleanup:;
 
     free(cookieStr);
@@ -295,6 +358,11 @@ cleanup:;
     return result;
 }
 
+/*
+ * This his a varidic wrapper around redditvRunParser. It takes a variable
+ * number of arguments and creates a va_list out of them to call
+ * redditvRunParser with.
+ */
 TokenParserResult redditRunParser(char *url, char *post, TokenIdent *idents, ...)
 {
     TokenParserResult result;
@@ -305,8 +373,11 @@ TokenParserResult redditRunParser(char *url, char *post, TokenIdent *idents, ...
     return result;
 }
 
-
-
+/*
+ * Takes a string of json and the token containing the string data, and
+ * parses out any '\' excape characters, such as '\n' and '\u'. This version
+ * returns a straight char* version, meaning unicode characters are discarded.
+ */
 char *redditParseEscCodes (char *json, jsmntok_t token)
 {
     int i, len = token.end - token.start, offset = 0;
@@ -341,6 +412,10 @@ char *redditParseEscCodes (char *json, jsmntok_t token)
     return new_text;
 }
 
+/*
+ * This is another verison of the above redditParseEscCodes. The difference is
+ * that this returns a whcar_t, so unicode characters are encoded correctly
+ */
 wchar_t *redditParseEscCodesWide (char *json, jsmntok_t token)
 {
     int i, k, len = token.end - token.start, offset = 0;

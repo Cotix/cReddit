@@ -17,6 +17,11 @@ typedef struct MemoryBlock {
     size_t  size;
 } MemoryBlock;
 
+/*
+ * Represents the state of a parser for parsing Reddit JSON. It holds a block
+ * of memory with the JSON text, the jsmn parsed tokens, the number of tokens,
+ * and the current token that is being parsed.
+ */
 typedef struct TokenParser {
     MemoryBlock *block;
     jsmntok_t *tokens;
@@ -24,6 +29,9 @@ typedef struct TokenParser {
     int       currentToken;
 } TokenParser;
 
+/*
+ * A simple enum representing possible errors from the parser
+ */
 typedef enum TokenParserResult {
     TOKEN_PARSER_SUCCESS   = 0,
     TOKEN_PARSER_CURL_FAIL,
@@ -39,14 +47,8 @@ typedef enum TokenParserResult {
  * When getting output from Reddit, key's stay largly the same every time
  * something is called. The value is then the data you're interested in. This
  * structure handles detailing how to handle a paticular key value, whether it
- * should be handled by assigning the value to a pointer, check if the contained
- * pointer equals the current value and then call a function callback if so, or
- * call a function callback to handle it when that specefic key is found
- *
- * The function callback get's sent a large list of data, but it's pretty simple,
- * It recieves:
- *   A char* to the full json text being parsed
- *
+ * should be handled by assigning the value to a pointer, or call a function
+ * callback to handle it when that specefic key is found.
  */
 typedef struct TokenIdent {
 
@@ -61,12 +63,12 @@ typedef struct TokenIdent {
     } type;
 
     enum {
-        /* If equal to 'TOKEN_SET', then 'var_ptr' will be cast and assigned
-         * based on the 'token_type' to the value of the token after 'token_name' */
+        /* If equal to 'TOKEN_SET', then 'value' will be cast and assigned
+         * based on the 'type' to the value of the token after 'name' */
         TOKEN_SET = 0,
 
-        /* If 'token_name' is found as a key, then 'token_func' will be called
-         * and 'var_ptr' will be completely ignored. */
+        /* If 'name' is found as a key, then 'funcCallback' will be called
+         * and 'value' will be completely ignored. */
         TOKEN_CHECK_CALL
     } action;
 
@@ -75,24 +77,21 @@ typedef struct TokenIdent {
     void *value;
 
     /* If using 'TOKEN_BOOL', then if the token is 'true', *value will be cast as an
-     * unsigned int, and |= with bit_mask. If 'false', it will be &= ~bit_mask */
+     * unsigned int, and |= with bitMask. If 'false', it will be &= ~bitMask */
     unsigned int bitMask;
 
     /* Simple flag -- This handles the case fo 'TOKEN_STRING' in combo with 'TOKEN_SET'
-     * In that case, if this is set to '1' then free() will be called on var_ptr
+     * In that case, if this is set to '1' then free() will be called on value 
      * before it is overwritten to avoid a memory leak */
     bool freeFlag;
 
     /* A function to call when this token is found
      *
      * Parameters from left to right:
-     *   Full json character data
-     *   Array of all the parsed tokens
-     *   Pointer to an int containing the current token in the array of tokens
-     *     Note: The pointer is incremented one token past where 'token_name' is located
-     *     in the array
-     *   A temporary buffer (Which is already malloced and can be realloced as much as wanted)
-     *   The extra arguments send over to parse_tokens */
+     *   Pointer to the current parser, which includes the json text and current token
+     *   Pointer to idents, which is an array detailing how to parse the tokens.
+     *   The extra arguments send over to parseTokens
+     */
     void (*funcCallback) (TokenParser       *parser,
                            struct TokenIdent *idents,
                            va_list             args
@@ -100,20 +99,33 @@ typedef struct TokenIdent {
 
 } TokenIdent;
 
+/*
+ * Functions for handling allocationg of a TokenParser
+ */
 TokenParser *tokenParserNew();
-void          tokenParserFree(TokenParser *parser);
+void         tokenParserFree(TokenParser *parser);
 
-char *getCopyOfToken(const char *json, jsmntok_t token);
+/*
+ * Some bsic functions for creating MemoryBlocks
+ */
 MemoryBlock *memoryBlockNew();
 void memoryBlockFree(MemoryBlock *block);
+
+char *getCopyOfToken(const char *json, jsmntok_t token);
 char *trueFalseString(char *string, bool tf);
 
+/* Functions to get the JSON from a url and run the parser over it */
 TokenParserResult redditvRunParser(char *url, char *post, TokenIdent *idents, va_list args);
 TokenParserResult redditRunParser(char *url, char *post, TokenIdent *idents, ...);
 
+/* Functions to take a jsmn token and return a copy of it after it has been
+ * parsed for excaped sequences, such as '\n' and '\u'. 'Wide' returns a wchar_t
+ * with unicode characters. */
 char *redditParseEscCodes (char *json, jsmntok_t token);
 wchar_t *redditParseEscCodesWide (char *json, jsmntok_t token);
 
+/* Runs a setup TokenParser. redditRunParser calls this. Normally it's
+ * only used in callbacks when a new object is going to be parsed */
 void vparseTokens (TokenParser *parser, TokenIdent *identifiers, va_list args);
 void parseTokens  (TokenParser *parser, TokenIdent *identifiers, ...);
 
@@ -128,10 +140,13 @@ void parseTokens  (TokenParser *parser, TokenIdent *identifiers, ...);
         tmp[token.end - token.start] = 0;                           \
     } while (0)
 
+/* Quick macros for testing jsmntok_t tokens */
 #define TOKEN_EQUALS(token, text)    (strcmp(token, text) == 0)
 #define TOKEN_IS_TRUE(json, token)   ((toupper(json[token.start])) == 'T')
 #define TOKEN_IS_FALSE(json, token)  ((toupper(json[token.start])) == 'F')
 
+/* These next macros take a token and read it in as a specefic type
+ * of JSON object, either a string, number of boolean */
 #define READ_TOKEN_AS_STRING(string, json, token)     \
     do {                                              \
         string = getCopyOfToken(json, token);      \

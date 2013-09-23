@@ -11,10 +11,10 @@
 /*
  * the below variable is a library global state for reddit (Mostly holds session cookies)
  *
- * When the library is used, you first need to use reddit_state_new() and then
- * reddit_state_set() to initalize the library with a new state. You can switch
- * to a different state at any time via reddit_state_set() and/or get the current
- * state via reddit_state_get.
+ * When the library is used, you first need to use redditStateNew() and then
+ * redditStateSet() to initalize the library with a new state. You can switch
+ * to a different state at any time via redditStateGet() and/or get the current
+ * state via redditStateGet.
  *
  * This data is needed on about every function call, storing it here instead of
  * requiring it every call it much easier.

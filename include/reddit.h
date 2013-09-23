@@ -5,6 +5,11 @@
 #include <stdbool.h>
 #include <wchar.h>
 
+/*
+ * This enum represents all possible errors from libreddit. Every function that
+ * returns an error number returns a RedditErrno set to one of these options
+ * (Which can be expanded upon as needed)
+ */
 typedef enum RedditErrno {
     /* This response indicates no error happened */
     REDDIT_SUCCESS = 0,

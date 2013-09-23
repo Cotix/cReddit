@@ -10,9 +10,9 @@
 #include "token.h"
 
 /*
- * Allocate and reture a new 'reddit_user' struct'
+ * Allocate and reture a new 'RedditUser' struct'
  *
- * A 'reddit_user' represents any and all users
+ * A 'RedditUser' represents any and all users
  */
 RedditUser *redditUserNew()
 {
@@ -25,6 +25,9 @@ RedditUser *redditUserNew()
     return log;
 }
 
+/*
+ * Frees a RedditUser and any data it has
+ */
 void redditUserFree (RedditUser *log)
 {
     free(log->name);
@@ -34,8 +37,8 @@ void redditUserFree (RedditUser *log)
 }
 
 /*
- * allocates and creates a new 'reddit_user_logged'
- * It's a superset of 'reddit_user', representing a logged-in user
+ * allocates and creates a new 'RedditUserLogged'
+ * It's a superset of 'RedditUser', representing a logged-in user
  */
 RedditUserLogged *redditUserLoggedNew()
 {
@@ -49,7 +52,7 @@ RedditUserLogged *redditUserLoggedNew()
 }
 
 /*
- * Frees a 'reddit_user_logged' and everything attached to it
+ * Frees a 'RedditUserLogged' and everything attached to it
  */
 void redditUserLoggedFree(RedditUserLogged *user)
 {
@@ -57,6 +60,10 @@ void redditUserLoggedFree(RedditUserLogged *user)
     free(user);
 }
 
+/*
+ * This setups idents to parse a RedditUser JSON object. It doesn't use any
+ * callbacks, but simply maps key strings to members on the RedditUser object
+ */
 RedditUser *redditGetUser(TokenParser *parser)
 {
     RedditUser *user = redditUserNew();
@@ -90,7 +97,10 @@ RedditUser *redditGetUser(TokenParser *parser)
 #define ARG_LIST_LOGIN \
     RedditErrno *response = va_arg(args, RedditErrno*);
 
-
+/*
+ * Checks for errors in the array array, and sets our result to return an error
+ * if there is any errors.
+ */
 DEF_TOKEN_CALLBACK(handleErrorArray)
 {
     ARG_LIST_LOGIN
@@ -100,6 +110,9 @@ DEF_TOKEN_CALLBACK(handleErrorArray)
 
 }
 
+/*
+ * If we get a session cookie, then add it to the currentRedditState via redditCookieNew
+ */
 DEF_TOKEN_CALLBACK(handleCookie)
 {
     char *tmp = NULL;
@@ -110,9 +123,9 @@ DEF_TOKEN_CALLBACK(handleCookie)
 }
 
 /*
- * Takes a redit_user_logged and returns a reddit_login_result
+ * Takes a RedditUserLogged and returns a RedditErrno
  *
- * Logs in the user storred in the reddit_user_logged into Reddit
+ * Logs in the user storred in the RedditUserLogged into Reddit
  * Also if successful adds the 'reddit_session' cookie to the global state
  *
  */
@@ -155,9 +168,14 @@ RedditErrno redditUserLoggedLogin (RedditUserLogged *log, char *name, char *pass
     return response;
 }
 
+/* varidic arguments list for parsing a user login */
 #define ARG_LIST_USER_UPDATE \
     RedditUser **user = va_arg(args, RedditUser**);
 
+/*
+ * This callback handles a 'data' parameter and checks for a 't2', which
+ * coresponds to a RedditUser JSON object.
+ */
 DEF_TOKEN_CALLBACK(userUpdateHelper)
 {
     ARG_LIST_USER_UPDATE
@@ -180,6 +198,10 @@ DEF_TOKEN_CALLBACK(userUpdateHelper)
     }
 }
 
+/*
+ * This function updates the data in a RedditUserLogged. It leaves the user
+ * logged in, and gets a new copy of the user->userInfo RedditUser
+ */
 RedditErrno redditUserLoggedUpdate (RedditUserLogged *user)
 {
     TokenParserResult res;

@@ -12,7 +12,7 @@
 #include "jsmn.h"
 
 /*
- * Allocates an empty reddit_link structure
+ * Allocates an empty RedditLink structure
  */
 RedditLink *redditLinkNew()
 {
@@ -25,8 +25,8 @@ RedditLink *redditLinkNew()
 }
 
 /*
- * Frees a single reddit_link structure
- * Note: Doesn't free the reddit_link at 'link->next'
+ * Frees a single RedditLink structure
+ * Note: Doesn't free the RedditLink at 'link->next'
  */
 void redditLinkFree (RedditLink *link)
 {
@@ -43,7 +43,7 @@ void redditLinkFree (RedditLink *link)
 }
 
 /*
- * Allocates an empty reddit_link_list structure
+ * Allocates an empty RedditLinkList structure
  */
 RedditLinkList *redditLinkListNew()
 {
@@ -53,7 +53,7 @@ RedditLinkList *redditLinkListNew()
 }
 
 /*
- * Fress a reddit_link_list as well as free's all reddit_link structures attached.
+ * Fress a RedditLinkList as well as free's all RedditLink structures attached.
  */
 void redditLinkListFree (RedditLinkList *list)
 {
@@ -67,6 +67,9 @@ void redditLinkListFree (RedditLinkList *list)
     free(list);
 }
 
+/*
+ * Adds a RedditLink onto a RedditLinkList
+ */
 void redditLinkListAddLink (RedditLinkList *list, RedditLink *link)
 {
     list->linkCount++;
@@ -74,9 +77,15 @@ void redditLinkListAddLink (RedditLinkList *list, RedditLink *link)
     list->links[list->linkCount - 1] = link;
 }
 
+/* Macro for the varidic arguments on parseTokens */
 #define ARG_LINK_GET_LINK \
     RedditLink *link = va_arg(args, RedditLink*);
 
+/*
+ * These next two callbacks handle creating a wchar_t* and char* version
+ * of a string. Eventually should functionality should be put into the
+ * token parser itself
+ */
 DEF_TOKEN_CALLBACK(parseSelftext)
 {
     ARG_LINK_GET_LINK
@@ -95,6 +104,10 @@ DEF_TOKEN_CALLBACK(parseTitle)
     link->wtitle = redditParseEscCodesWide(parser->block->memory, parser->tokens[parser->currentToken]);
 }
 
+/*
+ * Details how to parse a RedditLink. Doesn't do much more then allocate a new
+ * RedditLink and map it's members to key strings.
+ */
 RedditLink *redditGetLink(TokenParser *parser)
 {
     RedditLink *link = redditLinkNew();
@@ -126,17 +139,20 @@ RedditLink *redditGetLink(TokenParser *parser)
     return link;
 }
 
+/* varidic function arguments for a RedditLinkList */
 #define ARG_LIST_GET_LISTING \
     RedditLinkList *list = va_arg(args, RedditLinkList*);
 
+/* 
+ * When we encounter a 't3', which is a new RedditLink, we parse it with
+ * redditGetLink, and then add it to our RedditLinkList
+ */
 DEF_TOKEN_CALLBACK(getListingHelper)
 {
     ARG_LIST_GET_LISTING
 
 
-    /* The below simply loops through all the current idents, finds the 'kind' key
-     * and checks if it's a 't3'. If it is t3, then it's another link and we call
-     * 'reddit_get_link' to parse the data and give us our link */
+    /* Search for the 'kink' ident, and check if it was set to 't3' */
     int i;
     for (i = 0; idents[i].name != NULL; i++)
         if (strcmp(idents[i].name, "kind") == 0)
