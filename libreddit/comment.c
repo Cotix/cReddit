@@ -60,7 +60,7 @@ void redditCommentAddReply (RedditComment *comment, RedditComment *reply)
     comment->replyCount++;
     comment->replies = rrealloc(comment->replies, (comment->replyCount) * sizeof(RedditComment));
     comment->replies[comment->replyCount - 1] = reply;
-
+    reply->parent = comment;
 }
 
 /*
@@ -178,6 +178,17 @@ DEF_TOKEN_CALLBACK(getCommentReplies)
     free(kindStr);
 }
 
+DEF_TOKEN_CALLBACK(handleBodyText)
+{
+    ARG_COMMENT_LISTING
+    (void)list;
+
+    free(comment->body);
+    free(comment->wbody);
+    comment->body = redditParseEscCodes(parser->block->memory, parser->tokens[parser->currentToken]);
+    comment->wbody = redditParseEscCodesWide(parser->block->memory, parser->tokens[parser->currentToken]);
+}
+
 /*
  * This code parses a JSON object to pull out a RedditComment. The 'getCommentReplies' 
  * callback makes this all work, as it handles the case where 'replies' contains a 
@@ -194,8 +205,8 @@ RedditComment *redditGetComment(TokenParser *parser, RedditCommentList *list)
     TokenIdent ids[] = {
         ADD_TOKEN_IDENT_FUNC  ("replies",       getCommentReplies),
         ADD_TOKEN_IDENT_STRING("author",        comment->author),
-        ADD_TOKEN_IDENT_STRING("body",          comment->body),
-        ADD_TOKEN_IDENT_STRING("contentText",   comment->body),
+        ADD_TOKEN_IDENT_FUNC  ("body",          handleBodyText),
+        ADD_TOKEN_IDENT_FUNC  ("contentText",   handleBodyText),
         ADD_TOKEN_IDENT_STRING("id",            comment->id),
         ADD_TOKEN_IDENT_INT   ("ups",           comment->ups),
         ADD_TOKEN_IDENT_INT   ("downs",         comment->downs),

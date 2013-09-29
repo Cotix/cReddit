@@ -209,6 +209,7 @@ typedef struct RedditLinkList {
 typedef struct RedditComment {
     int replyCount;
     struct RedditComment **replies;
+    struct RedditComment *parent;
 
     char *id;
     char *author;

@@ -21,9 +21,24 @@ typedef struct {
 } LinkScreen;
 
 typedef struct {
-    RedditCommentList *list;
+    wchar_t *text;
+    RedditComment *comment;
+    unsigned int folded : 1;
+    int foldCount;
+    int indentCount;
+} CommentLine;
 
-} CommentStr;
+typedef struct {
+    RedditCommentList *list;
+    int lineCount;
+    int allocLineCount;
+    CommentLine **lines;
+    int displayed;
+    int offset;
+    int selected;
+    int commentOpenSize;
+    unsigned int commentOpen : 1;
+} CommentScreen;
 
 
 RedditState *globalState;
@@ -33,19 +48,121 @@ LinkScreen *linkScreenNew()
 {
     LinkScreen *screen = malloc(sizeof(LinkScreen));
     memset(screen, 0, sizeof(LinkScreen));
-    screen->list = redditLinkListNew();
     return screen;
 }
 
 void linkScreenFree(LinkScreen *screen)
 {
     int i;
-    redditLinkListFree(screen->list);
     for (i = 0; i < screen->screenLineCount; i++)
         free(screen->screenLines[i]);
 
     free(screen->screenLines);
     free(screen);
+}
+
+CommentLine *commentLineNew()
+{
+    CommentLine *line = malloc(sizeof(CommentLine));
+    memset(line, 0, sizeof(CommentLine));
+    return line;
+}
+
+void commentLineFree(CommentLine *line)
+{
+    free(line->text);
+    free(line);
+}
+
+CommentScreen *commentScreenNew()
+{
+    CommentScreen *screen = malloc(sizeof(CommentScreen));
+    memset(screen, 0, sizeof(CommentScreen));
+    return screen;
+}
+
+void commentScreenFree(CommentScreen *screen)
+{
+    int i;
+    for (i = 0; i < screen->lineCount; i++)
+        commentLineFree(screen->lines[i]);
+
+    free(screen->lines);
+    free(screen);
+}
+
+void commentScreenAddLine(CommentScreen *screen, CommentLine *line)
+{
+    screen->lineCount++;
+    if (screen->lineCount >= screen->allocLineCount) {
+        screen->allocLineCount+=100;
+        screen->lines = realloc(screen->lines, sizeof(CommentLine**) * screen->allocLineCount);
+    }
+    screen->lines[screen->lineCount - 1] = line;
+}
+
+wchar_t *createCommentLine(RedditComment *comment, int width, int indent)
+{
+    wchar_t *text = malloc(sizeof(wchar_t) * (width+1));
+    int i, ilen = indent * 3, bodylen, texlen;
+
+    bodylen = wcslen(comment->wbody);
+    memset(text, 32, sizeof(wchar_t) * (width));
+    text[width] = (wchar_t)0;
+
+    swprintf(text + ilen, width + 1 - ilen, L"%s > ", comment->author);
+
+    texlen = wcslen(text);
+    for (i = 0; i <= width - texlen - 1; i++)
+        if (i <= bodylen - 1 && comment->wbody[i] != L'\n')
+            text[i + texlen] = comment->wbody[i];
+        else
+            text[i + texlen] = (wchar_t)32;
+
+    return text;
+}
+
+int getCommentScreenRecurse(CommentScreen *screen, RedditComment *comment, int width, int indent)
+{
+    int i;
+    RedditComment *current;
+    CommentLine *line;
+    int indentCur = indent + 1;
+    int nested = 0;
+    for (i = 0; i < comment->replyCount; i++) {
+        current = comment->replies[i];
+        line = commentLineNew();
+        line->text = createCommentLine(current, width, indentCur);
+        line->indentCount = indentCur;
+        line->comment = current;
+        commentScreenAddLine(screen, line);
+        if (current->replyCount) {
+            line->foldCount = getCommentScreenRecurse(screen, current, width, indentCur);
+            nested += line->foldCount;
+        }
+        nested++;
+    }
+    return nested;
+}
+
+CommentScreen *getCommentScreenFromCommentList(RedditCommentList *list, int width)
+{
+    CommentScreen *screen;
+    CommentLine *endComment;
+    if (list == NULL)
+        return NULL;
+
+    screen = commentScreenNew();
+
+    getCommentScreenRecurse(screen, list->baseComment, width, -1);
+
+    endComment = commentLineNew();
+    endComment->text = malloc(sizeof(wchar_t) * (width + 1));
+
+    swprintf(endComment->text, width+ 1, L"More Replies (%d)", list->baseComment->totalReplyCount);
+
+    commentScreenAddLine(screen, endComment);
+    return screen;
 }
 
 /*
@@ -82,8 +199,8 @@ void linkScreenRenderLine (LinkScreen *screen, int line, int width)
 }
 
 /*
-   Prints a list of posts to the screen
-   */
+ * Prints a list of posts to the screen
+ */
 void drawScreen(LinkScreen *screen)
 {
     int i, screenLines;
@@ -112,8 +229,6 @@ void drawScreen(LinkScreen *screen)
             attroff(COLOR_PAIR(2));
     }
 
-    // draw things on the screen
-    touchwin(stdscr);
     refresh();
 }
 
@@ -138,144 +253,177 @@ void linkScreenUp(LinkScreen *screen)
         screen->offset--;
 }
 
-/*
- * FIXME: COMMENTS DO !NOT! WORK YET
- */
-#if 0
-/*
-   Prints horizontal line of dashes to screen
-   */
-void printHLine(int width) {
-    int i;
-    for (i = 0; i < width; i++) {
-        printw("-");
-    }
-}
-
-/*
-   Print comments separated by hline equal to width of term
-   */
-void printComment(char *author, char *text) {
-    printHLine(COLS);
-    attron(COLOR_PAIR(1));
-    printw("%s\n", author);
-    attroff(COLOR_PAIR(1));
-    printw("    %s\n", text);
-}
-
-void buildCommentScreen(Comment *comments, int selected, int numposts)
+void commentScreenDown(CommentScreen *screen)
 {
+    screen->selected++;
+    if (screen->selected > screen->offset + screen->displayed) {
+        if (screen->offset + screen->displayed + 1 < screen->lineCount)
+            screen->offset++;
+        else
+            screen->selected--;
+    } else if (screen->selected > screen->lineCount - 1) {
+        screen->selected--;
+    }
+}
+
+void commentScreenUp(CommentScreen *screen)
+{
+    screen->selected--;
+    if (screen->selected < 0)
+        screen->selected++;
+    if (screen->selected < screen->offset)
+        screen->offset--;
+}
+
+void commentScreenDisplay(CommentScreen *screen)
+{
+    int i, screenLines;
+    wchar_t *tmpbuf;
+    int bufSize, lastLine, bufLen;
+
+    if (screen == NULL)
+        return ;
+
     erase();
-    // setup colors for currently selected post
-    start_color();
-    init_pair(1, COLOR_RED, COLOR_WHITE);
 
-    int i;
-    for(i = 0; i < numposts; i++)
-    {
-        if(i == selected) attron(COLOR_PAIR(1));
+    screenLines = screen->offset + screen->displayed + 1;
 
-        // Make the op look different
-        if (i == 0) {
-            // Here pass the contents of the author's post on as a comment and format it differently if you like
-            printComment(comments[i].author, comments[i].text);
-            continue;
-        }
+    if (screenLines > screen->lineCount)
+        screenLines = screen->lineCount;
+    attron(COLOR_PAIR(1));
 
-        // Handle all other commenters
-        if (comments[i].author != NULL && comments[i].text != NULL)
-            printComment(comments[i].author, comments[i].text);
-        else if (comments[i].author != NULL)
-            printComment(comments[i].author, "");
-        else if (comments[i].text != NULL)
-            printComment("Unkown", comments[i].text);
+    for(i = screen->offset; i < screenLines; i++) {
+        if(i == screen->selected)
+            attron(COLOR_PAIR(2));
 
-        attroff(COLOR_PAIR(1));
+        if (screen->lines[i]->text != NULL)
+            mvaddwstr(i - screen->offset, 0, screen->lines[i]->text);
+
+        if (i == screen->selected)
+            attron(COLOR_PAIR(1));
     }
 
-    // draw things on the screen
+    if (screen->commentOpen) {
+        RedditComment *current;
+        lastLine = screenLines - screen->offset;
+        bufSize = sizeof(wchar_t) * (COLS + 1);
+        bufLen = COLS;
+        tmpbuf = malloc(bufSize);
+        memset(tmpbuf, 0, bufSize);
+
+        for (i = 0; i < bufLen; i++)
+            tmpbuf[i] = L'-';
+
+        tmpbuf[bufLen] = (wchar_t)0;
+        attron(COLOR_PAIR(2));
+        mvaddwstr(lastLine, 0, tmpbuf);
+
+        attron(COLOR_PAIR(1));
+        if (screen->lineCount >= screen->selected) {
+            current = screen->lines[screen->selected]->comment;
+            if (current != NULL) {
+                swprintf(tmpbuf, bufLen, L"%s - %d Up / %d Down", current->author, current->ups, current->downs);
+                mvaddwstr(lastLine + 1, 0, tmpbuf);
+                swprintf(tmpbuf, bufLen, L"-------");
+                mvaddwstr(lastLine + 2, 0, tmpbuf);
+
+                mvaddwstr(lastLine + 3, 0, current->wbody);
+            }
+        }
+        free(tmpbuf);
+    }
+
     refresh();
 }
 
-bool showThread(Post *posts, int selected, int displayCount) {
-    erase();
-    // = {0} sets all to NULL to avoid accessing unitialized memory
-    Comment cList[500] = {0};
-    int *commentCount = malloc(sizeof(int));
-    redditGetThread(posts[selected].id, cList, commentCount, displayCount);
-    int cdisplayCount = displayCount;
-    if (*commentCount < displayCount) {
-        cdisplayCount = *commentCount;
+void commentScreenOpenComment(CommentScreen *screen)
+{
+    if (!screen->commentOpen) {
+        screen->commentOpen = 1;
+        screen->displayed -= screen->commentOpenSize - 1;
+        if (screen->selected > screen->displayed + screen->offset)
+            screen->offset = screen->selected - screen->displayed;
     }
-    free(commentCount);
+}
 
-    // Basically a copy of the code above
-    start_color();
-    // init_pair(1,COLOR_CYAN,COLOR_MAGENTA);
-
-    char *ctext[cdisplayCount]; //Text buffer for each line
-    int u;
-    for(u = 0; u < cdisplayCount; u++)
-    {
-        if(cList[u].id == 0 || cList[u].text == NULL || cList[u].id == NULL || cList[u].author == NULL)
-            continue;
-        /*printComment(cList[u].author, cList[u].text);*/
-        /*attroff(COLOR_PAIR(1));*/
+void commentScreenCloseComment(CommentScreen *screen)
+{
+    if (screen->commentOpen) {
+        screen->commentOpen = 0;
+        screen->displayed += screen->commentOpenSize - 1;
     }
-    int selectedComment = displayCount-26;
-    if (selectedComment > cdisplayCount)
-        selectedComment = cdisplayCount-1;
-    if (selectedComment < 0)
-        selectedComment++;
+}
 
-    refresh();
-    buildCommentScreen(cList, selectedComment, cdisplayCount);
+void commentScreenToggleComment(CommentScreen *screen)
+{
+    if (screen->commentOpen)
+        commentScreenCloseComment(screen);
+    else
+        commentScreenOpenComment(screen);
+}
 
+void showThread(RedditLink *link)
+{
+    CommentScreen *screen = NULL;
+    RedditCommentList *list = NULL;
+    RedditErrno err;
+
+    if (link == NULL)
+        return ;
+
+    list = redditCommentListNew();
+    list->permalink = redditCopyString(link->permalink);
+
+    err = redditGetCommentList(list);
+    if (err != REDDIT_SUCCESS)
+        goto cleanup;
+
+    screen = getCommentScreenFromCommentList(list, COLS);
+
+    screen->offset = 0;
+    screen->selected = 0;
+    screen->displayed = LINES - 1;
+    screen->commentOpenSize = LINES / 3 * 2;
+    commentScreenDisplay(screen);
     int c;
-    bool breakNow = false;
-    while(c = wgetch(stdscr))
-    {
-        if (c == 'q' || c ==  'h' || breakNow == true)
-            return true;
-
-        switch(c)
-        {
+    while((c = wgetch(stdscr))) {
+        switch(c) {
             case 'j': case KEY_DOWN:
-                if (selectedComment == cdisplayCount-1) {
-                    if (true == showThread(posts, selected, displayCount+25)) {
-                        return true;
-                    }
-
-                } else {
-                    selectedComment++;
-                    /*refresh();*/
-                }
+                commentScreenDown(screen);
+                commentScreenDisplay(screen);
                 break;
             case 'k': case KEY_UP:
-                if (selectedComment != 0){
-                    selectedComment--;
-                    /*refresh();*/
+                commentScreenUp(screen);
+                commentScreenDisplay(screen);
+                break;
+
+            case 'l': case '\n': case KEY_ENTER:
+                commentScreenToggleComment(screen);
+                commentScreenDisplay(screen);
+                break;
+            case 'q': case 'h':
+                if (screen->commentOpen) {
+                    commentScreenCloseComment(screen);
+                    commentScreenDisplay(screen);
+                } else {
+                    goto cleanup;
                 }
                 break;
-
-            case 'l': case '\n': 
-                // TODO
-                // Open link/image/whateveryawant
-                // if(selectedComment == 0)
-                    // getUrlImageWhatevs(cList[0].text);
-                break;
         }
-        buildCommentScreen(cList, selectedComment, cdisplayCount);
-
     }
+
+cleanup:;
+    redditCommentListFree(list);
+    commentScreenFree(screen);
+    return ;
 }
-#endif
 
 void showSubreddit(char *subreddit)
 {
     LinkScreen *screen;
     screen = linkScreenNew();
 
+    screen->list = redditLinkListNew();
     screen->list->subreddit = redditCopyString(subreddit);
     screen->list->type = REDDIT_HOT;
 
@@ -293,12 +441,10 @@ void showSubreddit(char *subreddit)
     drawScreen(screen); //And print the screen!
 
     int c;
-    while((c = wgetch(stdscr)))
-    {
+    while((c = wgetch(stdscr))) {
         if(c == 'q') //Lets make a break key, so i dont have to close the tab like last time :S
             break;//YEA FUCK YOU WHILE
-        switch(c)
-        {
+        switch(c) {
             case 'k': case KEY_UP:
                 linkScreenUp(screen);
                 drawScreen(screen);
@@ -310,12 +456,13 @@ void showSubreddit(char *subreddit)
                 break;
 
             case 'l': case '\n': // Display selected thread
-                //showThread(posts, selected, 25);
+                showThread(screen->list->links[screen->selected]);
                 drawScreen(screen);
                 break;
         }
     }
 
+    redditLinkListFree(screen->list);
     linkScreenFree(screen);
 }
 
@@ -349,7 +496,7 @@ int main(int argc, char *argv[])
 
     /* If you want to try logging in as your user
      * Replace 'username' and 'password' with the approiate fields */
-    //redditUserLoggedLogin(user, "", "");
+    //redditUserLoggedLogin(user, "username", "password");
 
     showSubreddit(argv[1]);
 
