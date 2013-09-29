@@ -5,7 +5,7 @@ libreddit is a sub-project of cReddit, whose focus is to create a library
 written in C which is compliant with the Reddit API.
 
 Current, the library uses libcurl for handling the networking, and libjsmn
-(Modified, and compiled in directly) as well as some internal tooks to parse
+(Modified, and compiled in directly) as well as some internal tools to parse
 the JSON objects.
 
 API

@@ -17,7 +17,10 @@ typedef struct {
     int offset;
     int selected;
     int screenLineCount;
+    int allocLineCount;
     wchar_t **screenLines;
+    int linkOpenSize;
+    unsigned int linkOpen : 1;
 } LinkScreen;
 
 typedef struct {
@@ -54,7 +57,9 @@ LinkScreen *linkScreenNew()
 void linkScreenFree(LinkScreen *screen)
 {
     int i;
-    for (i = 0; i < screen->screenLineCount; i++)
+    if (screen == NULL)
+        return ;
+    for (i = 0; i < screen->allocLineCount; i++)
         free(screen->screenLines[i]);
 
     free(screen->screenLines);
@@ -70,6 +75,8 @@ CommentLine *commentLineNew()
 
 void commentLineFree(CommentLine *line)
 {
+    if (line == NULL)
+        return ;
     free(line->text);
     free(line);
 }
@@ -84,6 +91,8 @@ CommentScreen *commentScreenNew()
 void commentScreenFree(CommentScreen *screen)
 {
     int i;
+    if (screen == NULL)
+        return ;
     for (i = 0; i < screen->lineCount; i++)
         commentLineFree(screen->lines[i]);
 
@@ -148,7 +157,6 @@ int getCommentScreenRecurse(CommentScreen *screen, RedditComment *comment, int w
 CommentScreen *getCommentScreenFromCommentList(RedditCommentList *list, int width)
 {
     CommentScreen *screen;
-    CommentLine *endComment;
     if (list == NULL)
         return NULL;
 
@@ -156,101 +164,7 @@ CommentScreen *getCommentScreenFromCommentList(RedditCommentList *list, int widt
 
     getCommentScreenRecurse(screen, list->baseComment, width, -1);
 
-    endComment = commentLineNew();
-    endComment->text = malloc(sizeof(wchar_t) * (width + 1));
-
-    swprintf(endComment->text, width+ 1, L"More Replies (%d)", list->baseComment->totalReplyCount);
-
-    commentScreenAddLine(screen, endComment);
     return screen;
-}
-
-/*
- * This function renders a single line on a link screen into that LinkScreen's
- * line buffer. If this is called on an already rendered line, it will be
- * rendered again.
- *
- * 'line' should be zero-based.
- * 'width' is one-based, should be the width to render the line at.
- */
-void linkScreenRenderLine (LinkScreen *screen, int line, int width)
-{
-    size_t tmp, title;
-    size_t offset;
-    if (screen->screenLineCount <= line) {
-        screen->screenLineCount = line + 1;
-        screen->screenLines = realloc(screen->screenLines, (line + 1) * sizeof(wchar_t*));
-        screen->screenLines[line] = 0;
-    }
-
-    screen->screenLines[line] = realloc(screen->screenLines[line], (width + 1) * sizeof(wchar_t));
-
-    swprintf(screen->screenLines[line], width + 1, L"%d. [%4d] %20s - ", line + 1, screen->list->links[line]->score, screen->list->links[line]->author);
-
-    offset = wcslen(screen->screenLines[line]);
-    title = wcslen(screen->list->links[line]->wtitle);
-    for (tmp = 0; tmp <= width - offset; tmp++)
-        if (tmp >= title)
-            screen->screenLines[line][tmp + offset] = (wchar_t)32;
-        else
-            screen->screenLines[line][tmp + offset] = screen->list->links[line]->wtitle[tmp];
-
-    screen->screenLines[line][width] = (wchar_t)0;
-}
-
-/*
- * Prints a list of posts to the screen
- */
-void drawScreen(LinkScreen *screen)
-{
-    int i, screenLines;
-
-    if (screen == NULL)
-        return ;
-
-    erase();
-    // setup colors for currently selected post
-
-
-    screenLines = screen->offset + screen->displayed + 1;
-
-    attron(COLOR_PAIR(1));
-
-    for(i = screen->offset; i < screenLines; i++) {
-        if(i == screen->selected)
-            attron(COLOR_PAIR(2));
-
-        if (screen->screenLineCount <= i)
-            linkScreenRenderLine(screen, i, COLS);
-
-        mvaddwstr(i - screen->offset, 0, screen->screenLines[i]);
-
-        if (i == screen->selected)
-            attroff(COLOR_PAIR(2));
-    }
-
-    refresh();
-}
-
-void linkScreenDown(LinkScreen *screen)
-{
-    screen->selected++;
-    if (screen->selected > screen->offset + screen->displayed) {
-        if (screen->offset + screen->displayed + 1 < screen->list->linkCount)
-            screen->offset++;
-        else
-            screen->selected--;
-
-    }
-}
-
-void linkScreenUp(LinkScreen *screen)
-{
-    screen->selected--;
-    if (screen->selected < 0)
-        screen->selected++;
-    if (screen->selected < screen->offset)
-        screen->offset--;
 }
 
 void commentScreenDown(CommentScreen *screen)
@@ -284,7 +198,7 @@ void commentScreenDisplay(CommentScreen *screen)
     if (screen == NULL)
         return ;
 
-    erase();
+    //erase();
 
     screenLines = screen->offset + screen->displayed + 1;
 
@@ -303,13 +217,20 @@ void commentScreenDisplay(CommentScreen *screen)
             attron(COLOR_PAIR(1));
     }
 
+    bufSize = sizeof(wchar_t) * (COLS + 1);
+    bufLen = COLS;
+    tmpbuf = malloc(bufSize);
+    memset(tmpbuf, 0, bufSize);
+
     if (screen->commentOpen) {
         RedditComment *current;
         lastLine = screenLines - screen->offset;
-        bufSize = sizeof(wchar_t) * (COLS + 1);
-        bufLen = COLS;
-        tmpbuf = malloc(bufSize);
-        memset(tmpbuf, 0, bufSize);
+
+        for (i = 0; i < bufLen; i++)
+            tmpbuf[i] = L' ';
+
+        for (i = lastLine; i < lastLine + screen->commentOpenSize; i++)
+            mvaddwstr(i, 0, tmpbuf);
 
         for (i = 0; i < bufLen; i++)
             tmpbuf[i] = L'-';
@@ -330,9 +251,15 @@ void commentScreenDisplay(CommentScreen *screen)
                 mvaddwstr(lastLine + 3, 0, current->wbody);
             }
         }
-        free(tmpbuf);
+    } else if (screenLines < screen->displayed + screen->offset + 1) {
+        for (i = 0; i < bufLen; i++)
+            tmpbuf[i] = L' ';
+
+        for (i = screenLines; i < screen->displayed + screen->offset + 1; i++)
+            mvaddwstr(i, 0, tmpbuf);
     }
 
+    free(tmpbuf);
     refresh();
 }
 
@@ -375,7 +302,7 @@ void showThread(RedditLink *link)
     list->permalink = redditCopyString(link->permalink);
 
     err = redditGetCommentList(list);
-    if (err != REDDIT_SUCCESS)
+    if (err != REDDIT_SUCCESS || list->baseComment->replyCount == 0)
         goto cleanup;
 
     screen = getCommentScreenFromCommentList(list, COLS);
@@ -383,7 +310,7 @@ void showThread(RedditLink *link)
     screen->offset = 0;
     screen->selected = 0;
     screen->displayed = LINES - 1;
-    screen->commentOpenSize = LINES / 3 * 2;
+    screen->commentOpenSize = (screen->displayed / 5) * 4;
     commentScreenDisplay(screen);
     int c;
     while((c = wgetch(stdscr))) {
@@ -418,7 +345,176 @@ cleanup:;
     return ;
 }
 
-void showSubreddit(char *subreddit)
+/*
+ * This function renders a single line on a link screen into that LinkScreen's
+ * line buffer. If this is called on an already rendered line, it will be
+ * rendered again.
+ *
+ * 'line' should be zero-based.
+ * 'width' is one-based, should be the width to render the line at.
+ */
+void linkScreenRenderLine (LinkScreen *screen, int line, int width)
+{
+    size_t tmp, title;
+    size_t offset;
+    if (screen->allocLineCount <= line) {
+        screen->allocLineCount = line + 100;
+        screen->screenLines = realloc(screen->screenLines, screen->allocLineCount * sizeof(wchar_t*));
+        memset(screen->screenLines + screen->allocLineCount - 100, 0, sizeof(wchar_t*) * 100);
+    }
+
+    if (screen->screenLineCount < line)
+        screen->screenLineCount = line;
+
+    screen->screenLines[line] = realloc(screen->screenLines[line], (width + 1) * sizeof(wchar_t));
+
+    swprintf(screen->screenLines[line], width + 1, L"%d. [%4d] %20s - ", line + 1, screen->list->links[line]->score, screen->list->links[line]->author);
+
+    offset = wcslen(screen->screenLines[line]);
+    title = wcslen(screen->list->links[line]->wtitle);
+    for (tmp = 0; tmp <= width - offset; tmp++)
+        if (tmp >= title)
+            screen->screenLines[line][tmp + offset] = (wchar_t)32;
+        else
+            screen->screenLines[line][tmp + offset] = screen->list->links[line]->wtitle[tmp];
+
+    screen->screenLines[line][width] = (wchar_t)0;
+}
+
+/*
+ * Prints a list of posts to the screen
+ */
+void drawScreen(LinkScreen *screen)
+{
+    int i, screenLines;
+    wchar_t *tmpbuf;
+    int bufSize, lastLine, bufLen;
+
+    if (screen == NULL)
+        return ;
+
+    //erase();
+
+    screenLines = screen->offset + screen->displayed + 1;
+    if (screenLines > screen->list->linkCount)
+        screenLines = screen->list->linkCount;
+
+    attron(COLOR_PAIR(1));
+
+    for(i = screen->offset; i < screenLines; i++) {
+        if(i == screen->selected)
+            attron(COLOR_PAIR(2));
+
+        if (screen->screenLineCount <= i)
+            linkScreenRenderLine(screen, i, COLS);
+
+        mvaddwstr(i - screen->offset, 0, screen->screenLines[i]);
+
+        if (i == screen->selected)
+            attron(COLOR_PAIR(1));
+    }
+
+    bufSize = sizeof(wchar_t) * (COLS + 1);
+    bufLen = COLS;
+    tmpbuf = malloc(bufSize);
+    memset(tmpbuf, 0, bufSize);
+
+    if (screen->linkOpen) {
+        RedditLink *current;
+        lastLine = screenLines - screen->offset;
+
+        for (i = 0; i < bufLen; i++)
+            tmpbuf[i] = L' ';
+
+        for (i = lastLine; i < lastLine + screen->linkOpenSize; i++)
+            mvaddwstr(i, 0, tmpbuf);
+
+        for (i = 0; i < bufLen; i++)
+            tmpbuf[i] = L'-';
+
+        tmpbuf[bufLen] = (wchar_t)0;
+        attron(COLOR_PAIR(2));
+        mvaddwstr(lastLine, 0, tmpbuf);
+
+        attron(COLOR_PAIR(1));
+        if (screen->list->linkCount >= screen->selected) {
+            current = screen->list->links[screen->selected];
+            if (current != NULL) {
+                swprintf(tmpbuf, bufLen, L"%s - %d Score / %d Up / %d Down / %d Comments\nTitle: ", current->author, current->score, current->ups, current->downs, current->numComments);
+                mvaddwstr(lastLine + 1, 0, tmpbuf);
+                addwstr(current->wtitle);
+                addch('\n');
+                swprintf(tmpbuf, bufLen, L"-------\n");
+                addwstr(tmpbuf);
+
+                if (current->flags & REDDIT_LINK_IS_SELF)
+                    addwstr(current->wselftext);
+                else
+                    addstr(current->url);
+            }
+        }
+    } else if (screenLines < screen->displayed + screen->offset + 1) {
+        for (i = 0; i < bufLen; i++)
+            tmpbuf[i] = L' ';
+
+        for (i = screenLines; i < screen->displayed + screen->offset + 1; i++)
+            mvaddwstr(i, 0, tmpbuf);
+    }
+
+    free(tmpbuf);
+
+    refresh();
+}
+
+void linkScreenDown(LinkScreen *screen)
+{
+    screen->selected++;
+    if (screen->selected > screen->offset + screen->displayed) {
+        if (screen->offset + screen->displayed + 1 < screen->list->linkCount)
+            screen->offset++;
+        else
+            screen->selected--;
+    } else if (screen->selected + 1 > screen->list->linkCount) {
+        screen->selected--;
+    }
+}
+
+void linkScreenUp(LinkScreen *screen)
+{
+    screen->selected--;
+    if (screen->selected < 0)
+        screen->selected++;
+    if (screen->selected < screen->offset)
+        screen->offset--;
+}
+
+void linkScreenOpenLink(LinkScreen *screen)
+{
+    if (!screen->linkOpen) {
+        screen->linkOpen = 1;
+        screen->displayed -= screen->linkOpenSize - 1;
+        if (screen->selected > screen->displayed + screen->offset)
+            screen->offset = screen->selected - screen->displayed;
+    }
+}
+
+void linkScreenCloseLink(LinkScreen *screen)
+{
+    if (screen->linkOpen) {
+        screen->linkOpen = 0;
+        screen->displayed += screen->linkOpenSize - 1;
+    }
+}
+
+void linkScreenToggleLink(LinkScreen *screen)
+{
+    if (screen->linkOpen)
+        linkScreenCloseLink(screen);
+    else
+        linkScreenOpenLink(screen);
+}
+
+void showSubreddit(const char *subreddit)
 {
     LinkScreen *screen;
     screen = linkScreenNew();
@@ -429,10 +525,8 @@ void showSubreddit(char *subreddit)
 
     redditGetListing(screen->list);
 
-    if (screen->list->linkCount < LINES - 1)
-        screen->displayed = screen->list->linkCount - 1;
-    else
-        screen->displayed = LINES - 1;
+    screen->displayed = LINES - 1;
+    screen->linkOpenSize = (screen->displayed / 5) * 4;
 
     screen->offset = 0;
     screen->selected = 0;
@@ -442,8 +536,6 @@ void showSubreddit(char *subreddit)
 
     int c;
     while((c = wgetch(stdscr))) {
-        if(c == 'q') //Lets make a break key, so i dont have to close the tab like last time :S
-            break;//YEA FUCK YOU WHILE
         switch(c) {
             case 'k': case KEY_UP:
                 linkScreenUp(screen);
@@ -454,26 +546,64 @@ void showSubreddit(char *subreddit)
                 linkScreenDown(screen);
                 drawScreen(screen);
                 break;
-
-            case 'l': case '\n': // Display selected thread
+            case 'q':
+                if (screen->linkOpen) {
+                    linkScreenCloseLink(screen);
+                    drawScreen(screen);
+                } else {
+                    goto cleanup;
+                }
+                break;
+            case 'u':
+                redditLinkListFreeLinks(screen->list);
+                redditGetListing(screen->list);
+                screen->offset = 0;
+                screen->selected = 0;
+                drawScreen(screen);
+                break;
+            case 'l': case '\n': case KEY_ENTER:
+                linkScreenToggleLink(screen);
+                drawScreen(screen);
+                break;
+            case 'L':
+                redditGetListing(screen->list);
+                drawScreen(screen);
+                break;
+            case 'c':
                 showThread(screen->list->links[screen->selected]);
                 drawScreen(screen);
                 break;
         }
     }
 
+cleanup:;
     redditLinkListFree(screen->list);
     linkScreenFree(screen);
 }
 
 int main(int argc, char *argv[])
 {
-    RedditUserLogged *user = redditUserLoggedNew();
-    //Incase the user doesn't specify an argument
-    if (!argv[1]) {
-        wprintf(L"Please supply a subreddit to go to e.g. /r/coding\n"); //Added a \n
-        exit(1);
+    RedditUserLogged *user = NULL;
+    const char *subreddit = NULL;
+
+    if (argc > 1) {
+        subreddit = argv[1];
+        /* Display a simple help screen */
+        if (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "help") == 0) {
+            printf("Usage: %s [subreddit] [username] [password]\n", argv[0]);
+            printf("\n");
+            printf(" subreddit -- The name of a subreddit you want to view, Ex. '/r/coding', '/r/linux'\n");
+            printf(" username  -- The username of a user you want to login as.\n");
+            printf(" password  -- The password for the username, if one was given\n");
+            printf("\n");
+            printf("To report any bugs, submit patches, etc. Please see the github page at:\n");
+            printf("http://www.github.com/Cotix/cReddit\n");
+            return 0;
+        }
+    } else {
+        subreddit = "/";
     }
+
 
     setlocale(LC_CTYPE, "");
 
@@ -494,11 +624,14 @@ int main(int argc, char *argv[])
 
     redditStateSet(globalState);
 
-    /* If you want to try logging in as your user
-     * Replace 'username' and 'password' with the approiate fields */
-    //redditUserLoggedLogin(user, "username", "password");
+    if (argc == 4) {
+        user = redditUserLoggedNew();
+        /* If you want to try logging in as your user
+         * Replace 'username' and 'password' with the approiate fields */
+        redditUserLoggedLogin(user, argv[2], argv[3]);
 
-    showSubreddit(argv[1]);
+    }
+    showSubreddit(subreddit);
 
     redditUserLoggedFree(user);
     redditStateFree(globalState);

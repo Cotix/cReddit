@@ -27,6 +27,8 @@ MemoryBlock *memoryBlockNew()
  */
 void memoryBlockFree(MemoryBlock *block)
 {
+    if (block == NULL)
+        return ;
     free(block->memory);
     free(block);
 }
@@ -47,6 +49,8 @@ TokenParser *tokenParserNew()
  */
 void tokenParserFree(TokenParser *parser)
 {
+    if (parser == NULL)
+        return ;
     memoryBlockFree(parser->block);
     free(parser->tokens);
     free(parser);

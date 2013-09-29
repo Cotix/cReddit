@@ -30,6 +30,8 @@ RedditLink *redditLinkNew()
  */
 void redditLinkFree (RedditLink *link)
 {
+    if (link == NULL)
+        return ;
     free(link->selftext);
     free(link->id);
     free(link->permalink);
@@ -52,16 +54,26 @@ RedditLinkList *redditLinkListNew()
     return list;
 }
 
+void redditLinkListFreeLinks (RedditLinkList *list)
+{
+    int i;
+    if (list == NULL)
+        return ;
+    for (i = 0; i < list->linkCount; i++)
+        redditLinkFree(list->links[i]);
+    free(list->links);
+    list->links = NULL;
+    list->linkCount = 0;
+}
+
 /*
  * Fress a RedditLinkList as well as free's all RedditLink structures attached.
  */
 void redditLinkListFree (RedditLinkList *list)
 {
-    int i;
-    for (i = 0; i < list->linkCount; i++)
-        redditLinkFree(list->links[i]);
-
-    free(list->links);
+    if (list == NULL)
+        return ;
+    redditLinkListFreeLinks(list);
     free(list->subreddit);
     free(list->modhash);
     free(list);

@@ -30,6 +30,8 @@ RedditUser *redditUserNew()
  */
 void redditUserFree (RedditUser *log)
 {
+    if (log == NULL)
+        return ;
     free(log->name);
     free(log->id);
     free(log->modhash);
@@ -56,6 +58,8 @@ RedditUserLogged *redditUserLoggedNew()
  */
 void redditUserLoggedFree(RedditUserLogged *user)
 {
+    if (user == NULL)
+        return ;
     redditUserFree(user->userInfo);
     free(user);
 }

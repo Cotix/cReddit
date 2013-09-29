@@ -29,7 +29,8 @@ RedditState *redditStateNew()
  */
 void redditStateFree(RedditState *state)
 {
-
+    if (state == NULL)
+        return ;
     /* First free the linked-list of cookies */
     RedditCookieLink *tmp;
     RedditCookieLink *node;

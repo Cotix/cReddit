@@ -42,6 +42,8 @@ void redditCookieNew(char *name, char *data)
  */
 void redditCookieFree(RedditCookieLink *link)
 {
+    if (link == NULL)
+        return ;
     free(link->name);
     free(link->data);
     free(link);

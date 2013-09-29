@@ -26,6 +26,8 @@ RedditComment *redditCommentNew ()
 void redditCommentFreeReplies (RedditComment *comment)
 {
     int i;
+    if (comment == NULL)
+        return ;
     for (i = 0; i < comment->replyCount; i++)
         redditCommentFree(comment->replies[i]);
 
@@ -38,6 +40,8 @@ void redditCommentFreeReplies (RedditComment *comment)
 void redditCommentFree (RedditComment *comment)
 {
     int i;
+    if (comment == NULL)
+        return ;
     free(comment->id);
     free(comment->author);
     free(comment->parentId);
@@ -78,6 +82,8 @@ RedditCommentList *redditCommentListNew ()
  */
 void redditCommentListFree (RedditCommentList *list)
 {
+    if (list == NULL)
+        return ;
     redditCommentFree(list->baseComment);
     redditLinkFree(list->post);
     free(list->permalink);
@@ -244,8 +250,6 @@ RedditErrno redditGetCommentList (RedditCommentList *list)
     strcpy(fullLink, "http://www.reddit.com");
     strcat(fullLink, list->permalink);
     strcat(fullLink, "/.json");
-
-    printf("Link: %s\n", fullLink);
 
     if (list->baseComment == NULL)
         list->baseComment = redditCommentNew();
