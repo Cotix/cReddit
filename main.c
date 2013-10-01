@@ -581,14 +581,40 @@ cleanup:;
     linkScreenFree(screen);
 }
 
+int startsWith(const char *pre, const char *str)
+{
+    size_t lenpre = strlen(pre), lenstr = strlen(str);
+    return (lenstr < lenpre) ? 0 : strncmp(pre, str, lenpre) == 0;
+}
+
+/*
+ * Prepends 'pre' onto the front of the string buffer 'str'
+ * Make sure 'str' is large enough to fit 'pre' on it.
+ */
+void prepend(const char *pre, char *str)
+{
+    size_t lenpre = strlen(pre), lenstr = strlen(str);
+
+    /* Move the Strings memory forward */
+    memcpy(str + lenpre, str, lenstr + 1);
+    /* Copy pre into the new space */
+    memcpy(str, pre, lenpre);
+}
+
 int main(int argc, char *argv[])
 {
     RedditUserLogged *user = NULL;
-    const char *subreddit = NULL;
+    char *subreddit = NULL;
 
     if (argc > 1) {
         subreddit = argv[1];
         /* Display a simple help screen */
+        if (!startsWith("/r/", subreddit) && strcmp("/", subreddit) != 0) {
+            subreddit = malloc((strlen(argv[1]) + 4) * sizeof(char));
+            strcpy(subreddit, argv[1]);
+            prepend("/r/", subreddit);
+        }
+
         if (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "help") == 0) {
             printf("Usage: %s [subreddit] [username] [password]\n", argv[0]);
             printf("\n");
