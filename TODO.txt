@@ -1,4 +1,0 @@
-- Make the UI look better.
-- Implement scrolling if the comments get too long.
-- Implement replying to a comment.
-- Implement opening thread links in the user's browser.
