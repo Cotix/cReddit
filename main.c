@@ -631,6 +631,21 @@ cleanup:
     linkScreenFree(screen);
 }
 
+int startsWith(char *pre, const char *str)
+{
+    size_t lenpre = strlen(pre),
+           lenstr = strlen(str);
+    return lenstr < lenpre ? 0 : strncmp(pre, str, lenpre) == 0;
+}
+
+char* prepend(char *pre, const char *str)
+{
+    char* newString = malloc(sizeof(char) * strlen(pre) + sizeof(char) * strlen(str));
+    strcpy(newString, pre);
+    strcat(newString, str);
+    return newString;
+}
+
 int main(int argc, char *argv[])
 {
     RedditUserLogged *user = NULL;
@@ -639,6 +654,11 @@ int main(int argc, char *argv[])
     if (argc > 1)
     {
         subreddit = argv[1];
+
+        /*Validates the subreddit to make sure it has the "/r/" in front*/
+        if (!startsWith("/r/", subreddit))
+            subreddit = prepend("/r/", subreddit);
+
         /* Display a simple help screen */
         if (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "help") == 0)
         {
