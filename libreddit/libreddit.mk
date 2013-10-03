@@ -27,12 +27,12 @@ libreddit_clean:
 	$(ECHO) " RM $(LIBREDDIT_CMP_DIR)"
 	$(RM) -fr $(LIBREDDIT_CMP_DIR)
 
-$(LIBREDDIT_STATIC): $(LIBREDDIT_OBJECTS) 
+$(LIBREDDIT_STATIC): $(LIBREDDIT_OBJECTS)
 	$(ECHO) " AR $(LIBREDDIT_STATIC)"
-	$(AR) rcs $(LIBREDDIT_STATIC) $(LIBREDDIT_OBJECTS) 
+	$(AR) rcs $(LIBREDDIT_STATIC) $(LIBREDDIT_OBJECTS)
 
 # Compiles a single c file into a coresponding .o file
 $(LIBREDDIT_CMP_DIR)/%.o: $(LIBREDDIT_DIR)/%.c | $(LIBREDDIT_CMP_DIR)
-	$(ECHO) " CC $<"
+	$(ECHO) " CC $@"
 	$(CC) $(LIBREDDIT_CFLAGS) -c $< -o $@
 
