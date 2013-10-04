@@ -17,12 +17,6 @@ them.
 
 Known FIXMEs and TODOs
 ----------------------
-*   libreddit.mk:
-
-    Currently, symbols which are used across multiple files but aren't suppose
-    to be exposed for the API of libreddit are still in the symbol table in
-    libreddit.a, which could possibly cause unexpected symbol colisions.
-
 *   token.c:
 
     curl hangs if you don't have a internet connection, meaning libreddit will

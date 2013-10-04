@@ -15,6 +15,7 @@ PROJCFLAGS:=-O2 -Wall -I'./include'
 LD:=ld
 AR:=ar
 INSTALL:=install
+OBJCOPY:=objcopy
 BUILD_DIR:=build
 
 MKDIR:=@mkdir -p
