@@ -7,6 +7,7 @@
 # specifying their object name.
 # Ex. 'make build/src/main.o'
 
+QUIETLY:=@
 
 # Set some basic program-wide compile settings
 # In the future these shouldn't be assumed.
@@ -18,9 +19,9 @@ INSTALL:=install
 OBJCOPY:=objcopy
 BUILD_DIR:=build
 
-MKDIR:=@mkdir -p
-ECHO:=@echo
-RM:=@rm
+MKDIR:=mkdir -p
+ECHO:=echo
+RM:=rm
 
 ifndef PREFIX
 	PREFIX=/usr
@@ -41,7 +42,6 @@ include ./src/creddit.mk
 # Add a few ending values for the main program
 CLEAN_TARGETS +=build_clean
 
-.SILENT:
 .PHONY: all real-all install clean $(CLEAN_TARGETS) $(INSTALL_TARGETS)
 
 real-all: $(EXECUTABLE_FULL)
@@ -49,14 +49,14 @@ real-all: $(EXECUTABLE_FULL)
 install: $(INSTALL_TARGETS)
 
 $(BUILD_DIR):
-	$(ECHO) " MKDIR $(BUILD_DIR)"
-	$(MKDIR) $(BUILD_DIR)
+	$(QUIETLY)$(ECHO) " MKDIR $(BUILD_DIR)"
+	$(QUIETLY)$(MKDIR) $(BUILD_DIR)
 
 # Calls all the clean targets to be run, so we can clean up the build directory
 clean: $(CLEAN_TARGETS)
 
 # Top level clean -- deletes whole build directory
 build_clean:
-	$(ECHO) " RM $(BUILD_DIR)"
-	$(RM) -fr $(BUILD_DIR)
+	$(QUIETLY)$(ECHO) " RM $(BUILD_DIR)"
+	$(QUIETLY)$(RM) -fr $(BUILD_DIR)
 
