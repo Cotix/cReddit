@@ -11,17 +11,17 @@ QUIETLY:=@
 
 # Set some basic program-wide compile settings
 # In the future these shouldn't be assumed.
-CC:=gcc
+CC:=$(QUIETLY)gcc
 PROJCFLAGS:=-O2 -Wall -I'./include'
-LD:=ld
-AR:=ar
-INSTALL:=install
-OBJCOPY:=objcopy
+LD:=$(QUIETLY)ld
+AR:=$(QUIETLY)ar
+INSTALL:=$(QUIETLY)install
+OBJCOPY:=$(QUIETLY)objcopy
 BUILD_DIR:=build
 
-MKDIR:=mkdir -p
-ECHO:=echo
-RM:=rm
+MKDIR:=$(QUIETLY)mkdir -p
+ECHO:=$(QUIETLY)echo
+RM:=$(QUIETLY)rm
 
 ifndef PREFIX
 	PREFIX=/usr
@@ -49,14 +49,14 @@ real-all: $(EXECUTABLE_FULL)
 install: $(INSTALL_TARGETS)
 
 $(BUILD_DIR):
-	$(QUIETLY)$(ECHO) " MKDIR $(BUILD_DIR)"
-	$(QUIETLY)$(MKDIR) $(BUILD_DIR)
+	$(ECHO) " MKDIR $(BUILD_DIR)"
+	$(MKDIR) $(BUILD_DIR)
 
 # Calls all the clean targets to be run, so we can clean up the build directory
 clean: $(CLEAN_TARGETS)
 
 # Top level clean -- deletes whole build directory
 build_clean:
-	$(QUIETLY)$(ECHO) " RM $(BUILD_DIR)"
-	$(QUIETLY)$(RM) -fr $(BUILD_DIR)
+	$(ECHO) " RM $(BUILD_DIR)"
+	$(RM) -fr $(BUILD_DIR)
 

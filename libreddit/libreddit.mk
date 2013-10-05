@@ -20,26 +20,26 @@ LIBREDDIT_OBJECTS := $(patsubst %,$(LIBREDDIT_CMP_DIR)/%,$(LIBREDDIT_SOURCES:.c=
 libreddit: $(LIBREDDIT_STATIC)
 
 $(LIBREDDIT_CMP_DIR): | $(BUILD_DIR)
-	$(QUIETLY)$(ECHO) " MKDIR $(LIBREDDIT_CMP_DIR)"
-	$(QUIETLY)$(MKDIR) $(LIBREDDIT_CMP_DIR)
+	$(ECHO) " MKDIR $(LIBREDDIT_CMP_DIR)"
+	$(MKDIR) $(LIBREDDIT_CMP_DIR)
 
 # Removes the libreddit folder
 libreddit_clean:
-	$(QUIETLY)$(ECHO) " RM $(LIBREDDIT_CMP_DIR)"
-	$(QUIETLY)$(RM) -fr $(LIBREDDIT_CMP_DIR)
+	$(ECHO) " RM $(LIBREDDIT_CMP_DIR)"
+	$(RM) -fr $(LIBREDDIT_CMP_DIR)
 
 $(LIBREDDIT_STATIC): $(LIBREDDIT_COMBINED)
-	$(QUIETLY)$(ECHO) " AR $(LIBREDDIT_STATIC)"
-	$(QUIETLY)$(AR) rcs $(LIBREDDIT_STATIC) $(LIBREDDIT_COMBINED)
+	$(ECHO) " AR $(LIBREDDIT_STATIC)"
+	$(AR) rcs $(LIBREDDIT_STATIC) $(LIBREDDIT_COMBINED)
 
 $(LIBREDDIT_COMBINED): $(LIBREDDIT_OBJECTS)
-	$(QUIETLY)$(ECHO) " LD $@"
-	$(QUIETLY)$(LD) -r $(LIBREDDIT_OBJECTS) -o $@
-	$(QUIETLY)$(ECHO) " STRIP $@"
-	$(QUIETLY)$(OBJCOPY) --keep-global-symbols $(LIBREDDIT_DIR)/global_symbols $@
+	$(ECHO) " LD $@"
+	$(LD) -r $(LIBREDDIT_OBJECTS) -o $@
+	$(ECHO) " STRIP $@"
+	$(OBJCOPY) --keep-global-symbols $(LIBREDDIT_DIR)/global_symbols $@
 
 # Compiles a single c file into a coresponding .o file
 $(LIBREDDIT_CMP_DIR)/%.o: $(LIBREDDIT_DIR)/%.c | $(LIBREDDIT_CMP_DIR)
-	$(QUIETLY)$(ECHO) " CC $@"
-	$(QUIETLY)$(CC) $(LIBREDDIT_CFLAGS) -c $< -o $@
+	$(ECHO) " CC $@"
+	$(CC) $(LIBREDDIT_CFLAGS) -c $< -o $@
 
