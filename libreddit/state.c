@@ -14,7 +14,7 @@
 /*
  * Allocate a new RedditState and set any needed values to defaults
  */
-RedditState *redditStateNew()
+EXPORT_SYMBOL RedditState *redditStateNew()
 {
     RedditState *state;
     state = rmalloc(sizeof(RedditState));
@@ -27,7 +27,7 @@ RedditState *redditStateNew()
  * Frees a RedditState returned by redditStateNew()
  * Also frees anything attached to the RedditState, such as the cookie linked-list
  */
-void redditStateFree(RedditState *state)
+EXPORT_SYMBOL void redditStateFree(RedditState *state)
 {
     if (state == NULL)
         return ;
@@ -46,7 +46,7 @@ void redditStateFree(RedditState *state)
 /*
  * Returns the current RedditState the library is using
  */
-RedditState *redditStateGet()
+EXPORT_SYMBOL RedditState *redditStateGet()
 {
     return currentRedditState;
 }
@@ -54,7 +54,7 @@ RedditState *redditStateGet()
 /*
  * Sets the current RedditState that the library will use
  */
-void redditStateSet(RedditState *state)
+EXPORT_SYMBOL void redditStateSet(RedditState *state)
 {
     currentRedditState = state;
 }

@@ -9,6 +9,16 @@
 #define CREDDIT_USERAGENT "cReddit/0.0.1"
 
 /*
+ * This macro is used to export a symbol outside of the library. We compile with
+ * -fvisibility=hidden, so functions are hidden in the .so by default. Using
+ *  this macro will make them usable outside of the library.
+ *
+ *  Note: This is a GCC specefic add-on
+ */
+#define EXPORT_SYMBOL __attribute__((visibility("default")))
+
+
+/*
  * the below variable is a library global state for reddit (Mostly holds session cookies)
  *
  * When the library is used, you first need to use redditStateNew() and then

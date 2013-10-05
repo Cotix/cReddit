@@ -14,7 +14,7 @@
 /*
  * Allocates an empty RedditLink structure
  */
-RedditLink *redditLinkNew()
+EXPORT_SYMBOL RedditLink *redditLinkNew ()
 {
     RedditLink *link = rmalloc(sizeof(RedditLink));
 
@@ -28,7 +28,7 @@ RedditLink *redditLinkNew()
  * Frees a single RedditLink structure
  * Note: Doesn't free the RedditLink at 'link->next'
  */
-void redditLinkFree (RedditLink *link)
+EXPORT_SYMBOL void redditLinkFree (RedditLink *link)
 {
     if (link == NULL)
         return ;
@@ -47,14 +47,14 @@ void redditLinkFree (RedditLink *link)
 /*
  * Allocates an empty RedditLinkList structure
  */
-RedditLinkList *redditLinkListNew()
+EXPORT_SYMBOL RedditLinkList *redditLinkListNew()
 {
     RedditLinkList *list = rmalloc(sizeof(RedditLinkList));
     memset(list, 0, sizeof(RedditLinkList));
     return list;
 }
 
-void redditLinkListFreeLinks (RedditLinkList *list)
+EXPORT_SYMBOL void redditLinkListFreeLinks (RedditLinkList *list)
 {
     int i;
     if (list == NULL)
@@ -69,7 +69,7 @@ void redditLinkListFreeLinks (RedditLinkList *list)
 /*
  * Fress a RedditLinkList as well as free's all RedditLink structures attached.
  */
-void redditLinkListFree (RedditLinkList *list)
+EXPORT_SYMBOL void redditLinkListFree (RedditLinkList *list)
 {
     if (list == NULL)
         return ;
@@ -82,7 +82,7 @@ void redditLinkListFree (RedditLinkList *list)
 /*
  * Adds a RedditLink onto a RedditLinkList
  */
-void redditLinkListAddLink (RedditLinkList *list, RedditLink *link)
+EXPORT_SYMBOL void redditLinkListAddLink (RedditLinkList *list, RedditLink *link)
 {
     list->linkCount++;
     list->links = rrealloc(list->links, list->linkCount * sizeof(RedditLink*));
@@ -179,7 +179,7 @@ DEF_TOKEN_CALLBACK(getListingHelper)
  *
  * 'subreddit' should be in the form '/r/subreddit' or empty to indicate 'front'
  */
-RedditErrno redditGetListing (RedditLinkList *list)
+EXPORT_SYMBOL RedditErrno redditGetListing (RedditLinkList *list)
 {
     char subred[1024], *kindStr = NULL;
     TokenParserResult res;

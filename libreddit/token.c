@@ -149,7 +149,7 @@ char *trueFalseString(char *string, bool tf)
  * all the structures the library uses assumes allocated strings, this function
  * allows literals to be used easily by wrapping them with this function.
  */
-char *redditCopyString(const char *string)
+EXPORT_SYMBOL char *redditCopyString(const char *string)
 {
     char *newStr = rmalloc(strlen(string) + 1);
     strcpy(newStr, string);

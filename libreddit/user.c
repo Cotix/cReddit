@@ -14,7 +14,7 @@
  *
  * A 'RedditUser' represents any and all users
  */
-RedditUser *redditUserNew()
+EXPORT_SYMBOL RedditUser *redditUserNew()
 {
     RedditUser *log = rmalloc(sizeof(RedditUser));
 
@@ -28,7 +28,7 @@ RedditUser *redditUserNew()
 /*
  * Frees a RedditUser and any data it has
  */
-void redditUserFree (RedditUser *log)
+EXPORT_SYMBOL void redditUserFree (RedditUser *log)
 {
     if (log == NULL)
         return ;
@@ -42,7 +42,7 @@ void redditUserFree (RedditUser *log)
  * allocates and creates a new 'RedditUserLogged'
  * It's a superset of 'RedditUser', representing a logged-in user
  */
-RedditUserLogged *redditUserLoggedNew()
+EXPORT_SYMBOL RedditUserLogged *redditUserLoggedNew()
 {
     RedditUserLogged *user = rmalloc(sizeof(RedditUserLogged));
 
@@ -56,7 +56,7 @@ RedditUserLogged *redditUserLoggedNew()
 /*
  * Frees a 'RedditUserLogged' and everything attached to it
  */
-void redditUserLoggedFree(RedditUserLogged *user)
+EXPORT_SYMBOL void redditUserLoggedFree(RedditUserLogged *user)
 {
     if (user == NULL)
         return ;
@@ -133,7 +133,7 @@ DEF_TOKEN_CALLBACK(handleCookie)
  * Also if successful adds the 'reddit_session' cookie to the global state
  *
  */
-RedditErrno redditUserLoggedLogin (RedditUserLogged *log, char *name, char *passwd)
+EXPORT_SYMBOL RedditErrno redditUserLoggedLogin (RedditUserLogged *log, char *name, char *passwd)
 {
     char loginInfo[4096];
     char tf[6];
@@ -206,7 +206,7 @@ DEF_TOKEN_CALLBACK(userUpdateHelper)
  * This function updates the data in a RedditUserLogged. It leaves the user
  * logged in, and gets a new copy of the user->userInfo RedditUser
  */
-RedditErrno redditUserLoggedUpdate (RedditUserLogged *user)
+EXPORT_SYMBOL RedditErrno redditUserLoggedUpdate (RedditUserLogged *user)
 {
     TokenParserResult res;
     char *kindStr = NULL;
