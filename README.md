@@ -6,14 +6,25 @@ CLI Reddit client written in C. Oh, crossplatform too!
 
 How to build
 ============
-Current required libraries are libcurl and libncurses. To build the full
-project on its own, run 'make'. You can also run 'make install' to have the
-executable installed into the /usr/bin folder (Or anywhere else, if you set
-PREFIX).
+Current required libraries are libcurl and libncursesw (Wide-character version
+of libncurses). The project itself comprises a library called libreddit and a
+program called creddit.
 
-If you would like to compile libreddit on its own as a static library, you can
-run 'make libreddit'. The resulting static library will be ./build/libreddit.a.
-Further compilation options can be read in the top of the Makefile
+To do a normal compilation, run the two commands:
+make
+make install
+
+Note: 'make install' will need to be run as root to install to the root
+directory.
+
+
+If you would like to compile libreddit on its own as a shared library, you can
+run ``` make libreddit ```. The resulting shared library will be
+./build/libreddit.so.  You can also install the library sepratly via ``` make
+libreddit_install ```.  To use the library, include "reddit.h" and link against
+libreddit.so.
+
+To see other documented compilation options, read the top comments in ./Makefile.
 
 Default Keypresses
 ------------------
