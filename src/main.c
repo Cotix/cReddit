@@ -11,8 +11,7 @@
 
 #define SIZEOFELEM(x)  (sizeof(x) / sizeof(x[0]))
 
-typedef struct
-{
+typedef struct {
     RedditLinkList *list;
     int displayed;
     int offset;
@@ -24,8 +23,7 @@ typedef struct
     unsigned int linkOpen : 1;
 } LinkScreen;
 
-typedef struct
-{
+typedef struct {
     wchar_t *text;
     RedditComment *comment;
     unsigned int folded : 1;
@@ -33,8 +31,7 @@ typedef struct
     int indentCount;
 } CommentLine;
 
-typedef struct
-{
+typedef struct {
     RedditCommentList *list;
     int lineCount;
     int allocLineCount;
@@ -45,6 +42,7 @@ typedef struct
     int commentOpenSize;
     unsigned int commentOpen : 1;
 } CommentScreen;
+
 
 RedditState *globalState;
 
@@ -105,9 +103,8 @@ void commentScreenFree(CommentScreen *screen)
 void commentScreenAddLine(CommentScreen *screen, CommentLine *line)
 {
     screen->lineCount++;
-    if (screen->lineCount >= screen->allocLineCount)
-    {
-        screen->allocLineCount += 100;
+    if (screen->lineCount >= screen->allocLineCount) {
+        screen->allocLineCount+=100;
         screen->lines = realloc(screen->lines, sizeof(CommentLine**) * screen->allocLineCount);
     }
     screen->lines[screen->lineCount - 1] = line;
@@ -115,7 +112,7 @@ void commentScreenAddLine(CommentScreen *screen, CommentLine *line)
 
 wchar_t *createCommentLine(RedditComment *comment, int width, int indent)
 {
-    wchar_t *text = malloc(sizeof(wchar_t) * (width + 1));
+    wchar_t *text = malloc(sizeof(wchar_t) * (width+1));
     int i, ilen = indent * 3, bodylen, texlen;
 
     bodylen = wcslen(comment->wbody);
@@ -141,16 +138,14 @@ int getCommentScreenRecurse(CommentScreen *screen, RedditComment *comment, int w
     CommentLine *line;
     int indentCur = indent + 1;
     int nested = 0;
-    for (i = 0; i < comment->replyCount; i++)
-    {
+    for (i = 0; i < comment->replyCount; i++) {
         current = comment->replies[i];
         line = commentLineNew();
         line->text = createCommentLine(current, width, indentCur);
         line->indentCount = indentCur;
         line->comment = current;
         commentScreenAddLine(screen, line);
-        if (current->replyCount)
-        {
+        if (current->replyCount) {
             line->foldCount = getCommentScreenRecurse(screen, current, width, indentCur);
             nested += line->foldCount;
         }
@@ -175,15 +170,12 @@ CommentScreen *getCommentScreenFromCommentList(RedditCommentList *list, int widt
 void commentScreenDown(CommentScreen *screen)
 {
     screen->selected++;
-    if (screen->selected > screen->offset + screen->displayed)
-    {
+    if (screen->selected > screen->offset + screen->displayed) {
         if (screen->offset + screen->displayed + 1 < screen->lineCount)
             screen->offset++;
         else
             screen->selected--;
-    }
-    else if (screen->selected > screen->lineCount - 1)
-    {
+    } else if (screen->selected > screen->lineCount - 1) {
         screen->selected--;
     }
 }
@@ -214,9 +206,8 @@ void commentScreenDisplay(CommentScreen *screen)
         screenLines = screen->lineCount;
     attron(COLOR_PAIR(1));
 
-    for (i = screen->offset; i < screenLines; i++)
-    {
-        if (i == screen->selected)
+    for(i = screen->offset; i < screenLines; i++) {
+        if(i == screen->selected)
             attron(COLOR_PAIR(2));
 
         if (screen->lines[i]->text != NULL)
@@ -231,8 +222,7 @@ void commentScreenDisplay(CommentScreen *screen)
     tmpbuf = malloc(bufSize);
     memset(tmpbuf, 0, bufSize);
 
-    if (screen->commentOpen)
-    {
+    if (screen->commentOpen) {
         RedditComment *current;
         lastLine = screenLines - screen->offset;
 
@@ -250,11 +240,9 @@ void commentScreenDisplay(CommentScreen *screen)
         mvaddwstr(lastLine, 0, tmpbuf);
 
         attron(COLOR_PAIR(1));
-        if (screen->lineCount >= screen->selected)
-        {
+        if (screen->lineCount >= screen->selected) {
             current = screen->lines[screen->selected]->comment;
-            if (current != NULL)
-            {
+            if (current != NULL) {
                 swprintf(tmpbuf, bufLen, L"%s - %d Up / %d Down", current->author, current->ups, current->downs);
                 mvaddwstr(lastLine + 1, 0, tmpbuf);
                 swprintf(tmpbuf, bufLen, L"-------");
@@ -263,9 +251,7 @@ void commentScreenDisplay(CommentScreen *screen)
                 mvaddwstr(lastLine + 3, 0, current->wbody);
             }
         }
-    }
-    else if (screenLines < screen->displayed + screen->offset + 1)
-    {
+    } else if (screenLines < screen->displayed + screen->offset + 1) {
         for (i = 0; i < bufLen; i++)
             tmpbuf[i] = L' ';
 
@@ -279,8 +265,7 @@ void commentScreenDisplay(CommentScreen *screen)
 
 void commentScreenOpenComment(CommentScreen *screen)
 {
-    if (!screen->commentOpen)
-    {
+    if (!screen->commentOpen) {
         screen->commentOpen = 1;
         screen->displayed -= screen->commentOpenSize - 1;
         if (screen->selected > screen->displayed + screen->offset)
@@ -290,8 +275,7 @@ void commentScreenOpenComment(CommentScreen *screen)
 
 void commentScreenCloseComment(CommentScreen *screen)
 {
-    if (screen->commentOpen)
-    {
+    if (screen->commentOpen) {
         screen->commentOpen = 0;
         screen->displayed += screen->commentOpenSize - 1;
     }
@@ -329,44 +313,33 @@ void showThread(RedditLink *link)
     screen->commentOpenSize = (screen->displayed / 5) * 4;
     commentScreenDisplay(screen);
     int c;
-    while ((c = wgetch(stdscr)))
-    {
-        switch (c)
-        {
-            case 'j':
-            case KEY_DOWN:
+    while((c = wgetch(stdscr))) {
+        switch(c) {
+            case 'j': case KEY_DOWN:
                 commentScreenDown(screen);
                 commentScreenDisplay(screen);
                 break;
-            case 'k':
-            case KEY_UP:
+            case 'k': case KEY_UP:
                 commentScreenUp(screen);
                 commentScreenDisplay(screen);
                 break;
 
-            case 'l':
-            case '\n':
-            case KEY_ENTER:
+            case 'l': case '\n': case KEY_ENTER:
                 commentScreenToggleComment(screen);
                 commentScreenDisplay(screen);
                 break;
-            case 'q':
-            case 'h':
-                if (screen->commentOpen)
-                {
+            case 'q': case 'h':
+                if (screen->commentOpen) {
                     commentScreenCloseComment(screen);
                     commentScreenDisplay(screen);
-                }
-                else
-                {
+                } else {
                     goto cleanup;
                 }
                 break;
         }
     }
 
-cleanup:
-    ;
+cleanup:;
     redditCommentListFree(list);
     commentScreenFree(screen);
     return ;
@@ -384,8 +357,7 @@ void linkScreenRenderLine (LinkScreen *screen, int line, int width)
 {
     size_t tmp, title;
     size_t offset;
-    if (screen->allocLineCount <= line)
-    {
+    if (screen->allocLineCount <= line) {
         screen->allocLineCount = line + 100;
         screen->screenLines = realloc(screen->screenLines, screen->allocLineCount * sizeof(wchar_t*));
         memset(screen->screenLines + screen->allocLineCount - 100, 0, sizeof(wchar_t*) * 100);
@@ -429,9 +401,8 @@ void drawScreen(LinkScreen *screen)
 
     attron(COLOR_PAIR(1));
 
-    for (i = screen->offset; i < screenLines; i++)
-    {
-        if (i == screen->selected)
+    for(i = screen->offset; i < screenLines; i++) {
+        if(i == screen->selected)
             attron(COLOR_PAIR(2));
 
         if (screen->screenLineCount <= i)
@@ -448,8 +419,7 @@ void drawScreen(LinkScreen *screen)
     tmpbuf = malloc(bufSize);
     memset(tmpbuf, 0, bufSize);
 
-    if (screen->linkOpen)
-    {
+    if (screen->linkOpen) {
         RedditLink *current;
         lastLine = screenLines - screen->offset;
 
@@ -467,11 +437,9 @@ void drawScreen(LinkScreen *screen)
         mvaddwstr(lastLine, 0, tmpbuf);
 
         attron(COLOR_PAIR(1));
-        if (screen->list->linkCount >= screen->selected)
-        {
+        if (screen->list->linkCount >= screen->selected) {
             current = screen->list->links[screen->selected];
-            if (current != NULL)
-            {
+            if (current != NULL) {
                 swprintf(tmpbuf, bufLen, L"%s - %d Score / %d Up / %d Down / %d Comments\nTitle: ", current->author, current->score, current->ups, current->downs, current->numComments);
                 mvaddwstr(lastLine + 1, 0, tmpbuf);
                 addwstr(current->wtitle);
@@ -485,9 +453,7 @@ void drawScreen(LinkScreen *screen)
                     addstr(current->url);
             }
         }
-    }
-    else if (screenLines < screen->displayed + screen->offset + 1)
-    {
+    } else if (screenLines < screen->displayed + screen->offset + 1) {
         for (i = 0; i < bufLen; i++)
             tmpbuf[i] = L' ';
 
@@ -503,15 +469,12 @@ void drawScreen(LinkScreen *screen)
 void linkScreenDown(LinkScreen *screen)
 {
     screen->selected++;
-    if (screen->selected > screen->offset + screen->displayed)
-    {
+    if (screen->selected > screen->offset + screen->displayed) {
         if (screen->offset + screen->displayed + 1 < screen->list->linkCount)
             screen->offset++;
         else
             screen->selected--;
-    }
-    else if (screen->selected + 1 > screen->list->linkCount)
-    {
+    } else if (screen->selected + 1 > screen->list->linkCount) {
         screen->selected--;
     }
 }
@@ -527,8 +490,7 @@ void linkScreenUp(LinkScreen *screen)
 
 void linkScreenOpenLink(LinkScreen *screen)
 {
-    if (!screen->linkOpen)
-    {
+    if (!screen->linkOpen) {
         screen->linkOpen = 1;
         screen->displayed -= screen->linkOpenSize - 1;
         if (screen->selected > screen->displayed + screen->offset)
@@ -538,8 +500,7 @@ void linkScreenOpenLink(LinkScreen *screen)
 
 void linkScreenCloseLink(LinkScreen *screen)
 {
-    if (screen->linkOpen)
-    {
+    if (screen->linkOpen) {
         screen->linkOpen = 0;
         screen->displayed += screen->linkOpenSize - 1;
     }
@@ -553,8 +514,7 @@ void linkScreenToggleLink(LinkScreen *screen)
         linkScreenOpenLink(screen);
 }
 
-void showHelp(LinkScreen *screen)
-{
+void showHelp(LinkScreen *screen) {
     wchar_t *helpLines[19] = {
         L"Keypresses:",
         L"Link Screen:",
@@ -592,8 +552,7 @@ void showHelp(LinkScreen *screen)
 
     attron(COLOR_PAIR(1));
 
-    for (i = screen->offset; i < screenLines; i++)
-    {
+    for (i = screen->offset; i < screenLines; i++) {
         if (i == screen->selected)
             attron(COLOR_PAIR(2));
 
@@ -631,8 +590,7 @@ void showHelp(LinkScreen *screen)
     swprintf(tmpbuf, bufLen, L"Help:\n");
     mvaddwstr(lastLine + 1, 0, tmpbuf);
 
-    for(i=0; i < SIZEOFELEM(helpLines); i++)
-    {
+    for(i=0; i < SIZEOFELEM(helpLines); i++) {
         addwstr(helpLines[i]);
         addch('\n');
     }
@@ -665,29 +623,22 @@ void showSubreddit(const char *subreddit)
     drawScreen(screen); //And print the screen!
 
     int c;
-    while ((c = wgetch(stdscr)))
-    {
-        switch (c)
-        {
-            case 'k':
-            case KEY_UP:
+    while((c = wgetch(stdscr))) {
+        switch(c) {
+            case 'k': case KEY_UP:
                 linkScreenUp(screen);
                 drawScreen(screen);
                 break;
 
-            case 'j':
-            case KEY_DOWN:
+            case 'j': case KEY_DOWN:
                 linkScreenDown(screen);
                 drawScreen(screen);
                 break;
             case 'q':
-                if (screen->linkOpen)
-                {
+                if (screen->linkOpen) {
                     linkScreenCloseLink(screen);
                     drawScreen(screen);
-                }
-                else
-                {
+                } else {
                     goto cleanup;
                 }
                 break;
@@ -698,9 +649,7 @@ void showSubreddit(const char *subreddit)
                 screen->selected = 0;
                 drawScreen(screen);
                 break;
-            case 'l':
-            case '\n':
-            case KEY_ENTER:
+            case 'l': case '\n': case KEY_ENTER:
                 linkScreenToggleLink(screen);
                 drawScreen(screen);
                 break;
@@ -719,25 +668,29 @@ void showSubreddit(const char *subreddit)
         }
     }
 
-cleanup:
-    ;
+cleanup:;
     redditLinkListFree(screen->list);
     linkScreenFree(screen);
 }
 
-int startsWith(char *pre, const char *str)
+int startsWith(const char *pre, const char *str)
 {
-    size_t lenpre = strlen(pre),
-           lenstr = strlen(str);
-    return lenstr < lenpre ? 0 : strncmp(pre, str, lenpre) == 0;
+    size_t lenpre = strlen(pre), lenstr = strlen(str);
+    return (lenstr < lenpre) ? 0 : strncmp(pre, str, lenpre) == 0;
 }
 
-char* prepend(char *pre, const char *str)
+/*
+ * Prepends 'pre' onto the front of the string buffer 'str'
+ * Make sure 'str' is large enough to fit 'pre' on it.
+ */
+void prepend(const char *pre, char *str)
 {
-    char* newString = malloc(sizeof(char) * strlen(pre) + sizeof(char) * strlen(str));
-    strcpy(newString, pre);
-    strcat(newString, str);
-    return newString;
+    size_t lenpre = strlen(pre), lenstr = strlen(str);
+
+    /* Move the Strings memory forward */
+    memcpy(str + lenpre, str, lenstr + 1);
+    /* Copy pre into the new space */
+    memcpy(str, pre, lenpre);
 }
 
 int main(int argc, char *argv[])
@@ -745,17 +698,16 @@ int main(int argc, char *argv[])
     RedditUserLogged *user = NULL;
     char *subreddit = NULL;
 
-    if (argc > 1)
-    {
+    if (argc > 1) {
         subreddit = argv[1];
-
-        /*Validates the subreddit to make sure it has the "/r/" in front*/
-        if (!startsWith("/r/", subreddit))
-            subreddit = prepend("/r/", subreddit);
-
         /* Display a simple help screen */
-        if (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "help") == 0)
-        {
+        if (!startsWith("/r/", subreddit) && strcmp("/", subreddit) != 0) {
+            subreddit = malloc((strlen(argv[1]) + 4) * sizeof(char));
+            strcpy(subreddit, argv[1]);
+            prepend("/r/", subreddit);
+        }
+
+        if (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "help") == 0) {
             printf("Usage: %s [subreddit] [username] [password]\n", argv[0]);
             printf("\n");
             printf(" subreddit -- The name of a subreddit you want to view, Ex. '/r/coding', '/r/linux'\n");
@@ -766,9 +718,7 @@ int main(int argc, char *argv[])
             printf("http://www.github.com/Cotix/cReddit\n");
             return 0;
         }
-    }
-    else
-    {
+    } else {
         subreddit = "/";
     }
 
@@ -778,7 +728,7 @@ int main(int argc, char *argv[])
 
     initscr();
     raw();//We want character for character input
-    keypad(stdscr, 1); //Enable extra keys like arrowkeys
+    keypad(stdscr,1);//Enable extra keys like arrowkeys
     noecho();
     start_color();
     use_default_colors();
@@ -792,8 +742,7 @@ int main(int argc, char *argv[])
 
     redditStateSet(globalState);
 
-    if (argc == 4)
-    {
+    if (argc == 4) {
         user = redditUserLoggedNew();
         /* If you want to try logging in as your user
          * Replace 'username' and 'password' with the approiate fields */
@@ -808,4 +757,5 @@ int main(int argc, char *argv[])
     endwin();
     return 0;
 }
+
 
