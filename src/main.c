@@ -334,35 +334,35 @@ void showThread(RedditLink *link)
     {
         switch (c)
         {
-        case 'j':
-        case KEY_DOWN:
-            commentScreenDown(screen);
-            commentScreenDisplay(screen);
-            break;
-        case 'k':
-        case KEY_UP:
-            commentScreenUp(screen);
-            commentScreenDisplay(screen);
-            break;
-
-        case 'l':
-        case '\n':
-        case KEY_ENTER:
-            commentScreenToggleComment(screen);
-            commentScreenDisplay(screen);
-            break;
-        case 'q':
-        case 'h':
-            if (screen->commentOpen)
-            {
-                commentScreenCloseComment(screen);
+            case 'j':
+            case KEY_DOWN:
+                commentScreenDown(screen);
                 commentScreenDisplay(screen);
-            }
-            else
-            {
-                goto cleanup;
-            }
-            break;
+                break;
+            case 'k':
+            case KEY_UP:
+                commentScreenUp(screen);
+                commentScreenDisplay(screen);
+                break;
+
+            case 'l':
+            case '\n':
+            case KEY_ENTER:
+                commentScreenToggleComment(screen);
+                commentScreenDisplay(screen);
+                break;
+            case 'q':
+            case 'h':
+                if (screen->commentOpen)
+                {
+                    commentScreenCloseComment(screen);
+                    commentScreenDisplay(screen);
+                }
+                else
+                {
+                    goto cleanup;
+                }
+                break;
         }
     }
 
@@ -579,49 +579,49 @@ void showSubreddit(const char *subreddit)
     {
         switch (c)
         {
-        case 'k':
-        case KEY_UP:
-            linkScreenUp(screen);
-            drawScreen(screen);
-            break;
-
-        case 'j':
-        case KEY_DOWN:
-            linkScreenDown(screen);
-            drawScreen(screen);
-            break;
-        case 'q':
-            if (screen->linkOpen)
-            {
-                linkScreenCloseLink(screen);
+            case 'k':
+            case KEY_UP:
+                linkScreenUp(screen);
                 drawScreen(screen);
-            }
-            else
-            {
-                goto cleanup;
-            }
-            break;
-        case 'u':
-            redditLinkListFreeLinks(screen->list);
-            redditGetListing(screen->list);
-            screen->offset = 0;
-            screen->selected = 0;
-            drawScreen(screen);
-            break;
-        case 'l':
-        case '\n':
-        case KEY_ENTER:
-            linkScreenToggleLink(screen);
-            drawScreen(screen);
-            break;
-        case 'L':
-            redditGetListing(screen->list);
-            drawScreen(screen);
-            break;
-        case 'c':
-            showThread(screen->list->links[screen->selected]);
-            drawScreen(screen);
-            break;
+                break;
+
+            case 'j':
+            case KEY_DOWN:
+                linkScreenDown(screen);
+                drawScreen(screen);
+                break;
+            case 'q':
+                if (screen->linkOpen)
+                {
+                    linkScreenCloseLink(screen);
+                    drawScreen(screen);
+                }
+                else
+                {
+                    goto cleanup;
+                }
+                break;
+            case 'u':
+                redditLinkListFreeLinks(screen->list);
+                redditGetListing(screen->list);
+                screen->offset = 0;
+                screen->selected = 0;
+                drawScreen(screen);
+                break;
+            case 'l':
+            case '\n':
+            case KEY_ENTER:
+                linkScreenToggleLink(screen);
+                drawScreen(screen);
+                break;
+            case 'L':
+                redditGetListing(screen->list);
+                drawScreen(screen);
+                break;
+            case 'c':
+                showThread(screen->list->links[screen->selected]);
+                drawScreen(screen);
+                break;
         }
     }
 
@@ -649,7 +649,7 @@ char* prepend(char *pre, const char *str)
 int main(int argc, char *argv[])
 {
     RedditUserLogged *user = NULL;
-    const char *subreddit = NULL;
+    char *subreddit = NULL;
 
     if (argc > 1)
     {

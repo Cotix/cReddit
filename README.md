@@ -12,7 +12,8 @@ executable installed into the /usr/bin folder (Or anywhere else, if you set
 PREFIX).
 
 If you would like to compile libreddit on its own as a static library, you can
-run 'make libreddit'. The resulting static library will be ./build/libreddit.a
+run 'make libreddit'. The resulting static library will be ./build/libreddit.a.
+Further compilation options can be read in the top of the Makefile
 
 Default Keypresses
 ------------------
