@@ -46,7 +46,6 @@ typedef struct
     unsigned int commentOpen : 1;
 } CommentScreen;
 
-
 RedditState *globalState;
 
 
@@ -554,6 +553,97 @@ void linkScreenToggleLink(LinkScreen *screen)
         linkScreenOpenLink(screen);
 }
 
+void showHelp(LinkScreen *screen)
+{
+    wchar_t *helpLines[19] = {
+        L"Keypresses:",
+        L"Link Screen:",
+        L"- k / UP -- Move up one link in the list",
+        L"- j / DOWN -- Move down one link in the list",
+        L"- L -- Get the next list of Links from Reddit",
+        L"- u -- Update the list (Clears the list of links, and then gets a new list from Reddit)",
+        L"- l / ENTER -- Open the selected link",
+        L"- c -- Display the comments for the selected link",
+        L"- q -- Close open Link, or exit program if no link is open",
+        L"- ? -- Opens the help(but you wouldn't be reading this if you couldn't figure that out would you?)",
+        L"",
+        L"Comment screen:",
+        L"- k / UP -- Move up one comment in the list",
+        L"- j / DOWN -- Move down one comment in the list",
+        L"- l / ENTER -- Open the selected comment",
+        L"- q / h -- Close the open comment, or close the comment screen if no comment is open",
+        L"",
+        L"To report any bugs, submit patches, etc. Please see the github page at:",
+        L"http://www.github.com/Cotix/cReddit\n"
+    };
+
+    int i, screenLines;
+    wchar_t *tmpbuf;
+    int bufSize, lastLine, bufLen;
+
+    if (screen == NULL)
+        return ;
+
+    //erase();
+
+    screenLines = screen->offset + screen->displayed + 1;
+    if (screenLines > screen->list->linkCount)
+        screenLines = screen->list->linkCount;
+
+    attron(COLOR_PAIR(1));
+
+    for (i = screen->offset; i < screenLines; i++)
+    {
+        if (i == screen->selected)
+            attron(COLOR_PAIR(2));
+
+        if (screen->screenLineCount <= i)
+            linkScreenRenderLine(screen, i, COLS);
+
+        mvaddwstr(i - screen->offset, 0, screen->screenLines[i]);
+
+        if (i == screen->selected)
+            attron(COLOR_PAIR(1));
+    }
+
+    bufSize = sizeof(wchar_t) * (COLS + 1);
+    bufLen = COLS;
+    tmpbuf = malloc(bufSize);
+    memset(tmpbuf, 0, bufSize);
+
+    lastLine = screenLines - screen->offset;
+
+    for (i = 0; i < bufLen; i++)
+        tmpbuf[i] = L' ';
+
+    for (i = lastLine; i < lastLine + screen->linkOpenSize; i++)
+        mvaddwstr(i, 0, tmpbuf);
+
+    for (i = 0; i < bufLen; i++)
+        tmpbuf[i] = L'-';
+
+    tmpbuf[bufLen] = (wchar_t)0;
+    attron(COLOR_PAIR(2));
+    mvaddwstr(lastLine, 0, tmpbuf);
+
+    attron(COLOR_PAIR(1));
+
+    swprintf(tmpbuf, bufLen, L"Help:\n");
+    mvaddwstr(lastLine + 1, 0, tmpbuf);
+
+    for(i=0; i < SIZEOFELEM(helpLines); i++)
+    {
+        addwstr(helpLines[i]);
+        addch('\n');
+    }
+    swprintf(tmpbuf, bufLen, L"-------\n");
+    addwstr(tmpbuf);
+
+    free(tmpbuf);
+
+    refresh();
+}
+
 void showSubreddit(const char *subreddit)
 {
     LinkScreen *screen;
@@ -621,6 +711,10 @@ void showSubreddit(const char *subreddit)
             case 'c':
                 showThread(screen->list->links[screen->selected]);
                 drawScreen(screen);
+                break;
+            case '?':
+                linkScreenToggleLink(screen);
+                showHelp(screen);
                 break;
         }
     }
