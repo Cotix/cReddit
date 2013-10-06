@@ -7,20 +7,21 @@
 # specifying their object name.
 # Ex. 'make build/src/main.o'
 
+QUIETLY:=@
 
 # Set some basic program-wide compile settings
 # In the future these shouldn't be assumed.
-CC:=gcc
+CC:=$(QUIETLY)gcc
 PROJCFLAGS:=-O2 -Wall -I'./include'
-LD:=ld
-AR:=ar
-INSTALL:=install
-OBJCOPY:=objcopy
+LD:=$(QUIETLY)ld
+AR:=$(QUIETLY)ar
+INSTALL:=$(QUIETLY)install
+OBJCOPY:=$(QUIETLY)objcopy
 BUILD_DIR:=build
 
-MKDIR:=@mkdir -p
-ECHO:=@echo
-RM:=@rm
+MKDIR:=$(QUIETLY)mkdir -p
+ECHO:=$(QUIETLY)echo
+RM:=$(QUIETLY)rm
 
 ifndef PREFIX
 	PREFIX=/usr
@@ -41,7 +42,6 @@ include ./src/creddit.mk
 # Add a few ending values for the main program
 CLEAN_TARGETS +=build_clean
 
-.SILENT:
 .PHONY: all real-all install clean $(CLEAN_TARGETS) $(INSTALL_TARGETS)
 
 real-all: $(EXECUTABLE_FULL)
