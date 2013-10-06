@@ -1,6 +1,6 @@
 
 CREDDIT_CFLAGS:=$(PROJCFLAGS)
-CREDDIT_LDFLAGS:=-lncurses `curl-config --cflags` `curl-config --libs` -L$(BUILD_DIR) -lreddit
+CREDDIT_LDFLAGS:=-lncursesw `curl-config --cflags` `curl-config --libs` -L$(BUILD_DIR) -lreddit
 
 EXECUTABLE_NAME:=creddit
 CREDDIT_DIR_CMP:=$(BUILD_DIR)/src
