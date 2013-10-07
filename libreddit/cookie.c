@@ -12,7 +12,7 @@
 /*
  * Adds a new cookie to currentRedditState
  */
-void redditCookieNew(char *name, char *data)
+EXPORT_SYMBOL void redditCookieNew(char *name, char *data)
 {
     RedditCookieLink *link = rmalloc(sizeof(RedditCookieLink));
 
@@ -40,7 +40,7 @@ void redditCookieNew(char *name, char *data)
  *
  * This function does no clean-up on the linked-list as a whole, just frees a single link
  */
-void redditCookieFree(RedditCookieLink *link)
+EXPORT_SYMBOL void redditCookieFree(RedditCookieLink *link)
 {
     if (link == NULL)
         return ;
@@ -52,7 +52,7 @@ void redditCookieFree(RedditCookieLink *link)
 /*
  * Removes a cookie with the given name from currentRedditState
  */
-void redditRemoveCookie(char *name)
+EXPORT_SYMBOL void redditRemoveCookie(char *name)
 {
     RedditCookieLink *prev = NULL, *node;
 
@@ -79,7 +79,7 @@ void redditRemoveCookie(char *name)
  * The returned pointer will be NULL if there are currently no cookies
  * The returned pointer should be freed if not NULL
  */
-char *redditGetCookieString()
+EXPORT_SYMBOL char *redditGetCookieString()
 {
     char *cookieStr = NULL;
     int currentLength = 0;

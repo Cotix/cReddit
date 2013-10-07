@@ -1,7 +1,13 @@
 # CREDDIT MAKEFILE
 #
-# To compile the creddit executable either use 'make', or 'make creddit'
-# To compile libreddit as a static library only, use 'make libreddit'
+# Normal usage: make; make install
+#
+# 'make' will default to compiling creddit in ./build/creddit and libreddit as
+# ./build/libreddit.so (shared object)
+# To compile libreddit as a shared library separately, use 'make libreddit'
+#
+# To compile libreddit as a static library, compile with STATIC=y
+# Ex. make STATIC=y
 #
 # You can also compile individual parts or individual files on their own, by
 # specifying their object name.
@@ -13,6 +19,7 @@ QUIETLY:=@
 # In the future these shouldn't be assumed.
 CC:=$(QUIETLY)gcc
 PROJCFLAGS:=-O2 -Wall -I'./include'
+PROJLDFLAGS:=-fvisibility=hidden
 LD:=$(QUIETLY)ld
 AR:=$(QUIETLY)ar
 INSTALL:=$(QUIETLY)install

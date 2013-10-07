@@ -12,7 +12,7 @@
 /*
  * Creates a new redditComment
  */
-RedditComment *redditCommentNew ()
+EXPORT_SYMBOL RedditComment *redditCommentNew ()
 {
     RedditComment *comment;
     comment = rmalloc(sizeof(RedditComment));
@@ -23,7 +23,7 @@ RedditComment *redditCommentNew ()
 /*
  * Recurrisivly free's all replys on a RedditComment
  */
-void redditCommentFreeReplies (RedditComment *comment)
+EXPORT_SYMBOL void redditCommentFreeReplies (RedditComment *comment)
 {
     int i;
     if (comment == NULL)
@@ -37,7 +37,7 @@ void redditCommentFreeReplies (RedditComment *comment)
 /*
  * Frees all of a RedditComment as well as all of it's replies
  */
-void redditCommentFree (RedditComment *comment)
+EXPORT_SYMBOL void redditCommentFree (RedditComment *comment)
 {
     int i;
     if (comment == NULL)
@@ -59,7 +59,7 @@ void redditCommentFree (RedditComment *comment)
 /*
  * Chains a RedditComment as a reply on another RedditComment.
  */
-void redditCommentAddReply (RedditComment *comment, RedditComment *reply)
+EXPORT_SYMBOL void redditCommentAddReply (RedditComment *comment, RedditComment *reply)
 {
     comment->replyCount++;
     comment->replies = rrealloc(comment->replies, (comment->replyCount) * sizeof(RedditComment));
@@ -70,7 +70,7 @@ void redditCommentAddReply (RedditComment *comment, RedditComment *reply)
 /*
  * Creates a new blank list of comments
  */
-RedditCommentList *redditCommentListNew ()
+EXPORT_SYMBOL RedditCommentList *redditCommentListNew ()
 {
     RedditCommentList *list = rmalloc(sizeof(RedditCommentList));
     memset(list, 0, sizeof(RedditCommentList));
@@ -80,7 +80,7 @@ RedditCommentList *redditCommentListNew ()
 /*
  * Frees that list of comments
  */
-void redditCommentListFree (RedditCommentList *list)
+EXPORT_SYMBOL void redditCommentListFree (RedditCommentList *list)
 {
     if (list == NULL)
         return ;
@@ -235,7 +235,7 @@ RedditComment *redditGetComment(TokenParser *parser, RedditCommentList *list)
  * This function calls Reddit to get the list of comments on a link, and then stores them
  * in a RedditCommentList.
  */
-RedditErrno redditGetCommentList (RedditCommentList *list)
+EXPORT_SYMBOL RedditErrno redditGetCommentList (RedditCommentList *list)
 {
     char fullLink[2048], *kindStr = NULL;
     TokenParserResult res;
@@ -271,7 +271,7 @@ RedditErrno redditGetCommentList (RedditCommentList *list)
  * FIXME: Doesn't yet work correctly, it needs separate callbacks, the format
  * is slightly different then the getCommentListHelper callback is expecting.
  */
-RedditErrno redditGetCommentChildren (RedditCommentList *list, RedditComment *parent)
+EXPORT_SYMBOL RedditErrno redditGetCommentChildren (RedditCommentList *list, RedditComment *parent)
 {
     TokenParserResult res;
     char postText[4096], *kindStr = NULL;

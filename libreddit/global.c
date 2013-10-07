@@ -39,12 +39,12 @@ void *rrealloc(void *old, size_t bytes)
  *
  * Currently they just start and end the curl library
  */
-void redditGlobalInit()
+EXPORT_SYMBOL void redditGlobalInit()
 {
     curl_global_init(CURL_GLOBAL_ALL);
 }
 
-void redditGlobalCleanup()
+EXPORT_SYMBOL void redditGlobalCleanup()
 {
     curl_global_cleanup();
 }
