@@ -36,6 +36,8 @@ endif
 
 all: real-all
 
+include ./common.mk
+
 # Set initial values for 'targets'
 CLEAN_TARGETS:=
 COMPILE_TARGETS:=
