@@ -1,6 +1,12 @@
 
 CREDDIT_CFLAGS:=$(PROJCFLAGS)
-CREDDIT_LDFLAGS:=$(PROJLDFILES) -lncursesw -L$(BUILD_DIR) -lreddit
+CREDDIT_LDFLAGS:=$(PROJLDFILES) -L$(BUILD_DIR) -lreddit
+ifdef F_MACOSX
+	CREDDIT_LDFLAGS+=-lncurses
+else
+	CREDDIT_LDFLAGS+=-lncursesw
+endif
+
 ifdef STATIC
     CREDDIT_LDFLAGS+=`curl-config --cflags` `curl-config --libs`
 endif
