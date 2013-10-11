@@ -32,14 +32,20 @@ EXPORT_SYMBOL void redditLinkFree (RedditLink *link)
 {
     if (link == NULL)
         return ;
+
     free(link->selftext);
+    free(link->title);
+
+    free(link->selftextEsc);
+    free(link->titleEsc);
+
+    free(link->wselftextEsc);
+    free(link->wtitleEsc);
+
     free(link->id);
     free(link->permalink);
     free(link->author);
     free(link->url);
-    free(link->title);
-    free(link->wtitle);
-    free(link->wselftext);
 
     free(link);
 }
@@ -101,19 +107,35 @@ EXPORT_SYMBOL void redditLinkListAddLink (RedditLinkList *list, RedditLink *link
 DEF_TOKEN_CALLBACK(parseSelftext)
 {
     ARG_LINK_GET_LINK
+    int len;
 
-    link->selftext = redditParseEscCodes(parser->block->memory, parser->tokens[parser->currentToken]);
-    link->wselftext = redditParseEscCodesWide(parser->block->memory, parser->tokens[parser->currentToken]);
+    free(link->selftext);
+    free(link->selftextEsc);
+    free(link->wselftextEsc);
+
+    link->selftext = getCopyOfToken(parser->block->memory, parser->tokens[parser->currentToken]);
+
+    len = strlen(link->selftext);
+
+    link->selftextEsc = redditParseEscCodes(link->selftext, len);
+    link->wselftextEsc = redditParseEscCodesWide(link->selftext, len);
 }
 
 DEF_TOKEN_CALLBACK(parseTitle)
 {
     ARG_LINK_GET_LINK
+    int len;
 
     free(link->title);
-    free(link->wtitle);
-    link->title  = redditParseEscCodes(parser->block->memory, parser->tokens[parser->currentToken]);
-    link->wtitle = redditParseEscCodesWide(parser->block->memory, parser->tokens[parser->currentToken]);
+    free(link->titleEsc);
+    free(link->wtitleEsc);
+
+    link->title = getCopyOfToken(parser->block->memory, parser->tokens[parser->currentToken]);
+
+    len = strlen(link->title);
+
+    link->titleEsc  = redditParseEscCodes(link->title, len);
+    link->wtitleEsc = redditParseEscCodesWide(link->title, len);
 }
 
 /*
@@ -155,7 +177,7 @@ RedditLink *redditGetLink(TokenParser *parser)
 #define ARG_LIST_GET_LISTING \
     RedditLinkList *list = va_arg(args, RedditLinkList*);
 
-/* 
+/*
  * When we encounter a 't3', which is a new RedditLink, we parse it with
  * redditGetLink, and then add it to our RedditLinkList
  */

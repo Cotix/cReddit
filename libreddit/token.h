@@ -118,12 +118,6 @@ char *trueFalseString(char *string, bool tf);
 TokenParserResult redditvRunParser(char *url, char *post, TokenIdent *idents, va_list args);
 TokenParserResult redditRunParser(char *url, char *post, TokenIdent *idents, ...);
 
-/* Functions to take a jsmn token and return a copy of it after it has been
- * parsed for excaped sequences, such as '\n' and '\u'. 'Wide' returns a wchar_t
- * with unicode characters. */
-char *redditParseEscCodes (char *json, jsmntok_t token);
-wchar_t *redditParseEscCodesWide (char *json, jsmntok_t token);
-
 /* Runs a setup TokenParser. redditRunParser calls this. Normally it's
  * only used in callbacks when a new object is going to be parsed */
 void vparseTokens (TokenParser *parser, TokenIdent *identifiers, va_list args);

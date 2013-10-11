@@ -42,11 +42,13 @@ EXPORT_SYMBOL void redditCommentFree (RedditComment *comment)
     int i;
     if (comment == NULL)
         return ;
+
+    free(comment->body);
+    free(comment->bodyEsc);
+    free(comment->wbodyEsc);
     free(comment->id);
     free(comment->author);
     free(comment->parentId);
-    free(comment->body);
-    free(comment->wbody);
     for (i = 0; i < comment->directChildrenCount; i++)
         free(comment->directChildrenIds[i]);
 
@@ -188,16 +190,23 @@ DEF_TOKEN_CALLBACK(handleBodyText)
 {
     ARG_COMMENT_LISTING
     (void)list;
+    int len;
 
     free(comment->body);
-    free(comment->wbody);
-    comment->body = redditParseEscCodes(parser->block->memory, parser->tokens[parser->currentToken]);
-    comment->wbody = redditParseEscCodesWide(parser->block->memory, parser->tokens[parser->currentToken]);
+    free(comment->bodyEsc);
+    free(comment->wbodyEsc);
+
+    comment->body = getCopyOfToken(parser->block->memory, parser->tokens[parser->currentToken]);
+
+    len = strlen(comment->body);
+
+    comment->bodyEsc  = redditParseEscCodes(comment->body, len);
+    comment->wbodyEsc = redditParseEscCodesWide(comment->body, len);
 }
 
 /*
- * This code parses a JSON object to pull out a RedditComment. The 'getCommentReplies' 
- * callback makes this all work, as it handles the case where 'replies' contains a 
+ * This code parses a JSON object to pull out a RedditComment. The 'getCommentReplies'
+ * callback makes this all work, as it handles the case where 'replies' contains a
  * number of more RedditComment structures. That callback calls redditGetComment on
  * those objects in a recursive fashion to parse them.
  *

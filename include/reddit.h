@@ -120,20 +120,23 @@ typedef struct RedditUserLogged {
 typedef struct RedditLink {
     struct RedditLink *next;
 
-    char *title;
-    char *selftext;
     char *id;
     char *permalink;
     char *author;
     char *url;
 
-    /*
-     * These members are versions of title and selftext in wchar_t* format. The only
-     * difference from the char* versions is that unicode characters are only in
-     * the wchar_t* versions. Everything else is the same.
-     */
-    wchar_t *wtitle;
-    wchar_t *wselftext;
+    /* These members are versions of the strings in different formats.
+     * The normal versions are unparsed.
+     * The 'Esc' versions are parsed for Reddit Esc codes.
+     * The 'w' versions are parsed for Esc codes as well as support unicode characters */
+    char *title;
+    char *selftext;
+
+    char *titleEsc;
+    char *selftextEsc;
+
+    wchar_t *wtitleEsc;
+    wchar_t *wselftextEsc;
 
     int score;
     int downs;
@@ -214,10 +217,12 @@ typedef struct RedditComment {
     char *id;
     char *author;
     char *parentId;
-    char *body;
 
-    /* copy of 'body' text which includes unicode characters */
-    wchar_t *wbody;
+    /* See 'RedditLink' for explination of different strings */
+    char *body;
+    char *bodyEsc;
+    wchar_t *wbodyEsc;
+
 
     int ups;
     int downs;
@@ -328,6 +333,11 @@ extern RedditErrno redditGetCommentChildren (RedditCommentList *list, RedditComm
 
 /* simply returns an allocated copy of a string. */
 extern char *redditCopyString (const char *string);
+
+/* These functions will returned a copy of 'text' parsed for Reddit's esc codes,
+ * Ex. '\n', '\uxxxx', etc... */
+extern char    *redditParseEscCodes     (const char *text, int len);
+extern wchar_t *redditParseEscCodesWide (const char *text, int len);
 
 /* Global init and clean-up functions. These should be called at the start and
  * end of a program, respectivly. */
