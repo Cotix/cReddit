@@ -139,7 +139,7 @@ wchar_t *createCommentLine(RedditComment *comment, int width, int indent)
     wchar_t *text = malloc(sizeof(wchar_t) * (width+1));
     int i, ilen = indent * 3, bodylen, texlen;
 
-    bodylen = wcslen(comment->wbody);
+    bodylen = wcslen(comment->wbodyEsc);
     memset(text, 32, sizeof(wchar_t) * (width));
     text[width] = (wchar_t)0;
 
@@ -147,8 +147,8 @@ wchar_t *createCommentLine(RedditComment *comment, int width, int indent)
 
     texlen = wcslen(text);
     for (i = 0; i <= width - texlen - 1; i++)
-        if (i <= bodylen - 1 && comment->wbody[i] != L'\n')
-            text[i + texlen] = comment->wbody[i];
+        if (i <= bodylen - 1 && comment->wbodyEsc[i] != L'\n')
+            text[i + texlen] = comment->wbodyEsc[i];
         else
             text[i + texlen] = (wchar_t)32;
 
@@ -272,7 +272,7 @@ void commentScreenDisplay(CommentScreen *screen)
                 swprintf(tmpbuf, bufLen, L"-------");
                 mvaddwstr(lastLine + 2, 0, tmpbuf);
 
-                mvaddwstr(lastLine + 3, 0, current->wbody);
+                mvaddwstr(lastLine + 3, 0, current->wbodyEsc);
             }
         }
     } else if (screenLines < screen->displayed + screen->offset + 1) {
@@ -395,12 +395,12 @@ void linkScreenRenderLine (LinkScreen *screen, int line, int width)
     swprintf(screen->screenLines[line], width + 1, L"%d. [%4d] %20s - ", line + 1, screen->list->links[line]->score, screen->list->links[line]->author);
 
     offset = wcslen(screen->screenLines[line]);
-    title = wcslen(screen->list->links[line]->wtitle);
+    title = wcslen(screen->list->links[line]->wtitleEsc);
     for (tmp = 0; tmp <= width - offset; tmp++)
         if (tmp >= title)
             screen->screenLines[line][tmp + offset] = (wchar_t)32;
         else
-            screen->screenLines[line][tmp + offset] = screen->list->links[line]->wtitle[tmp];
+            screen->screenLines[line][tmp + offset] = screen->list->links[line]->wtitleEsc[tmp];
 
     screen->screenLines[line][width] = (wchar_t)0;
 }
@@ -435,13 +435,13 @@ void linkScreenRenderLinkText (LinkScreen *screen, wchar_t *tmpbuf, int bufLen, 
         if (current != NULL) {
             swprintf(tmpbuf, bufLen, L"%s - %d Score / %d Up / %d Down / %d Comments\nTitle: ", current->author, current->score, current->ups, current->downs, current->numComments);
             mvaddwstr(lastLine + 1, 0, tmpbuf);
-            addwstr(current->wtitle);
+            addwstr(current->wtitleEsc);
             addch('\n');
             swprintf(tmpbuf, bufLen, L"-------\n");
             addwstr(tmpbuf);
 
             if (current->flags & REDDIT_LINK_IS_SELF)
-                addwstr(current->wselftext);
+                addwstr(current->wselftextEsc);
             else
                 addstr(current->url);
         }
