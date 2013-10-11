@@ -100,45 +100,6 @@ EXPORT_SYMBOL void redditLinkListAddLink (RedditLinkList *list, RedditLink *link
     RedditLink *link = va_arg(args, RedditLink*);
 
 /*
- * These next two callbacks handle creating a wchar_t* and char* version
- * of a string. Eventually should functionality should be put into the
- * token parser itself
- */
-DEF_TOKEN_CALLBACK(parseSelftext)
-{
-    ARG_LINK_GET_LINK
-    int len;
-
-    free(link->selftext);
-    free(link->selftextEsc);
-    free(link->wselftextEsc);
-
-    link->selftext = getCopyOfToken(parser->block->memory, parser->tokens[parser->currentToken]);
-
-    len = strlen(link->selftext);
-
-    link->selftextEsc = redditParseEscCodes(link->selftext, len);
-    link->wselftextEsc = redditParseEscCodesWide(link->selftext, len);
-}
-
-DEF_TOKEN_CALLBACK(parseTitle)
-{
-    ARG_LINK_GET_LINK
-    int len;
-
-    free(link->title);
-    free(link->titleEsc);
-    free(link->wtitleEsc);
-
-    link->title = getCopyOfToken(parser->block->memory, parser->tokens[parser->currentToken]);
-
-    len = strlen(link->title);
-
-    link->titleEsc  = redditParseEscCodes(link->title, len);
-    link->wtitleEsc = redditParseEscCodesWide(link->title, len);
-}
-
-/*
  * Details how to parse a RedditLink. Doesn't do much more then allocate a new
  * RedditLink and map it's members to key strings.
  */
@@ -147,24 +108,24 @@ RedditLink *redditGetLink(TokenParser *parser)
     RedditLink *link = redditLinkNew();
 
     TokenIdent ids[] = {
-        ADD_TOKEN_IDENT_FUNC  ("selftext",      parseSelftext),
-        ADD_TOKEN_IDENT_FUNC  ("title",         parseTitle),
-        ADD_TOKEN_IDENT_STRING("id",            link->id),
-        ADD_TOKEN_IDENT_STRING("permalink",     link->permalink),
-        ADD_TOKEN_IDENT_STRING("author",        link->author),
-        ADD_TOKEN_IDENT_STRING("url",           link->url),
-        ADD_TOKEN_IDENT_INT   ("score",         link->score),
-        ADD_TOKEN_IDENT_INT   ("downs",         link->downs),
-        ADD_TOKEN_IDENT_INT   ("ups",           link->ups),
-        ADD_TOKEN_IDENT_INT   ("num_comments",  link->numComments),
-        ADD_TOKEN_IDENT_INT   ("num_reports",   link->numReports),
-        ADD_TOKEN_IDENT_BOOL  ("is_self",       link->flags, REDDIT_LINK_IS_SELF),
-        ADD_TOKEN_IDENT_BOOL  ("over_18",       link->flags, REDDIT_LINK_OVER_18),
-        ADD_TOKEN_IDENT_BOOL  ("clicked",       link->flags, REDDIT_LINK_CLICKED),
-        ADD_TOKEN_IDENT_BOOL  ("stickied",      link->flags, REDDIT_LINK_STICKIED),
-        ADD_TOKEN_IDENT_BOOL  ("edited",        link->flags, REDDIT_LINK_EDITED),
-        ADD_TOKEN_IDENT_BOOL  ("hidden",        link->flags, REDDIT_LINK_HIDDEN),
-        ADD_TOKEN_IDENT_BOOL  ("distinguished", link->flags, REDDIT_LINK_DISTINGUISHED),
+        ADD_TOKEN_IDENT_STRPARSE("selftext",      link->selftext, link->selftextEsc, link->wselftextEsc),
+        ADD_TOKEN_IDENT_STRPARSE("title",         link->title,    link->titleEsc,    link->wtitleEsc),
+        ADD_TOKEN_IDENT_STRING  ("id",            link->id),
+        ADD_TOKEN_IDENT_STRING  ("permalink",     link->permalink),
+        ADD_TOKEN_IDENT_STRING  ("author",        link->author),
+        ADD_TOKEN_IDENT_STRING  ("url",           link->url),
+        ADD_TOKEN_IDENT_INT     ("score",         link->score),
+        ADD_TOKEN_IDENT_INT     ("downs",         link->downs),
+        ADD_TOKEN_IDENT_INT     ("ups",           link->ups),
+        ADD_TOKEN_IDENT_INT     ("num_comments",  link->numComments),
+        ADD_TOKEN_IDENT_INT     ("num_reports",   link->numReports),
+        ADD_TOKEN_IDENT_BOOL    ("is_self",       link->flags, REDDIT_LINK_IS_SELF),
+        ADD_TOKEN_IDENT_BOOL    ("over_18",       link->flags, REDDIT_LINK_OVER_18),
+        ADD_TOKEN_IDENT_BOOL    ("clicked",       link->flags, REDDIT_LINK_CLICKED),
+        ADD_TOKEN_IDENT_BOOL    ("stickied",      link->flags, REDDIT_LINK_STICKIED),
+        ADD_TOKEN_IDENT_BOOL    ("edited",        link->flags, REDDIT_LINK_EDITED),
+        ADD_TOKEN_IDENT_BOOL    ("hidden",        link->flags, REDDIT_LINK_HIDDEN),
+        ADD_TOKEN_IDENT_BOOL    ("distinguished", link->flags, REDDIT_LINK_DISTINGUISHED),
         {0}
     };
 

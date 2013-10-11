@@ -186,24 +186,6 @@ DEF_TOKEN_CALLBACK(getCommentReplies)
     free(kindStr);
 }
 
-DEF_TOKEN_CALLBACK(handleBodyText)
-{
-    ARG_COMMENT_LISTING
-    (void)list;
-    int len;
-
-    free(comment->body);
-    free(comment->bodyEsc);
-    free(comment->wbodyEsc);
-
-    comment->body = getCopyOfToken(parser->block->memory, parser->tokens[parser->currentToken]);
-
-    len = strlen(comment->body);
-
-    comment->bodyEsc  = redditParseEscCodes(comment->body, len);
-    comment->wbodyEsc = redditParseEscCodesWide(comment->body, len);
-}
-
 /*
  * This code parses a JSON object to pull out a RedditComment. The 'getCommentReplies'
  * callback makes this all work, as it handles the case where 'replies' contains a
@@ -218,17 +200,17 @@ RedditComment *redditGetComment(TokenParser *parser, RedditCommentList *list)
     RedditComment *comment = redditCommentNew();
 
     TokenIdent ids[] = {
-        ADD_TOKEN_IDENT_FUNC  ("replies",       getCommentReplies),
-        ADD_TOKEN_IDENT_STRING("author",        comment->author),
-        ADD_TOKEN_IDENT_FUNC  ("body",          handleBodyText),
-        ADD_TOKEN_IDENT_FUNC  ("contentText",   handleBodyText),
-        ADD_TOKEN_IDENT_STRING("id",            comment->id),
-        ADD_TOKEN_IDENT_INT   ("ups",           comment->ups),
-        ADD_TOKEN_IDENT_INT   ("downs",         comment->downs),
-        ADD_TOKEN_IDENT_INT   ("num_reports",   comment->numReports),
-        ADD_TOKEN_IDENT_BOOL  ("edited",        comment->flags, REDDIT_COMMENT_EDITED),
-        ADD_TOKEN_IDENT_BOOL  ("score_hidden",  comment->flags, REDDIT_COMMENT_SCORE_HIDDEN),
-        ADD_TOKEN_IDENT_BOOL  ("distinguished", comment->flags, REDDIT_COMMENT_DISTINGUISHED),
+        ADD_TOKEN_IDENT_FUNC    ("replies",       getCommentReplies),
+        ADD_TOKEN_IDENT_STRING  ("author",        comment->author),
+        ADD_TOKEN_IDENT_STRPARSE("body",          comment->body, comment->bodyEsc, comment->wbodyEsc),
+        ADD_TOKEN_IDENT_STRPARSE("contentText",   comment->body, comment->bodyEsc, comment->wbodyEsc),
+        ADD_TOKEN_IDENT_STRING  ("id",            comment->id),
+        ADD_TOKEN_IDENT_INT     ("ups",           comment->ups),
+        ADD_TOKEN_IDENT_INT     ("downs",         comment->downs),
+        ADD_TOKEN_IDENT_INT     ("num_reports",   comment->numReports),
+        ADD_TOKEN_IDENT_BOOL    ("edited",        comment->flags, REDDIT_COMMENT_EDITED),
+        ADD_TOKEN_IDENT_BOOL    ("score_hidden",  comment->flags, REDDIT_COMMENT_SCORE_HIDDEN),
+        ADD_TOKEN_IDENT_BOOL    ("distinguished", comment->flags, REDDIT_COMMENT_DISTINGUISHED),
         {0}
     };
 

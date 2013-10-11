@@ -180,7 +180,7 @@ EXPORT_SYMBOL char *redditCopyString(const char *string)
 int performIdentAction(TokenParser *p, TokenIdent *identifiers, int i, va_list args)
 {
     char *tmp = NULL;
-    int performedAction = 0;
+    int performedAction = 0, len;
 
     READ_TOKEN_TO_TMP(p->block->memory, tmp, p->tokens[p->currentToken]);
 
@@ -190,6 +190,23 @@ int performIdentAction(TokenParser *p, TokenIdent *identifiers, int i, va_list a
             (p->currentToken)++;
             CALL_TOKEN_FUNC(identifiers[i].funcCallback, p, identifiers, args);
             performedAction = 1;
+            break;
+
+        case TOKEN_SET_PARSE:
+            (p->currentToken)++;
+            if (identifiers[i].freeFlag) {
+                free(*((char**)identifiers[i].value));
+                free(*(identifiers[i].parseStrWide));
+                free(*(identifiers[i].parseStr));
+            }
+
+            *((char**)identifiers[i].value) = getCopyOfToken(p->block->memory, p->tokens[p->currentToken]);
+
+            len = p->tokens[p->currentToken].end - p->tokens[p->currentToken].start;
+
+            *(identifiers[i].parseStr)     = redditParseEscCodes    (*((char**)identifiers[i].value), len);
+            *(identifiers[i].parseStrWide) = redditParseEscCodesWide(*((char**)identifiers[i].value), len);
+
             break;
 
         case TOKEN_SET:
@@ -414,8 +431,8 @@ static void parseChar (struct charParser *p)
                 for (k = 3; k >= 0; k--) {
                     p->cur++;
                     /* This weird piece of code converts a hex character (0-9 and a-f) into
-                     * it's decimal equivelent, and then shits it over the correct number of
-                     * bits coresponding to it's position in the wchar_t */
+                     * it's decimal equivalent, and then shits it over the correct number of
+                     * bits corresponding to it's position in the wchar_t */
                     temp |= (((p->text[p->cur] < 58)? p->text[p->cur] - 48: ((p->text[p->cur] & 0x0F) + 9))) << (k << 2);
                 }
                 ((wchar_t*)(p->new_text))[p->offset] = temp;
@@ -471,7 +488,7 @@ static void *redditParseEscCodesGeneric (const void *text, int len, int wide)
 
 /*
  * Takes a string of json and the token containing the string data, and
- * parses out any '\' excape characters, such as '\n' and '\u'. This version
+ * parses out any '\' escape characters, such as '\n' and '\u'. This version
  * returns a straight char* version, meaning unicode characters are discarded.
  */
 EXPORT_SYMBOL char *redditParseEscCodes (const char *text, int len)
@@ -480,7 +497,7 @@ EXPORT_SYMBOL char *redditParseEscCodes (const char *text, int len)
 }
 
 /*
- * This is another verison of the above redditParseEscCodes. The difference is
+ * This is another version of the above redditParseEscCodes. The difference is
  * that this returns a whcar_t, so unicode characters are encoded correctly
  */
 EXPORT_SYMBOL wchar_t *redditParseEscCodesWide (const char *text, int len)

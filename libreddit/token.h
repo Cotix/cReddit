@@ -67,6 +67,10 @@ typedef struct TokenIdent {
          * based on the 'type' to the value of the token after 'name' */
         TOKEN_SET = 0,
 
+        /* If we have this, then the parser will run the EscCode parser on the string 'value'
+         * and store the contents in 'strParse' and 'strParseWide' */
+        TOKEN_SET_PARSE,
+
         /* If 'name' is found as a key, then 'funcCallback' will be called
          * and 'value' will be completely ignored. */
         TOKEN_CHECK_CALL
@@ -75,6 +79,10 @@ typedef struct TokenIdent {
 
     /* A pointer to one of the token type's to store the token's data -- See enum type */
     void *value;
+
+    /* Some extra pointers if we have a Parsed string */
+    char **parseStr;
+    wchar_t **parseStrWide;
 
     /* If using 'TOKEN_BOOL', then if the token is 'true', *value will be cast as an
      * unsigned int, and |= with bitMask. If 'false', it will be &= ~bitMask */
@@ -195,6 +203,15 @@ void parseTokens  (TokenParser *parser, TokenIdent *identifiers, ...);
      .value = &(member),                             \
      .bitMask = mask}
 
+
+#define ADD_TOKEN_IDENT_STRPARSE(key_name, unparsed, parsed, wideparsed) \
+    {.name = key_name,                                                   \
+     .type = TOKEN_STRING,                                               \
+     .action = TOKEN_SET_PARSE,                                          \
+     .value = &(unparsed),                                               \
+     .parseStr = &(parsed),                                              \
+     .parseStrWide = &(wideparsed),                                      \
+     .freeFlag = 1}
 /*
  * Again, another similar macro. This time, it creates a callback instead
  */

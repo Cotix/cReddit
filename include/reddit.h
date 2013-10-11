@@ -218,7 +218,7 @@ typedef struct RedditComment {
     char *author;
     char *parentId;
 
-    /* See 'RedditLink' for explination of different strings */
+    /* See 'RedditLink' for explanation of different strings */
     char *body;
     char *bodyEsc;
     wchar_t *wbodyEsc;
