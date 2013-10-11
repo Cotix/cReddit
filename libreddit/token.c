@@ -64,7 +64,7 @@ void tokenParserFree(TokenParser *parser)
  *
  * It returns the state jsmn_parse returned.
  */
-jsmnerr_t tokenParserCreateTokens(TokenParser *parser)
+static jsmnerr_t tokenParserCreateTokens(TokenParser *parser)
 {
     jsmn_parser jsmnParser;
     jsmnerr_t result;
@@ -114,7 +114,7 @@ char *getCopyOfToken(const char *json, jsmntok_t token)
  * reallocates the size of the memory buffer as more memory is needed for the
  * JSON.
  */
-size_t writeToParser(void *contents, size_t size, size_t nmemb, void *userp)
+static size_t writeToParser(void *contents, size_t size, size_t nmemb, void *userp)
 {
     size_t realsize = size * nmemb;
     TokenParser *parser = (TokenParser*)userp;
