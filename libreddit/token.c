@@ -180,7 +180,7 @@ EXPORT_SYMBOL char *redditCopyString(const char *string)
 int performIdentAction(TokenParser *p, TokenIdent *identifiers, int i, va_list args)
 {
     char *tmp = NULL;
-    int performedAction = 0;
+    int performedAction = 0, len;
 
     READ_TOKEN_TO_TMP(p->block->memory, tmp, p->tokens[p->currentToken]);
 
@@ -190,6 +190,23 @@ int performIdentAction(TokenParser *p, TokenIdent *identifiers, int i, va_list a
             (p->currentToken)++;
             CALL_TOKEN_FUNC(identifiers[i].funcCallback, p, identifiers, args);
             performedAction = 1;
+            break;
+
+        case TOKEN_SET_PARSE:
+            (p->currentToken)++;
+            if (identifiers[i].freeFlag) {
+                free(*((char**)identifiers[i].value));
+                free(*(identifiers[i].parseStrWide));
+                free(*(identifiers[i].parseStr));
+            }
+
+            *((char**)identifiers[i].value) = getCopyOfToken(p->block->memory, p->tokens[p->currentToken]);
+
+            len = p->tokens[p->currentToken].end - p->tokens[p->currentToken].start;
+
+            *(identifiers[i].parseStr)     = redditParseEscCodes    (*((char**)identifiers[i].value), len);
+            *(identifiers[i].parseStrWide) = redditParseEscCodesWide(*((char**)identifiers[i].value), len);
+
             break;
 
         case TOKEN_SET:
@@ -378,89 +395,114 @@ TokenParserResult redditRunParser(char *url, char *post, TokenIdent *idents, ...
 }
 
 /*
- * Takes a string of json and the token containing the string data, and
- * parses out any '\' excape characters, such as '\n' and '\u'. This version
- * returns a straight char* version, meaning unicode characters are discarded.
+ * This is a simple structure used by the EscCodeParser. It's simply here to
+ * make passing the data around easy and faster then passing a ton of pointers
+ * separately.
  */
-char *redditParseEscCodes (char *json, jsmntok_t token)
+struct charParser {
+    const char *text;
+    int cur;
+    int offset;
+    int wide;
+    void *new_text;
+};
+
+/*
+ * This function parses a single character in a piece of text and handles any
+ * escaped characters.
+ */
+static void parseChar (struct charParser *p)
 {
-    int i, len = token.end - token.start, offset = 0;
-    char *new_text;
+    int k;
+    wchar_t temp;
+    switch(p->text[p->cur]) {
+    case '\\':
+        p->cur++;
+        switch(p->text[p->cur]) {
+        case 'n':
+            if (p->wide)
+                ((wchar_t*)(p->new_text))[p->offset] = L'\n';
+            else
+                ((char*)(p->new_text))[p->offset] = '\n';
+            p->offset++;
+        case 'u':
+            if (p->wide) {
+                temp = L'\0';
+                for (k = 3; k >= 0; k--) {
+                    p->cur++;
+                    /* This weird piece of code converts a hex character (0-9 and a-f) into
+                     * it's decimal equivalent, and then shits it over the correct number of
+                     * bits corresponding to it's position in the wchar_t */
+                    temp |= (((p->text[p->cur] < 58)? p->text[p->cur] - 48: ((p->text[p->cur] & 0x0F) + 9))) << (k << 2);
+                }
+                ((wchar_t*)(p->new_text))[p->offset] = temp;
+                p->offset++;
+            } else {
+                p->cur+=4;
+            }
+            break;
+        }
+        break;
+    default:
+        if (p->wide)
+            ((wchar_t*)(p->new_text))[p->offset] = btowc(p->text[p->cur]);
+        else
+            ((char*)(p->new_text))[p->offset] = p->text[p->cur];
+        p->offset++;
+        break;
+    }
+}
+
+/*
+ * This code implements a generic version of the 'redditParseEscCodes'
+ * functions which works with both wchar_t and char strings. To use wchar_t set
+ * 'wide' to 1, else set it to 0 for plain char strings.
+ */
+static void *redditParseEscCodesGeneric (const void *text, int len, int wide)
+{
+    struct charParser parser;
 
     if (len == 0)
         return NULL;
 
-    new_text = rmalloc(len + 1);
+    parser.wide = wide;
+    parser.text = text;
+    parser.cur = 0;
+    parser.offset = 0;
 
-    len += token.start;
-    for (i = token.start; i < len; i++) {
-        switch(json[i]) {
-        case '\\':
-            i++;
-            switch(json[i]) {
-            case 'n':
-                new_text[offset] = '\n';
-                offset++;
-                break;
-            case 'u':
-                i+=4;
-                break;
-            }
-            break;
-        default:
-            new_text[offset] = json[i];
-            offset++;
-        }
-    }
-    new_text[offset] = '\0';
-    return new_text;
+    if (wide)
+        parser.new_text = rmalloc((len + 1) * sizeof(wchar_t));
+    else
+        parser.new_text = rmalloc((len + 1) * sizeof(char));
+
+    for (parser.cur = 0; parser.cur < len; parser.cur++)
+        parseChar(&parser);
+
+    if (wide)
+        ((wchar_t*)(parser.new_text))[parser.offset] = L'\0';
+    else
+        ((char*)(parser.new_text))[parser.offset] = '\0';
+
+    return parser.new_text;
 }
 
 /*
- * This is another verison of the above redditParseEscCodes. The difference is
+ * Takes a string of json and the token containing the string data, and
+ * parses out any '\' escape characters, such as '\n' and '\u'. This version
+ * returns a straight char* version, meaning unicode characters are discarded.
+ */
+EXPORT_SYMBOL char *redditParseEscCodes (const char *text, int len)
+{
+    return redditParseEscCodesGeneric(text, len, 0);
+}
+
+/*
+ * This is another version of the above redditParseEscCodes. The difference is
  * that this returns a whcar_t, so unicode characters are encoded correctly
  */
-wchar_t *redditParseEscCodesWide (char *json, jsmntok_t token)
+EXPORT_SYMBOL wchar_t *redditParseEscCodesWide (const char *text, int len)
 {
-    int i, k, len = token.end - token.start, offset = 0;
-    wchar_t *new_text, temp;
-
-    if (len== 0)
-        return NULL;
-
-    new_text = rmalloc((len + 1) * sizeof(wchar_t));
-
-    len += token.start;
-    for (i = token.start; i < len; i++) {
-        switch(json[i]) {
-        case '\\':
-            i++;
-            switch(json[i]) {
-            case 'n':
-                new_text[offset] = L'\n';
-                offset++;
-                break;
-            case 'u':
-                temp = L'\0';
-                for (k = 3; k >= 0; k--) {
-                    i++;
-                    /* This weird piece of code converts a hex character (0-9 and a-f) into
-                     * it's decimal equivelent, and then shits it over the correct number of
-                     * bits coresponding to it's position in the wchar_t */
-                    temp |= (((json[i] < 58)? json[i] - 48: ((json[i] & 0x0F) + 9))) << (k << 2);
-                }
-                new_text[offset] = temp;
-                offset++;
-                break;
-            }
-            break;
-        default:
-            new_text[offset] = btowc(json[i]);
-            offset++;
-        }
-    }
-    new_text[offset] = L'\0';
-    return new_text;
+    return redditParseEscCodesGeneric(text, len, 1);
 }
 
 
