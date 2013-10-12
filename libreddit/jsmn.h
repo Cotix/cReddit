@@ -1,6 +1,12 @@
 #ifndef __JSMN_H_
 #define __JSMN_H_
 
+/*
+ * Both of these settings are needed by libreddit
+ */
+#define JSMN_PARENT_LINKS
+#define JSMN_STRICT
+
 /**
  * JSON type identifier. Basic types are:
  * 	o Object
@@ -36,8 +42,15 @@ typedef struct {
 	jsmntype_t type;
 	int start;
 	int end;
-	int size;
+    int size;
+	/*
+	 * Key's are the labels in a json object
+     *
+     * Note: This is not in standard jsmn
+	 */
+	unsigned int is_key : 1;
 #ifdef JSMN_PARENT_LINKS
+	int full_size; /* Not in standard jsmn */
 	int parent;
 #endif
 } jsmntok_t;
@@ -61,7 +74,7 @@ void jsmn_init(jsmn_parser *parser);
  * Run JSON parser. It parses a JSON data string into and array of tokens, each describing
  * a single JSON object.
  */
-jsmnerr_t jsmn_parse(jsmn_parser *parser, const char *js, 
+jsmnerr_t jsmn_parse(jsmn_parser *parser, const char *js,
 		jsmntok_t *tokens, unsigned int num_tokens);
 
 #endif /* __JSMN_H_ */

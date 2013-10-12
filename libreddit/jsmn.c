@@ -5,7 +5,7 @@
 /**
  * Allocates a fresh unused token from the token pull.
  */
-static jsmntok_t *jsmn_alloc_token(jsmn_parser *parser, 
+static jsmntok_t *jsmn_alloc_token(jsmn_parser *parser,
 		jsmntok_t *tokens, size_t num_tokens) {
 	jsmntok_t *tok;
 	if (parser->toknext >= num_tokens) {
@@ -14,8 +14,10 @@ static jsmntok_t *jsmn_alloc_token(jsmn_parser *parser,
 	tok = &tokens[parser->toknext++];
 	tok->start = tok->end = -1;
 	tok->size = 0;
+	tok->is_key = 0;
 #ifdef JSMN_PARENT_LINKS
 	tok->parent = -1;
+	tok->full_size = 0;
 #endif
 	return tok;
 }
@@ -23,19 +25,20 @@ static jsmntok_t *jsmn_alloc_token(jsmn_parser *parser,
 /**
  * Fills token type and boundaries.
  */
-static void jsmn_fill_token(jsmntok_t *token, jsmntype_t type, 
-                            int start, int end) {
+static void jsmn_fill_token(jsmntok_t *token, jsmntype_t type,
+                            int start, int end, int on_key) {
 	token->type = type;
 	token->start = start;
 	token->end = end;
 	token->size = 0;
+	token->is_key = on_key;
 }
 
 /**
  * Fills next available token with JSON primitive.
  */
 static jsmnerr_t jsmn_parse_primitive(jsmn_parser *parser, const char *js,
-		jsmntok_t *tokens, size_t num_tokens) {
+		jsmntok_t *tokens, int on_key, size_t num_tokens) {
 	jsmntok_t *token;
 	int start;
 
@@ -68,7 +71,7 @@ found:
 		parser->pos = start;
 		return JSMN_ERROR_NOMEM;
 	}
-	jsmn_fill_token(token, JSMN_PRIMITIVE, start, parser->pos);
+	jsmn_fill_token(token, JSMN_PRIMITIVE, start, parser->pos, on_key);
 #ifdef JSMN_PARENT_LINKS
 	token->parent = parser->toksuper;
 #endif
@@ -80,7 +83,7 @@ found:
  * Filsl next token with JSON string.
  */
 static jsmnerr_t jsmn_parse_string(jsmn_parser *parser, const char *js,
-		jsmntok_t *tokens, size_t num_tokens) {
+		jsmntok_t *tokens, int on_key, size_t num_tokens) {
 	jsmntok_t *token;
 
 	int start = parser->pos;
@@ -98,7 +101,7 @@ static jsmnerr_t jsmn_parse_string(jsmn_parser *parser, const char *js,
 				parser->pos = start;
 				return JSMN_ERROR_NOMEM;
 			}
-			jsmn_fill_token(token, JSMN_STRING, start+1, parser->pos);
+			jsmn_fill_token(token, JSMN_STRING, start+1, parser->pos, on_key);
 #ifdef JSMN_PARENT_LINKS
 			token->parent = parser->toksuper;
 #endif
@@ -131,10 +134,14 @@ static jsmnerr_t jsmn_parse_string(jsmn_parser *parser, const char *js,
 /**
  * Parse JSON string and fill tokens.
  */
-jsmnerr_t jsmn_parse(jsmn_parser *parser, const char *js, jsmntok_t *tokens, 
+jsmnerr_t jsmn_parse(jsmn_parser *parser, const char *js, jsmntok_t *tokens,
 		unsigned int num_tokens) {
 	jsmnerr_t r;
 	int i;
+#ifdef JSMN_PARENT_LINKS
+	int k;
+#endif
+	int on_key = 1;
 	jsmntok_t *token;
 
 	for (; js[parser->pos] != '\0'; parser->pos++) {
@@ -147,6 +154,7 @@ jsmnerr_t jsmn_parse(jsmn_parser *parser, const char *js, jsmntok_t *tokens,
 				token = jsmn_alloc_token(parser, tokens, num_tokens);
 				if (token == NULL)
 					return JSMN_ERROR_NOMEM;
+				token->is_key = 0; /* Objects can't be keys */
 				if (parser->toksuper != -1) {
 					tokens[parser->toksuper].size++;
 #ifdef JSMN_PARENT_LINKS
@@ -156,6 +164,11 @@ jsmnerr_t jsmn_parse(jsmn_parser *parser, const char *js, jsmntok_t *tokens,
 				token->type = (c == '{' ? JSMN_OBJECT : JSMN_ARRAY);
 				token->start = parser->pos;
 				parser->toksuper = parser->toknext - 1;
+				/*
+				 * The start of a new object or array means we'll encounter a key next
+				 * We reset this to show that
+				 */
+				on_key = 1;
 				break;
 			case '}': case ']':
 				type = (c == '}' ? JSMN_OBJECT : JSMN_ARRAY);
@@ -200,14 +213,33 @@ jsmnerr_t jsmn_parse(jsmn_parser *parser, const char *js, jsmntok_t *tokens,
 					}
 				}
 #endif
+				/*
+				 * The end of an object/array also means we'll encounter a key next
+				 * We change the variable againt o show this
+				 *
+				 * Technically this shouldn't be nessisary (Since a comma should be soon)
+				 * But better to have it then not.
+				 */
+				on_key = 1;
 				break;
 			case '\"':
-				r = jsmn_parse_string(parser, js, tokens, num_tokens);
+				r = jsmn_parse_string(parser, js, tokens, on_key, num_tokens);
 				if (r < 0) return r;
 				if (parser->toksuper != -1)
 					tokens[parser->toksuper].size++;
 				break;
-			case '\t' : case '\r' : case '\n' : case ':' : case ',': case ' ': 
+
+			/*
+			 * The next two cases represent a change between whether or not the token
+			 * is a key
+			 */
+			case ':':
+				on_key = 0;
+				break;
+			case ',':
+				on_key = 1;
+				break;
+			case '\t' : case '\r' : case '\n' : case ' ':
 				break;
 #ifdef JSMN_STRICT
 			/* In strict mode primitives are: numbers and booleans */
@@ -218,7 +250,7 @@ jsmnerr_t jsmn_parse(jsmn_parser *parser, const char *js, jsmntok_t *tokens,
 			/* In non-strict mode every unquoted value is a primitive */
 			default:
 #endif
-				r = jsmn_parse_primitive(parser, js, tokens, num_tokens);
+				r = jsmn_parse_primitive(parser, js, tokens, on_key, num_tokens);
 				if (r < 0) return r;
 				if (parser->toksuper != -1)
 					tokens[parser->toksuper].size++;
@@ -238,13 +270,21 @@ jsmnerr_t jsmn_parse(jsmn_parser *parser, const char *js, jsmntok_t *tokens,
 		if (tokens[i].start != -1 && tokens[i].end == -1) {
 			return JSMN_ERROR_PART;
 		}
+#ifdef JSMN_PARENT_LINKS
+		if (tokens[i].type == JSMN_OBJECT || tokens[i].type == JSMN_ARRAY) {
+			tokens[i].full_size += tokens[i].size;
+			for (k = tokens[i].parent; k != -1; k = tokens[k].parent) {
+				tokens[k].full_size += tokens[i].size;
+			}
+		}
+#endif
 	}
 
 	return JSMN_SUCCESS;
 }
 
 /**
- * Creates a new parser based over a given  buffer with an array of tokens 
+ * Creates a new parser based over a given  buffer with an array of tokens
  * available.
  */
 void jsmn_init(jsmn_parser *parser) {
