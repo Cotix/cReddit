@@ -20,7 +20,7 @@ directory.
 
 If you would like to compile libreddit on its own as a shared library, you can
 run ``` make libreddit ```. The resulting shared library will be
-./build/libreddit.so.  You can also install the library sepratly via ``` make
+./build/libreddit.so.  You can also install the library separately via ``` make
 libreddit_install ```.  To use the library, include "reddit.h" and link against
 libreddit.so.
 

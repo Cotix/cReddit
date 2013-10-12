@@ -132,7 +132,7 @@ size_t writeToParser(void *contents, size_t size, size_t nmemb, void *userp)
  * Returns either 'True' or 'False' in string form of a bool value
  *
  * The return value is always the exact same pointer of 'string'
- * Note -- 'string' should be already allocated to atleast a length of 6
+ * Note -- 'string' should be already allocated to at least a length of 6
  */
 char *trueFalseString(char *string, bool tf)
 {
@@ -226,7 +226,7 @@ int performIdentAction(TokenParser *p, TokenIdent *identifiers, int i, va_list a
 
 /*
  * This function parses a json object, looking for tokens and calling the proper
- * function callback if nessisary
+ * function callback if necessary
  *
  * When called, this function will assume p->tokens[p->currentToken] points to
  * the start of an object, and will return if this is not the case
