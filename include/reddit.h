@@ -18,27 +18,27 @@ typedef enum RedditErrno {
      * It's use should be avoided if possible */
     REDDIT_ERROR,
 
-    /* Issue with the text recieved from reddit
+    /* Issue with the text received from reddit
      * Probably a parsing issue with that JSON */
     REDDIT_ERROR_RESPONSE,
 
     /* Unable to connect to reddit.com */
     REDDIT_ERROR_NOTCON,
 
-    /* Specefic error for logging on
+    /* Specific error for logging on
      * Indicates an issue with password or username */
     REDDIT_ERROR_USER
 
 } RedditErrno;
 
 /*
- * This structure holds data on a cookie recieved from Reddit.  In general,
+ * This structure holds data on a cookie received from Reddit.  In general,
  * these are allocated and stored automatically in the current global state, so
- * allocating them directly isn't nessisary. The only real use it has
+ * allocating them directly isn't necessary. The only real use it has
  * externally is reading the name and data from a cookie in the current state
  * so you can save it for later use. Cookies should be added to the current
  * global state by a separate API call, and removed by another separate API
- * call, so allocating them directly shouldn't be nessisary
+ * call, so allocating them directly shouldn't be necessary
  */
 typedef struct RedditCookieLink {
     struct RedditCookieLink *next;
@@ -48,7 +48,7 @@ typedef struct RedditCookieLink {
 
 
 /*
- * This structure repreents the current state of the library, or more specefically
+ * This structure represents the current state of the library, or more specifically
  * of the Reddit Session.
  *
  * Currently, all it does is contain a linked-list of cookies being used in the session
@@ -96,14 +96,14 @@ typedef struct RedditUser {
 
 
 /*
- * A superset of 'reddit_user', coresponds to a user that is or is going to
+ * A superset of 'reddit_user', corresponds to a user that is or is going to
  * log-in. Includes a full RedditUser as well as extra info related to
  * logged-in state
  */
 typedef struct RedditUserLogged {
     RedditUserState userState;
     bool stayLoggedOn; /* If this is set when logged-in, the API will request
-                        * a persistant cookie, which you can then save and use
+                        * a persistent cookie, which you can then save and use
                         * again later-on */
 
     RedditUser *userInfo;
@@ -184,7 +184,7 @@ typedef struct RedditLinkList {
 /*
  * Similar to RedditUser in structure, but it's use is a bit more complex:
  *
- * Reddit has two ways of informing about comments. Specefically, in any
+ * Reddit has two ways of informing about comments. Specifically, in any
  * comment listing from Reddit, you'll have directly displayed comments and
  * hidden comments.  'hidden comments' are simply the 'click to see more
  * replies' on the webpage which aren't displayed by default unless you click
@@ -330,7 +330,7 @@ extern RedditErrno redditGetCommentChildren (RedditCommentList *list, RedditComm
 extern char *redditCopyString (const char *string);
 
 /* Global init and clean-up functions. These should be called at the start and
- * end of a program, respectivly. */
+ * end of a program, respectively. */
 extern void redditGlobalInit();
 extern void redditGlobalCleanup();
 

@@ -18,7 +18,7 @@ EXPORT_SYMBOL RedditLink *redditLinkNew ()
 {
     RedditLink *link = rmalloc(sizeof(RedditLink));
 
-    /* Just initalize everything as NULL or zero */
+    /* Just initialize everything as NULL or zero */
     memset(link, 0, sizeof(RedditLink));
 
     return link;

@@ -21,7 +21,7 @@ EXPORT_SYMBOL RedditComment *redditCommentNew ()
 }
 
 /*
- * Recurrisivly free's all replys on a RedditComment
+ * Recursively free's all replys on a RedditComment
  */
 EXPORT_SYMBOL void redditCommentFreeReplies (RedditComment *comment)
 {
@@ -122,7 +122,7 @@ DEF_TOKEN_CALLBACK(getCommentRepliesMore)
 }
 
 /*
- * This callback is sort of a 'dispatch' which simply deligates what to do to the relevant functions
+ * This callback is sort of a 'dispatch' which simply delegates what to do to the relevant functions
  *
  * In the event of a 't3' datatype, we have a RedditLink and call redditGetLink to parse it
  * A 't1' is a comment, so we use redditGetComment, and then redditCommentAddReply

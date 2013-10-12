@@ -44,11 +44,11 @@ typedef enum TokenParserResult {
  * Json notation works on a system of 'key' and 'value' pairs. Ex:
  *   { "Key": "Value", "Key2": "Value2", ...
  *
- * When getting output from Reddit, key's stay largly the same every time
+ * When getting output from Reddit, key's stay largely the same every time
  * something is called. The value is then the data you're interested in. This
- * structure handles detailing how to handle a paticular key value, whether it
+ * structure handles detailing how to handle a particular key value, whether it
  * should be handled by assigning the value to a pointer, or call a function
- * callback to handle it when that specefic key is found.
+ * callback to handle it when that specific key is found.
  */
 typedef struct TokenIdent {
 
@@ -80,7 +80,7 @@ typedef struct TokenIdent {
      * unsigned int, and |= with bitMask. If 'false', it will be &= ~bitMask */
     unsigned int bitMask;
 
-    /* Simple flag -- This handles the case fo 'TOKEN_STRING' in combo with 'TOKEN_SET'
+    /* Simple flag -- This handles the case of 'TOKEN_STRING' in combo with 'TOKEN_SET'
      * In that case, if this is set to '1' then free() will be called on value 
      * before it is overwritten to avoid a memory leak */
     bool freeFlag;
@@ -100,13 +100,13 @@ typedef struct TokenIdent {
 } TokenIdent;
 
 /*
- * Functions for handling allocationg of a TokenParser
+ * Functions for handling allocations of a TokenParser
  */
 TokenParser *tokenParserNew();
 void         tokenParserFree(TokenParser *parser);
 
 /*
- * Some bsic functions for creating MemoryBlocks
+ * Some basic functions for creating MemoryBlocks
  */
 MemoryBlock *memoryBlockNew();
 void memoryBlockFree(MemoryBlock *block);
@@ -145,7 +145,7 @@ void parseTokens  (TokenParser *parser, TokenIdent *identifiers, ...);
 #define TOKEN_IS_TRUE(json, token)   ((toupper(json[token.start])) == 'T')
 #define TOKEN_IS_FALSE(json, token)  ((toupper(json[token.start])) == 'F')
 
-/* These next macros take a token and read it in as a specefic type
+/* These next macros take a token and read it in as a specific type
  * of JSON object, either a string, number of boolean */
 #define READ_TOKEN_AS_STRING(string, json, token)     \
     do {                                              \
@@ -170,7 +170,7 @@ void parseTokens  (TokenParser *parser, TokenIdent *identifiers, ...);
     static void name (TokenParser *parser, TokenIdent *idents, va_list args)
 
 /*
- * This macro is a quick way to create token_ident entrys which simply set
+ * This macro is a quick way to create token_ident entries which simply set
  * a variable in a pointer to a struct that has the same name as it's key
  * (This is the most common use case)
  */

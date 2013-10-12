@@ -735,10 +735,7 @@ int main(int argc, char *argv[])
 
     if (argc == 4) {
         user = redditUserLoggedNew();
-        /* If you want to try logging in as your user
-         * Replace 'username' and 'password' with the approiate fields */
         redditUserLoggedLogin(user, argv[2], argv[3]);
-
     }
     showSubreddit(subreddit);
 

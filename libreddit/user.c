@@ -10,7 +10,7 @@
 #include "token.h"
 
 /*
- * Allocate and reture a new 'RedditUser' struct'
+ * Allocate and return a new 'RedditUser' struct'
  *
  * A 'RedditUser' represents any and all users
  */
@@ -129,7 +129,7 @@ DEF_TOKEN_CALLBACK(handleCookie)
 /*
  * Takes a RedditUserLogged and returns a RedditErrno
  *
- * Logs in the user storred in the RedditUserLogged into Reddit
+ * Logs in the user stored in the RedditUserLogged into Reddit
  * Also if successful adds the 'reddit_session' cookie to the global state
  *
  */
@@ -178,7 +178,7 @@ EXPORT_SYMBOL RedditErrno redditUserLoggedLogin (RedditUserLogged *log, char *na
 
 /*
  * This callback handles a 'data' parameter and checks for a 't2', which
- * coresponds to a RedditUser JSON object.
+ * corresponds to a RedditUser JSON object.
  */
 DEF_TOKEN_CALLBACK(userUpdateHelper)
 {
