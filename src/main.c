@@ -222,36 +222,37 @@ void commentScreenDisplay(CommentScreen *screen)
     if (screen == NULL)
         return ;
 
-    //erase();
+    bufSize = sizeof(wchar_t) * (COLS + 1);
+    bufLen = COLS;
+    tmpbuf = malloc(bufSize);
+    memset(tmpbuf, 0, bufSize);
+
+    for (i = 0; i < bufLen; i++)
+        tmpbuf[i] = L' ';
 
     screenLines = screen->offset + screen->displayed + 1;
 
-    if (screenLines > screen->lineCount)
-        screenLines = screen->lineCount;
     attron(COLOR_PAIR(1));
 
     for(i = screen->offset; i < screenLines; i++) {
         if(i == screen->selected)
             attron(COLOR_PAIR(2));
 
-        if (screen->lines[i]->text != NULL)
+        if (i < screen->lineCount && screen->lines[i]->text != NULL)
             mvaddwstr(i - screen->offset, 0, screen->lines[i]->text);
+        else
+            mvaddwstr(i - screen->offset, 0, tmpbuf);
 
         if (i == screen->selected)
             attron(COLOR_PAIR(1));
     }
 
-    bufSize = sizeof(wchar_t) * (COLS + 1);
-    bufLen = COLS;
-    tmpbuf = malloc(bufSize);
-    memset(tmpbuf, 0, bufSize);
+    for (i = screenLines; i < screen->displayed + screen->offset + 1 + screen->commentOpenSize; i++)
+        mvaddwstr(i, 0, tmpbuf);
 
     if (screen->commentOpen) {
         RedditComment *current;
         lastLine = screenLines - screen->offset;
-
-        for (i = 0; i < bufLen; i++)
-            tmpbuf[i] = L' ';
 
         for (i = lastLine; i < lastLine + screen->commentOpenSize; i++)
             mvaddwstr(i, 0, tmpbuf);
@@ -275,12 +276,6 @@ void commentScreenDisplay(CommentScreen *screen)
                 mvaddwstr(lastLine + 3, 0, current->wbodyEsc);
             }
         }
-    } else if (screenLines < screen->displayed + screen->offset + 1) {
-        for (i = 0; i < bufLen; i++)
-            tmpbuf[i] = L' ';
-
-        for (i = screenLines; i < screen->displayed + screen->offset + 1; i++)
-            mvaddwstr(i, 0, tmpbuf);
     }
 
     free(tmpbuf);
@@ -408,11 +403,6 @@ void linkScreenRenderLine (LinkScreen *screen, int line, int width)
 void linkScreenSetupSplit (LinkScreen *screen, wchar_t *tmpbuf, int bufLen, int lastLine)
 {
     int i;
-    for (i = 0; i < bufLen; i++)
-        tmpbuf[i] = L' ';
-
-    for (i = lastLine; i < lastLine + screen->linkOpenSize; i++)
-        mvaddwstr(i, 0, tmpbuf);
 
     for (i = 0; i < bufLen; i++)
         tmpbuf[i] = L'-';
@@ -474,11 +464,15 @@ void drawScreen(LinkScreen *screen)
     if (screen == NULL)
         return ;
 
-    //erase();
+    bufSize = sizeof(wchar_t) * (COLS + 1);
+    bufLen = COLS;
+    tmpbuf = malloc(bufSize);
+    memset(tmpbuf, 0, bufSize);
+
+    for (i = 0; i < bufLen; i++)
+        tmpbuf[i] = L' ';
 
     screenLines = screen->offset + screen->displayed + 1;
-    if (screenLines > screen->list->linkCount)
-        screenLines = screen->list->linkCount;
 
     attron(COLOR_PAIR(1));
 
@@ -486,31 +480,29 @@ void drawScreen(LinkScreen *screen)
         if(i == screen->selected)
             attron(COLOR_PAIR(2));
 
-        if (screen->screenLineCount <= i)
-            linkScreenRenderLine(screen, i, COLS);
+        if (i < screen->list->linkCount) {
+            if (screen->screenLineCount <= i)
+                linkScreenRenderLine(screen, i, COLS);
 
-        mvaddwstr(i - screen->offset, 0, screen->screenLines[i]);
+            mvaddwstr(i - screen->offset, 0, screen->screenLines[i]);
+        } else {
+            mvaddwstr(i - screen->offset, 0, tmpbuf);
+        }
 
         if (i == screen->selected)
             attron(COLOR_PAIR(1));
     }
 
-    bufSize = sizeof(wchar_t) * (COLS + 1);
-    bufLen = COLS;
-    tmpbuf = malloc(bufSize);
-    memset(tmpbuf, 0, bufSize);
+
+
+    for (i = screenLines; i < screen->displayed + screen->offset + 1 + screen->linkOpenSize; i++)
+        mvaddwstr(i, 0, tmpbuf);
 
     if (screen->linkOpen) {
         if (screen->helpOpen == 0)
             linkScreenRenderLinkText(screen, tmpbuf, bufLen, screenLines);
         else
             linkScreenRenderHelpText(screen, tmpbuf, bufLen, screenLines);
-    } else if (screenLines < screen->displayed + screen->offset + 1) {
-        for (i = 0; i < bufLen; i++)
-            tmpbuf[i] = L' ';
-
-        for (i = screenLines; i < screen->displayed + screen->offset + 1; i++)
-            mvaddwstr(i, 0, tmpbuf);
     }
 
     free(tmpbuf);
