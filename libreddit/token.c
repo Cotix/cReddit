@@ -425,6 +425,8 @@ static void parseChar (struct charParser *p)
             else
                 ((char*)(p->new_text))[p->offset] = '\n';
             p->offset++;
+            break;
+
         case 'u':
             if (p->wide) {
                 temp = L'\0';
@@ -441,6 +443,15 @@ static void parseChar (struct charParser *p)
                 p->cur+=4;
             }
             break;
+
+        case '\"':
+            if (p->wide)
+                ((wchar_t*)(p->new_text))[p->offset] = L'\"';
+            else
+                ((char*)(p->new_text))[p->offset] = '\"';
+            p->offset++;
+            break;
+
         }
         break;
     default:
