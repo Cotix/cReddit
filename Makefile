@@ -9,6 +9,13 @@
 # To compile libreddit as a static library, compile with STATIC=y
 # Ex. make STATIC=y
 #
+# To turn on debugging, set an environment variable called 'REDDIT_DEBUG' to
+# 'y' and then 'make clean' and 'make'. This will turn off optimization, tun on
+# the -g flag, and set the 'REDDIT_DEBUG' C macro for all of the project's C
+# files.
+#
+# Bash users can run the command 'export REDDIT_DEBUG=y' to turn debugging on.
+#
 # You can also compile individual parts or individual files on their own, by
 # specifying their object name.
 # Ex. 'make build/src/main.o'
@@ -18,7 +25,16 @@ QUIETLY:=@
 # Set some basic program-wide compile settings
 # In the future these shouldn't be assumed.
 CC:=$(QUIETLY)gcc
-PROJCFLAGS:=-O2 -Wall -I'./include'
+
+ifdef REDDIT_DEBUG
+	PROJCFLAGS+=-g -DREDDIT_DEBUG
+	RUN_FIRST:=debug-msg real-all
+else
+	PROJCFLAGS=-O2
+	RUN_FIRST:=real-all
+endif
+PROJCFLAGS+=-Wall -I'./include' -fvisibility=hidden
+
 PROJLDFLAGS:=-fvisibility=hidden
 LD:=$(QUIETLY)ld
 AR:=$(QUIETLY)ar
@@ -34,7 +50,10 @@ ifndef PREFIX
 	PREFIX=/usr
 endif
 
-all: real-all
+all: $(RUN_FIRST)
+
+debug-msg:
+	$(ECHO) " !!Debug Build!!"
 
 include ./common.mk
 
@@ -51,7 +70,7 @@ include ./src/creddit.mk
 # Add a few ending values for the main program
 CLEAN_TARGETS +=build_clean
 
-.PHONY: all real-all install clean $(CLEAN_TARGETS) $(INSTALL_TARGETS)
+.PHONY: all real-all debug-msg install clean $(CLEAN_TARGETS) $(INSTALL_TARGETS)
 
 real-all: $(EXECUTABLE_FULL)
 
