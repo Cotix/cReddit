@@ -2,6 +2,7 @@
 #define _REDDIT_GLOBAL_H_
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "state.h"
 #include "token.h"
@@ -31,6 +32,23 @@
  *
  */
 extern RedditState *currentRedditState;
+
+/*
+ * This adds debug macros and a debug FILE* pointer in the event that debugging is turned on
+ * If you compile with -DREDDIT_DEBUG, then debugging will be used
+ *
+ * The 'debugFile' FILE* is the destination of all the debug messages.
+ * DEBUG_FILE is the actual filename of where to send files to
+ * DEBUG_PRINT is a macro that expands into a wide-character print to this file
+ */
+#ifdef REDDIT_DEBUG
+  extern FILE *debugFile;
+# define DEBUG_FILE "/tmp/reddit_error.log"
+# define DEBUG_PRINT(...) fwprintf(debugFile, __VA_ARGS__)
+#else
+# define DEBUG_PRINT(...) do { ; } while (0)
+#endif
+
 
 void *rmalloc (size_t bytes);
 void *rrealloc (void *old, size_t bytes);
