@@ -758,6 +758,8 @@ int main(int argc, char *argv[])
 
     globalState = redditStateNew();
 
+    globalState->userAgent = redditCopyString("cReddit/0.0.1");
+
     redditStateSet(globalState);
 
     if (argc == 4) {

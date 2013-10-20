@@ -7,8 +7,6 @@
 #include "state.h"
 #include "token.h"
 
-#define CREDDIT_USERAGENT "cReddit/0.0.1"
-
 /*
  * This macro is used to export a symbol outside of the library. We compile with
  * -fvisibility=hidden, so functions are hidden in the .so by default. Using

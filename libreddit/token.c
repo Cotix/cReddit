@@ -339,8 +339,8 @@ TokenParserResult redditvRunParser(char *url, char *post, TokenIdent *idents, va
         curl_easy_setopt(redditHandle, CURLOPT_POSTFIELDS, (void *)post);
     }
 
-    /* Set the user agent, defined in global.h */
-    curl_easy_setopt(redditHandle, CURLOPT_USERAGENT, CREDDIT_USERAGENT);
+    /* Set the user agent, defined in the global state */
+    curl_easy_setopt(redditHandle, CURLOPT_USERAGENT, currentRedditState->userAgent);
 
     /* Run curl, which will run the callback and store our text in the parser
      * then cleanup */

@@ -55,6 +55,7 @@ typedef struct RedditCookieLink {
  */
 typedef struct RedditState {
     RedditCookieLink *base;
+    char *userAgent;
 } RedditState;
 
 /*
