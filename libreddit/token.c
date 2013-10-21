@@ -140,7 +140,7 @@ char *trueFalseString(char *string, bool tf)
         strcpy(string, "true");
     else
         strcpy(string, "false");
- 
+
     return string;
 }
 

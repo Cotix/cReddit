@@ -214,9 +214,10 @@ typedef struct RedditComment {
     struct RedditComment **replies;
     struct RedditComment *parent;
 
-    char *id;
+    char *id; /* Doesn't include 't1_' */
     char *author;
     char *parentId;
+    char *linkId;
 
     /* See 'RedditLink' for explanation of different strings */
     char *body;

@@ -89,7 +89,7 @@ typedef struct TokenIdent {
     unsigned int bitMask;
 
     /* Simple flag -- This handles the case of 'TOKEN_STRING' in combo with 'TOKEN_SET'
-     * In that case, if this is set to '1' then free() will be called on value 
+     * In that case, if this is set to '1' then free() will be called on value
      * before it is overwritten to avoid a memory leak */
     bool freeFlag;
 
