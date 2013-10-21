@@ -42,6 +42,7 @@ typedef struct {
     int displayed;
     int offset;
     int selected;
+    int width;
     int commentOpenSize;
     unsigned int commentOpen : 1;
 } CommentScreen;
@@ -112,13 +113,24 @@ CommentScreen *commentScreenNew()
     return screen;
 }
 
-void commentScreenFree(CommentScreen *screen)
+void commentScreenFreeLines (CommentScreen *screen)
 {
     int i;
     if (screen == NULL)
         return ;
     for (i = 0; i < screen->lineCount; i++)
         commentLineFree(screen->lines[i]);
+    free(screen->lines);
+    screen->lines = NULL;
+    screen->lineCount = 0;
+    screen->allocLineCount = 0;
+}
+
+void commentScreenFree(CommentScreen *screen)
+{
+    if (screen == NULL)
+        return ;
+    commentScreenFreeLines(screen);
 
     free(screen->lines);
     free(screen);
@@ -143,7 +155,10 @@ wchar_t *createCommentLine(RedditComment *comment, int width, int indent)
     memset(text, 32, sizeof(wchar_t) * (width));
     text[width] = (wchar_t)0;
 
-    swprintf(text + ilen, width + 1 - ilen, L"%s > ", comment->author);
+    if (comment->directChildrenCount > 0)
+        swprintf(text + ilen, width + 1 - ilen, L"%s (%d hidden) > ", comment->author, comment->totalReplyCount);
+    else
+        swprintf(text + ilen, width + 1 - ilen, L"%s > ", comment->author);
 
     texlen = wcslen(text);
     for (i = 0; i <= width - texlen - 1; i++)
@@ -176,6 +191,14 @@ int getCommentScreenRecurse(CommentScreen *screen, RedditComment *comment, int w
         nested++;
     }
     return nested;
+}
+
+void commentScreenRenderLines (CommentScreen *screen)
+{
+    if (screen->lines)
+        commentScreenFreeLines(screen);
+
+    getCommentScreenRecurse(screen, screen->list->baseComment, screen->width, -1);
 }
 
 CommentScreen *getCommentScreenFromCommentList(RedditCommentList *list, int width)
@@ -324,12 +347,17 @@ void showThread(RedditLink *link)
     if (err != REDDIT_SUCCESS || list->baseComment->replyCount == 0)
         goto cleanup;
 
-    screen = getCommentScreenFromCommentList(list, COLS);
+    /*screen = getCommentScreenFromCommentList(list, COLS); */
+    screen = commentScreenNew();
 
     screen->offset = 0;
     screen->selected = 0;
     screen->displayed = LINES - 1;
     screen->commentOpenSize = (screen->displayed / 5) * 4;
+    screen->list = list;
+    screen->width = COLS;
+
+    commentScreenRenderLines(screen);
     commentScreenDisplay(screen);
     int c;
     while((c = wgetch(stdscr))) {
@@ -347,6 +375,13 @@ void showThread(RedditLink *link)
                 commentScreenToggleComment(screen);
                 commentScreenDisplay(screen);
                 break;
+
+            case 'm':
+                redditGetCommentChildren(screen->list, screen->lines[screen->selected]->comment);
+                commentScreenRenderLines(screen);
+                commentScreenDisplay(screen);
+                break;
+
             case 'q': case 'h':
                 if (screen->commentOpen) {
                     commentScreenCloseComment(screen);
