@@ -451,7 +451,7 @@ EXPORT_SYMBOL RedditErrno redditGetCommentChildren (RedditCommentList *list, Red
         parent->totalReplyCount -= children;
 
     endCount = parent->directChildrenCount - children;
-    for (i = parent->directChildrenCount; i >= endCount; i--)
+    for (i = parent->directChildrenCount - 1; i >= endCount; i--)
         free(parent->directChildrenIds[i]);
 
     parent->directChildrenCount = endCount;
