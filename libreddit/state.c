@@ -19,6 +19,7 @@ EXPORT_SYMBOL RedditState *redditStateNew()
     RedditState *state;
     state = rmalloc(sizeof(RedditState));
     state->base = NULL;
+    state->userAgent = NULL;
 
     return state;
 }
@@ -38,6 +39,8 @@ EXPORT_SYMBOL void redditStateFree(RedditState *state)
         tmp = node->next;
         redditCookieFree(node);
     }
+
+    free(state->userAgent);
 
     /* Free the actual state */
     free(state);
