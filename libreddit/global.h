@@ -8,6 +8,11 @@
 #include "token.h"
 
 /*
+ * Current version of libreddit
+ */
+#define LIBREDDIT_VERSION 0.0.1
+
+/*
  * This macro is used to export a symbol outside of the library. We compile with
  * -fvisibility=hidden, so functions are hidden in the .so by default. Using
  *  this macro will make them usable outside of the library.
@@ -16,6 +21,13 @@
  */
 #define EXPORT_SYMBOL __attribute__((visibility("default")))
 
+/*
+ * This is the UserAgent string appended on by libreddit (At the beginning of
+ * the UserAgent)
+ */
+#define QQ(macro) #macro
+#define Q(macro) QQ(macro)
+#define LIBREDDIT_USERAGENT "libreddit/" Q(LIBREDDIT_VERSION) " (http://github.com/Cotix/cReddit) "
 
 /*
  * the below variable is a library global state for reddit (Mostly holds session cookies)

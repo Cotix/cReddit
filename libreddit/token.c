@@ -317,6 +317,7 @@ TokenParserResult redditvRunParser(char *url, char *post, TokenIdent *idents, va
     char *cookieStr = NULL;
     CURL *redditHandle = curl_easy_init();
     jsmnerr_t jsmnResult;
+    char fullUseragent[1024];
 
     /* Set default response */
     TokenParserResult result = TOKEN_PARSER_SUCCESS;
@@ -339,8 +340,11 @@ TokenParserResult redditvRunParser(char *url, char *post, TokenIdent *idents, va
         curl_easy_setopt(redditHandle, CURLOPT_POSTFIELDS, (void *)post);
     }
 
-    /* Set the user agent, defined in the global state */
-    curl_easy_setopt(redditHandle, CURLOPT_USERAGENT, currentRedditState->userAgent);
+    /* Set the user agent, A combo of libreddit's useragent and the program
+     * using libreddit's useragent */
+    strcpy(fullUseragent, LIBREDDIT_USERAGENT);
+    strcat(fullUseragent, currentRedditState->userAgent);
+    curl_easy_setopt(redditHandle, CURLOPT_USERAGENT, fullUseragent);
 
     /* Run curl, which will run the callback and store our text in the parser
      * then cleanup */
