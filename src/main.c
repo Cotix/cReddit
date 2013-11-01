@@ -258,6 +258,9 @@ void commentScreenDisplay(CommentScreen *screen)
 
     screenLines = screen->offset + screen->displayed + 1;
 
+    for (i = 0; i < screen->displayed + screen->offset + 1 + screen->commentOpenSize; i++)
+        mvaddwstr(i, 0, tmpbuf);
+
     attron(COLOR_PAIR(1));
 
     for(i = screen->offset; i < screenLines; i++) {
@@ -272,9 +275,6 @@ void commentScreenDisplay(CommentScreen *screen)
         if (i == screen->selected)
             attron(COLOR_PAIR(1));
     }
-
-    for (i = screenLines; i < screen->displayed + screen->offset + 1 + screen->commentOpenSize; i++)
-        mvaddwstr(i, 0, tmpbuf);
 
     if (screen->commentOpen) {
         RedditComment *current;
@@ -512,6 +512,9 @@ void drawScreen(LinkScreen *screen)
 
     screenLines = screen->offset + screen->displayed + 1;
 
+    for (i = 0; i < screen->displayed + screen->offset + 1 + screen->linkOpenSize; i++)
+        mvaddwstr(i, 0, tmpbuf);
+
     attron(COLOR_PAIR(1));
 
     for(i = screen->offset; i < screenLines; i++) {
@@ -532,9 +535,6 @@ void drawScreen(LinkScreen *screen)
     }
 
 
-
-    for (i = screenLines; i < screen->displayed + screen->offset + 1 + screen->linkOpenSize; i++)
-        mvaddwstr(i, 0, tmpbuf);
 
     if (screen->linkOpen) {
         if (screen->helpOpen == 0)
