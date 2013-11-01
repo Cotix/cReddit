@@ -319,6 +319,10 @@ TokenParserResult redditvRunParser(char *url, char *post, TokenIdent *idents, va
     jsmnerr_t jsmnResult;
     char fullUseragent[1024];
 
+    DEBUG_PRINT(L"Grabbing %s\n", url);
+    if (post)
+        DEBUG_PRINT(L"Post: %s\n", post);
+
     /* Set default response */
     TokenParserResult result = TOKEN_PARSER_SUCCESS;
 

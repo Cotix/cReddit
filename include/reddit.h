@@ -4,6 +4,9 @@
 #include <ctype.h>
 #include <stdbool.h>
 #include <wchar.h>
+#ifdef REDDIT_DEBUG
+# include <stdio.h>
+#endif
 
 /*
  * This enum represents all possible errors from libreddit. Every function that
@@ -345,5 +348,9 @@ extern wchar_t *redditParseEscCodesWide (const char *text, int len);
  * end of a program, respectively. */
 extern void redditGlobalInit();
 extern void redditGlobalCleanup();
+
+#ifdef REDDIT_DEBUG
+extern void redditSetDebugFile(FILE *file);
+#endif
 
 #endif
