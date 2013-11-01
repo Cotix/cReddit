@@ -21,6 +21,22 @@ extern FILE* debugFile;
 #define LIBREDDIT_VERSION 0.0.1
 
 /*
+ * These define the Reddit API links used by the library
+ */
+#define REDDIT_URL            "http://www.reddit.com"
+#define REDDIT_JSON           ".json"
+#define REDDIT_API REDDIT_URL "/api"
+
+#define REDDIT_SUB_NEW           "/new"
+#define REDDIT_SUB_RISING        "/rising"
+#define REDDIT_SUB_CONTROVERSIAL "/controversial"
+#define REDDIT_SUB_TOP           "/top"
+
+#define REDDIT_API_MORECHILDREN REDDIT_API "/morechildren" REDDIT_JSON
+#define REDDIT_API_LOGIN        REDDIT_API "/login"        REDDIT_JSON
+#define REDDIT_API_ME           REDDIT_API "/me"           REDDIT_JSON
+
+/*
  * This macro is used to export a symbol outside of the library. We compile with
  * -fvisibility=hidden, so functions are hidden in the .so by default. Using
  *  this macro will make them usable outside of the library.

@@ -174,20 +174,20 @@ EXPORT_SYMBOL RedditErrno redditGetListing (RedditLinkList *list)
         {0}
     };
 
-    strcpy(subred, "http://www.reddit.com");
+    strcpy(subred, REDDIT_URL);
     if (list->subreddit != NULL)
         strcat(subred, list->subreddit);
 
     if (list->type == REDDIT_NEW)
-        strcat(subred, "/new");
+        strcat(subred, REDDIT_SUB_NEW);
     else if (list->type == REDDIT_RISING)
-        strcat(subred, "/rising");
+        strcat(subred, REDDIT_SUB_RISING);
     else if (list->type == REDDIT_CONTR)
-        strcat(subred, "/controversial");
+        strcat(subred, REDDIT_SUB_CONTROVERSIAL);
     else if (list->type == REDDIT_TOP)
-        strcat(subred, "/top");
+        strcat(subred, REDDIT_SUB_TOP);
 
-    strcat(subred, "/.json");
+    strcat(subred, REDDIT_JSON);
 
     if (list->linkCount > 0)
         sprintf(subred + strlen(subred), "?after=t3_%s", list->links[list->linkCount - 1]->id);
