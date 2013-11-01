@@ -51,19 +51,20 @@ void *rrealloc(void *old, size_t bytes)
 EXPORT_SYMBOL void redditGlobalInit()
 {
     curl_global_init(CURL_GLOBAL_ALL);
-#ifdef REDDIT_DEBUG
-    /* This starts debugging, using 'DEBUG_FILE' for the location to send messages to */
-    debugFile = fopen(DEBUG_FILE, "w");
-#endif
+    DEBUG_PRINT(L"libreddit Loaded\n");
 }
 
 EXPORT_SYMBOL void redditGlobalCleanup()
 {
     curl_global_cleanup();
-#ifdef REDDIT_DEBUG
-    /* Close the debugFile when we're called to close libreddit */
-    fclose(debugFile);
-#endif
+    DEBUG_PRINT(L"libreddit Closed\n");
 }
+
+#ifdef REDDIT_DEBUG
+EXPORT_SYMBOL void redditSetDebugFile(FILE *file)
+{
+    debugFile = file;
+}
+#endif
 
 #endif

@@ -9,6 +9,9 @@
 #include <form.h>
 #include <locale.h>
 
+#include "global.h"
+
+
 #define SIZEOFELEM(x)  (sizeof(x) / sizeof(x[0]))
 
 typedef struct {
@@ -614,6 +617,7 @@ void linkScreenToggleHelp(LinkScreen *screen)
 void showSubreddit(const char *subreddit)
 {
     LinkScreen *screen;
+    DEBUG_PRINT(L"Loading Subreddit %s\n", subreddit);
     screen = linkScreenNew();
 
     screen->list = redditLinkListNew();
@@ -716,6 +720,8 @@ int main(int argc, char *argv[])
     RedditUserLogged *user = NULL;
     char *subreddit = NULL;
 
+    DEBUG_START(DEBUG_FILE, DEBUG_FILENAME);
+
     if (argc > 1) {
         subreddit = argv[1];
         /* Display a simple help screen */
@@ -753,6 +759,8 @@ int main(int argc, char *argv[])
     init_pair(1, -1, -1);
     init_pair(2, COLOR_BLACK, COLOR_WHITE);
 
+    DEBUG_PRINT(L"Starting...\n");
+
     /* Start libreddit */
     redditGlobalInit();
 
@@ -772,6 +780,8 @@ int main(int argc, char *argv[])
     redditStateFree(globalState);
     redditGlobalCleanup();
     endwin();
+
+    DEBUG_END(DEBUG_FILE);
     return 0;
 }
 
