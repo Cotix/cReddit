@@ -159,7 +159,7 @@ EXPORT_SYMBOL RedditErrno redditUserLoggedLogin (RedditUserLogged *log, char *na
     sprintf(loginInfo, "api_type=json&rem=%s&user=%s&passwd=%s", trueFalseString(tf, log->stayLoggedOn), name, passwd);
 
 
-    res = redditRunParser("http://www.reddit.com/api/login", loginInfo, ids, &response);
+    res = redditRunParser(REDDIT_API_LOGIN, loginInfo, ids, &response);
 
     if (res != TOKEN_PARSER_SUCCESS)
         response = REDDIT_ERROR_RESPONSE;
@@ -217,7 +217,7 @@ EXPORT_SYMBOL RedditErrno redditUserLoggedUpdate (RedditUserLogged *user)
         {0}
     };
 
-    res = redditRunParser("http://www.reddit.com/api/me.json", NULL, ids, &(user->userInfo));
+    res = redditRunParser(REDDIT_API_ME, NULL, ids, &(user->userInfo));
     free(kindStr);
 
     if (res == TOKEN_PARSER_SUCCESS)

@@ -8,7 +8,7 @@
 # issues can be checked for.
 
 if [ "y" == "$REDDIT_DEBUG" ]; then
-    LD_PRELOAD=./build/libreddit.so valgrind --leak-check=yes ./build/creddit
+    LD_PRELOAD=./build/libreddit.so valgrind --leak-check=yes ./build/creddit $@
 else
-    LD_PRELOAD=./build/libreddit.so ./build/creddit
+    LD_PRELOAD=./build/libreddit.so ./build/creddit $@
 fi

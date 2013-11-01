@@ -310,9 +310,9 @@ EXPORT_SYMBOL RedditErrno redditGetCommentList (RedditCommentList *list)
         {0}
     };
 
-    strcpy(fullLink, "http://www.reddit.com");
+    strcpy(fullLink, REDDIT_URL);
     strcat(fullLink, list->permalink);
-    strcat(fullLink, "/.json");
+    strcat(fullLink, REDDIT_JSON);
 
     if (list->baseComment == NULL)
         list->baseComment = redditCommentNew();
@@ -445,7 +445,7 @@ EXPORT_SYMBOL RedditErrno redditGetCommentChildren (RedditCommentList *list, Red
 
     preCheck = parent->totalReplyCount;
 
-    res = redditRunParser("http://www.reddit.com/api/morechildren.json", postText, ids, list, parent);
+    res = redditRunParser(REDDIT_API_MORECHILDREN, postText, ids, list, parent);
 
     if (preCheck == parent->totalReplyCount)
         parent->totalReplyCount -= children;
