@@ -715,10 +715,25 @@ void prepend(const char *pre, char *str)
     memcpy(str, pre, lenpre);
 }
 
+char *getPassword()
+{
+    const int MAX_PASSWD_SIZE = 200;
+    char *password = malloc(MAX_PASSWD_SIZE);
+
+    clear();
+    mvprintw(0, 0, "Password: ");
+    refresh();
+
+    getnstr(password, MAX_PASSWD_SIZE);
+    password[MAX_PASSWD_SIZE - 1] = '\0';
+    return password;
+}
+
 int main(int argc, char *argv[])
 {
     RedditUserLogged *user = NULL;
     char *subreddit = NULL;
+    char *password = NULL, *username = NULL;
 
     DEBUG_START(DEBUG_FILE, DEBUG_FILENAME);
 
@@ -770,9 +785,21 @@ int main(int argc, char *argv[])
 
     redditStateSet(globalState);
 
-    if (argc == 4) {
+    if (argc > 2) {
+        username = argv[2];
+        if (argc == 3)
+            password = getPassword();
+        else
+            password = argv[3];
+
         user = redditUserLoggedNew();
-        redditUserLoggedLogin(user, argv[2], argv[3]);
+        redditUserLoggedLogin(user, username, password);
+
+        if (argc == 3) {
+            /* Don't want to leave that important Reddit password in memory */
+            memset(password, 0, strlen(password));
+            free(password);
+        }
     }
     showSubreddit(subreddit);
 
