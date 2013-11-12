@@ -38,7 +38,7 @@ creddit_clean:
 	$(ECHO) " RM $(CREDDIT_DIR_CMP)"
 	$(RM) -fr $(CREDDIT_DIR_CMP)
 
-creddit_install: $(EXECUTABLE_FULL)
+creddit_install: $(EXECUTABLE_FULL) | $(PREFIX)/bin
 	$(ECHO) " INSTALL $(EXECUTABLE_FULL)"
 	$(INSTALL) -m 0755 $(EXECUTABLE_FULL) $(PREFIX)/bin/
 
