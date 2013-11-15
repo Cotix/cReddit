@@ -1,6 +1,11 @@
 #ifndef _DEBUG_H_
 #define _DEBUG_H_
 
+#ifdef REDDIT_DEBUG
+# include <stdio.h>
+# include <wchar.h>
+#endif
+
 /*
  * If you compile with -DREDDIT_DEBUG, then debugging will be turned-on program-wide
  *
