@@ -16,11 +16,6 @@ extern FILE* debugFile;
 #include "debug.h"
 
 /*
- * Current version of libreddit
- */
-#define LIBREDDIT_VERSION 0.0.1
-
-/*
  * These define the Reddit API links used by the library
  */
 #define REDDIT_URL            "http://www.reddit.com"
@@ -47,7 +42,7 @@ extern FILE* debugFile;
 
 /*
  * This is the UserAgent string appended on by libreddit (At the beginning of
- * the UserAgent)
+ * the UserAgent) (LIBREDDIT_VERSION is defined by the Makefile)
  */
 #define QQ(macro) #macro
 #define Q(macro) QQ(macro)
