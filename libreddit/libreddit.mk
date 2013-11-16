@@ -1,10 +1,11 @@
 # Add libreddit's targets
 CLEAN_TARGETS +=libreddit_clean
 
-LIBREDDIT_VERSION:=0.1
+# Current version of libreddit
+LIBREDDIT_VERSION:=0.0.1
 
 # libreddit currently just compiles with the default settings
-LIBREDDIT_CFLAGS :=$(PROJCFLAGS) -fvisibility=hidden
+LIBREDDIT_CFLAGS :=$(PROJCFLAGS) -fvisibility=hidden -DLIBREDDIT_VERSION=$(LIBREDDIT_VERSION)
 LIBREDDIT_LDFLAGS :=`curl-config --cflags` `curl-config --libs`
 
 # The directory to store the object files in
