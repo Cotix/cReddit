@@ -41,10 +41,10 @@ libreddit_clean:
 	$(ECHO) " RM $(LIBREDDIT_CMP_DIR)"
 	$(RM) -fr $(LIBREDDIT_CMP_DIR)
 
-libreddit_install: $(LIBREDDIT_CMP)
-	$(ECHO) " INSTALL $(LIBREDDIT_CMP)"
+libreddit_install: $(LIBREDDIT_CMP) | $(PREFIX)/lib $(PREFIX)/include
+	$(ECHO) " INSTALL $(PREFIX)/lib/libreddit.so"
 	$(INSTALL) -m 0755 $(LIBREDDIT_CMP) $(PREFIX)/lib
-	$(ECHO) " INSTALL include/reddit.h"
+	$(ECHO) " INSTALL $(PREFIX)/include/reddit.h"
 	$(INSTALL) -m 0755 ./include/reddit.h $(PREFIX)/include
 
 ifdef STATIC

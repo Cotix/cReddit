@@ -74,6 +74,18 @@ CLEAN_TARGETS +=build_clean
 
 real-all: $(EXECUTABLE_FULL)
 
+$(PREFIX)/bin:
+	$(ECHO) " MKDIR $(PREFIX)/bin"
+	$(MKDIR) $(PREFIX)/bin
+
+$(PREFIX)/include:
+	$(ECHO) " MKDIR $(PREFIX)/include"
+	$(MKDIR) $(PREFIX)/include
+
+$(PREFIX)/lib:
+	$(ECHO) " MKDIR $(PREFIX)/lib"
+	$(MKDIR) $(PREFIX)/lib
+
 install: $(INSTALL_TARGETS)
 
 $(BUILD_DIR):
