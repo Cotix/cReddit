@@ -10,6 +10,7 @@
 #include <locale.h>
 
 #include "global.h"
+#include "opt.h"
 
 
 #define SIZEOFELEM(x)  (sizeof(x) / sizeof(x[0]))
@@ -710,10 +711,23 @@ void prepend(const char *pre, char *str)
     size_t lenpre = strlen(pre), lenstr = strlen(str);
 
     /* Move the Strings memory forward */
-    memcpy(str + lenpre, str, lenstr + 1);
+    memmove(str + lenpre, str, lenstr + 1);
     /* Copy pre into the new space */
-    memcpy(str, pre, lenpre);
+    memmove(str, pre, lenpre);
 }
+
+#define MOPT_SUBREDDIT 0
+#define MOPT_USERNAME  1
+#define MOPT_PASSWORD  2
+#define MOPT_HELP      3
+#define MOPT_ARG_COUNT 4
+
+optOption mainOptions[MOPT_ARG_COUNT] = {
+    OPT_STRING("subreddit", 's', "The name of a subreddit you want to open", ""),
+    OPT_STRING("username",  'u', "A Reddit username to login as",            ""),
+    OPT_STRING("password",  'p', "Password for the provided username",       ""),
+    OPT       ("help",      'h', "Display command-line arguments help-text")
+};
 
 char *getPassword()
 {
@@ -729,38 +743,98 @@ char *getPassword()
     return password;
 }
 
+void handleArguments (optParser *parser)
+{
+    optResponse res;
+    int unusedCount = 0;
+    int optUnused[3] = { MOPT_SUBREDDIT, MOPT_USERNAME, MOPT_PASSWORD };
+
+    do {
+       res = optRunParser(parser);
+       if (res == OPT_UNUSED) {
+           if (unusedCount < (sizeof(optUnused)/sizeof(optUnused[0]))) {
+               int optC = optUnused[unusedCount];
+               strcpy(mainOptions[optC].svalue, parser->argv[parser->curopt]);
+               mainOptions[optC].isSet = 1;
+           }
+
+           unusedCount++;
+       }
+
+    } while (res != OPT_SUCCESS);
+}
+
+void displayCmd (optOption *option)
+{
+    printf("   ");
+    if (option->opt_long[0] != '\0')
+        printf("--%-10s ", option->opt_long);
+    else
+        printf("             ");
+
+    if (option->opt_short != '\0')
+        printf("-%c ", option->opt_short);
+    else
+        printf("   ");
+
+    switch(option->arg) {
+    case OPT_STRING:
+        printf("[String] ");
+        break;
+    case OPT_INT:
+        printf("[Int]    ");
+        break;
+    case OPT_NONE:
+        printf("         ");
+        break;
+    }
+
+    printf(" : %s\n", option->helpText);
+}
+
+void displayHelp (optParser *parser)
+{
+    optOption **option;
+
+    printf("Usage: %s [flags] [subreddit] [username] [password] \n\n", parser->argv[0]);
+    printf("Below is a list of all the flags reconized by creddit.\n");
+    printf(" [String] --> argument takes a string\n");
+    printf(" [Int]    --> argument takes an integer value\n");
+
+    printf("\n");
+    for (option = parser->options; *option != NULL; option++)
+        displayCmd(*option);
+
+    printf("\nYou will be prompted for a password if you don't include one\n");
+
+    printf("\nTo report any bugs, submit patches, etc. Please see the github page at:\n");
+    printf("http://www.github.com/Cotix/cReddit\n");
+}
+
 int main(int argc, char *argv[])
 {
     RedditUserLogged *user = NULL;
     char *subreddit = NULL;
     char *password = NULL, *username = NULL;
+    optParser parser;
 
     DEBUG_START(DEBUG_FILE, DEBUG_FILENAME);
 
-    if (argc > 1) {
-        subreddit = argv[1];
-        /* Display a simple help screen */
-        if (!startsWith("/r/", subreddit) && strcmp("/", subreddit) != 0) {
-            subreddit = malloc((strlen(argv[1]) + 4) * sizeof(char));
-            strcpy(subreddit, argv[1]);
-            prepend("/r/", subreddit);
-        }
+    memset(&parser, 0, sizeof(optParser));
 
-        if (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "help") == 0) {
-            printf("Usage: %s [subreddit] [username] [password]\n", argv[0]);
-            printf("\n");
-            printf(" subreddit -- The name of a subreddit you want to view, Ex. '/r/coding', '/r/linux'\n");
-            printf(" username  -- The username of a user you want to login as.\n");
-            printf(" password  -- The password for the username, if one was given\n");
-            printf("\n");
-            printf("To report any bugs, submit patches, etc. Please see the github page at:\n");
-            printf("http://www.github.com/Cotix/cReddit\n");
-            return 0;
-        }
-    } else {
-        subreddit = "/";
+    parser.argc = argc;
+    parser.argv = argv;
+
+    optAddOptions (&parser, mainOptions, MOPT_ARG_COUNT);
+
+    handleArguments(&parser);
+
+    if (mainOptions[MOPT_HELP].isSet) {
+        displayHelp(&parser);
+        return 0;
     }
 
+    optClearParser(&parser);
 
     setlocale(LC_CTYPE, "");
 
@@ -785,21 +859,28 @@ int main(int argc, char *argv[])
 
     redditStateSet(globalState);
 
-    if (argc > 2) {
-        username = argv[2];
-        if (argc == 3)
+    if (mainOptions[MOPT_USERNAME].isSet) {
+        username = mainOptions[MOPT_USERNAME].svalue;
+        if (!mainOptions[MOPT_PASSWORD].isSet)
             password = getPassword();
         else
-            password = argv[3];
+            password = mainOptions[MOPT_PASSWORD].svalue;
 
         user = redditUserLoggedNew();
         redditUserLoggedLogin(user, username, password);
 
-        if (argc == 3) {
-            /* Don't want to leave that important Reddit password in memory */
-            memset(password, 0, strlen(password));
+        /* Don't want to leave that important Reddit password in memory */
+        memset(password, 0, strlen(password));
+        if (!mainOptions[MOPT_PASSWORD].isSet)
             free(password);
-        }
+    }
+    if (mainOptions[MOPT_SUBREDDIT].isSet) {
+        subreddit = mainOptions[MOPT_SUBREDDIT].svalue;
+        if (!startsWith("/r/", subreddit) && strcmp("/", subreddit) != 0)
+            prepend("/r/", subreddit);
+
+    } else {
+        subreddit = "/";
     }
     showSubreddit(subreddit);
 
