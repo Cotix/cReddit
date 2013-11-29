@@ -1,6 +1,10 @@
 #ifndef _REDDIT_H_
 #define _REDDIT_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <ctype.h>
 #include <stdbool.h>
 #include <wchar.h>
@@ -351,6 +355,10 @@ extern void redditGlobalCleanup();
 
 #ifdef REDDIT_DEBUG
 extern void redditSetDebugFile(FILE *file);
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif
