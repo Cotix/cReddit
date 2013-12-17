@@ -617,6 +617,7 @@ void linkScreenToggleHelp(LinkScreen *screen)
 
 void showSubreddit(const char *subreddit)
 {
+    char *line;
     LinkScreen *screen;
     DEBUG_PRINT(L"Loading Subreddit %s\n", subreddit);
     screen = linkScreenNew();
@@ -673,6 +674,11 @@ void showSubreddit(const char *subreddit)
                 else
                     linkScreenToggleLink(screen);
                 drawScreen(screen);
+                break;
+            case 'o':
+                line = alloc_sprintf("xdg-open %s &>/dev/null", screen->list->links[screen->selected]->url);
+                system(line);
+                free(line);
                 break;
             case 'L':
                 redditGetListing(screen->list);
