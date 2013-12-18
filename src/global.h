@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 #ifdef REDDIT_DEBUG
   extern FILE *debugFile;
@@ -22,5 +23,7 @@
 #define DEBUG_MODULE   "creddit"
 #define DEBUG_FILENAME "/tmp/reddit_errors.log"
 #include "debug.h"
+
+char *alloc_sprintf (const char *format, ...);
 
 #endif
