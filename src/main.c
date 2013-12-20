@@ -426,7 +426,7 @@ void linkScreenRenderLine (LinkScreen *screen, int line, int width)
 
     screen->screenLines[line] = realloc(screen->screenLines[line], (width + 1) * sizeof(wchar_t));
 
-    swprintf(screen->screenLines[line], width + 1, L"%d. [%4d] %20s - ", line + 1, screen->list->links[line]->score, screen->list->links[line]->author);
+    swprintf(screen->screenLines[line], width + 1, L"%2d. [%4d] %20s - ", line + 1, screen->list->links[line]->score, screen->list->links[line]->author);
 
     offset = wcslen(screen->screenLines[line]);
     title = wcslen(screen->list->links[line]->wtitleEsc);
