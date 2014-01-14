@@ -83,14 +83,8 @@ struct optOption {
     char helpText[OPT_HELP_MAX + 1];
 
     unsigned int isSet :1;
-    union {
-        struct {
-            int ivalue;
-        };
-        struct {
-            char svalue[OPT_STRLEN + 1];
-        };
-    };
+    int ivalue;
+    char svalue[OPT_STRLEN + 1];
 };
 
 /* These macros are useful for easily creating an array entry for an option. It
