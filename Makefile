@@ -10,7 +10,7 @@
 # Ex. make STATIC=y
 #
 # To turn on debugging, set an environment variable called 'REDDIT_DEBUG' to
-# 'y' and then 'make clean' and 'make'. This will turn off optimization, tun on
+# 'y' and then 'make clean' and 'make'. This will turn off optimization, turn on
 # the -g flag, and set the 'REDDIT_DEBUG' C macro for all of the project's C
 # files.
 #
