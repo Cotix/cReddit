@@ -74,6 +74,11 @@ EXPORT_SYMBOL void redditCommentFree (RedditComment *comment)
 EXPORT_SYMBOL void redditCommentAddReply (RedditComment *comment, RedditComment *reply)
 {
     comment->replyCount++;
+    RedditComment* ptr = comment;
+    while (ptr != NULL) {
+        ptr->totalReplyCount += reply->totalReplyCount + 1;
+        ptr = ptr->parent;
+    }
     comment->replies = rrealloc(comment->replies, (comment->replyCount) * sizeof(RedditComment*));
     comment->replies[comment->replyCount - 1] = reply;
     reply->parent = comment;
