@@ -41,5 +41,7 @@ Link screen:
 Comment screen:
 *    k / UP      -- Move up one comment in the list
 *    j / DOWN    -- Move down one comment in the list
+*    K           -- Move up one comment at the same depth
+*    J           -- Move down one comment at the same depth
 *    l / ENTER   -- Open the selected comment
 *    q / h       -- Close the open comment, or close the comment screen if no comment is open

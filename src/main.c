@@ -71,6 +71,8 @@ wchar_t *linkScreenHelp[19] = {
     L"- j / DOWN -- Move down one comment in the list",
     L"- l / ENTER -- Open the selected comment",
     L"- q / h -- Close the open comment, or close the comment screen if no comment is open",
+    L"- K -- Move up one comment at the same depth",
+    L"- L -- Move down one comment at the same depth",
     L"",
     L"To report any bugs, submit patches, etc. Please see the github page at:",
     L"http://www.github.com/Cotix/cReddit\n"
@@ -231,6 +233,36 @@ void commentScreenDown(CommentScreen *screen)
     }
 }
 
+void commentScreenLevelDown(CommentScreen *screen) 
+{
+    int newPosition = screen->selected;
+    int indentCount = screen->lines[screen->selected]->indentCount;
+    while (++newPosition < screen->lineCount) {
+        if (screen->lines[newPosition]->indentCount < indentCount)
+            return;
+        if (screen->lines[newPosition]->indentCount == indentCount) {
+            screen->offset += newPosition - screen->selected;
+            screen->selected = newPosition;
+            return;
+        }
+    }
+}
+
+void commentScreenLevelUp(CommentScreen *screen)
+{
+    int newPosition = screen->selected;
+    int indentCount = screen->lines[screen->selected]->indentCount;
+    while (--newPosition >= 0) {
+        if (screen->lines[newPosition]->indentCount < indentCount)
+            return;
+        if (screen->lines[newPosition]->indentCount == indentCount) {
+            screen->offset += newPosition - screen->selected;
+            screen->selected = newPosition;
+            return;
+        }
+    }
+}
+
 void commentScreenUp(CommentScreen *screen)
 {
     screen->selected--;
@@ -374,7 +406,14 @@ void showThread(RedditLink *link)
                 commentScreenUp(screen);
                 commentScreenDisplay(screen);
                 break;
-
+            case 'J':
+                commentScreenLevelDown(screen);
+                commentScreenDisplay(screen);
+                break;
+            case 'K':
+                commentScreenLevelUp(screen);
+                commentScreenDisplay(screen);
+                break;
             case 'l': case '\n': case KEY_ENTER:
                 commentScreenToggleComment(screen);
                 commentScreenDisplay(screen);
