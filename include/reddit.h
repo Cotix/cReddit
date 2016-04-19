@@ -8,6 +8,7 @@ extern "C" {
 #include <ctype.h>
 #include <stdbool.h>
 #include <wchar.h>
+#include <time.h>
 #ifdef REDDIT_DEBUG
 # include <stdio.h>
 #endif
@@ -241,6 +242,8 @@ typedef struct RedditComment {
     char *childrenId;
     char **directChildrenIds;
 
+    char *created; // Date that this comment was created
+
     unsigned int flags;
 } RedditComment;
 
@@ -356,6 +359,10 @@ extern void redditGlobalCleanup();
 #ifdef REDDIT_DEBUG
 extern void redditSetDebugFile(FILE *file);
 #endif
+
+/* Format is YYYY-MM-DD-HH:MM:SS */
+#define CREATE_DATE_FORMAT "\%F-\%T"
+#define CREATE_DATE_FORMAT_BYTE_COUNT 32
 
 #ifdef __cplusplus
 }

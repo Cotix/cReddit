@@ -59,7 +59,8 @@ typedef struct TokenIdent {
         TOKEN_BOOL = 0, /* Should be of type 'unsigned int' -- See bit_mask member */
         TOKEN_INT = 1, /* Same as Bool, 'int', however can be any value */
         TOKEN_STRING = 2, /* Should be of type 'char*' */
-        TOKEN_OBJECT = 3 /* For now, acts same as TOKEN_STRING */
+        TOKEN_OBJECT = 3, /* For now, acts same as TOKEN_STRING */
+        TOKEN_DATE = 4 /* Parse this id as a date object */
     } type;
 
     enum {
@@ -189,6 +190,15 @@ void parseTokens  (TokenParser *parser, TokenIdent *identifiers, ...);
 #define ADD_TOKEN_IDENT_INT(key_name, member) \
     {.name = key_name,                        \
      .type = TOKEN_INT,                       \
+     .action = TOKEN_SET,                     \
+     .value = &(member)}
+
+/*
+ * A specific token for getting the date from the 'created' JSON API object
+ */
+#define ADD_TOKEN_IDENT_DATE(key_name, member) \
+    {.name = key_name,                        \
+     .type = TOKEN_DATE,                       \
      .action = TOKEN_SET,                     \
      .value = &(member)}
 

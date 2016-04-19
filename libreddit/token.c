@@ -182,6 +182,11 @@ int performIdentAction(TokenParser *p, TokenIdent *identifiers, int i, va_list a
     char *tmp = NULL;
     int performedAction = 0, len;
 
+    time_t created_time_t;
+    struct tm *localtime_internal_data;
+    struct tm *created_struct_tm;
+    char *formatted_time_string;
+
     READ_TOKEN_TO_TMP(p->block->memory, tmp, p->tokens[p->currentToken]);
 
     if (TOKEN_EQUALS(tmp, identifiers[i].name)) {
@@ -229,6 +234,34 @@ int performIdentAction(TokenParser *p, TokenIdent *identifiers, int i, va_list a
                     free(*((char**)identifiers[i].value));
 
                 *((char**)identifiers[i].value) = getCopyOfToken(p->block->memory, p->tokens[p->currentToken]);
+                break;
+            case TOKEN_DATE:
+                // Process the tmp char* string as a date
+                created_time_t = atol(tmp);
+                created_struct_tm = (struct tm *)(rmalloc(sizeof(struct tm)));
+                formatted_time_string = (char *)(rmalloc(CREATE_DATE_FORMAT_BYTE_COUNT));
+                
+                // Convert created_time_t (seconds since epoch) to 
+                // the struct tm object of localtime_internal_data. After we get
+                // the value, copy the internal data (static data)to a newly created
+                // struct tm object.
+                localtime_internal_data = localtime(&created_time_t);
+                if (localtime_internal_data != NULL)
+                {
+                    memcpy(created_struct_tm, localtime_internal_data, sizeof(struct tm));
+
+                    // Use strftime to convert the struct tm to a formatted string. The
+                    // format for the string is specified by CREATE_DATE_FORMAT
+                    if (0 != strftime(formatted_time_string, CREATE_DATE_FORMAT_BYTE_COUNT, 
+                                CREATE_DATE_FORMAT, created_struct_tm))
+                    {
+                        *((char**)identifiers[i].value) = formatted_time_string;
+                    }
+                }
+
+                // Free only created_struct_tm, don't free formatted_time_string
+                // because that data is now pointed to by identifiers[i].value
+                free(created_struct_tm);
                 break;
             }
             performedAction = 1;

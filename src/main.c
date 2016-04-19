@@ -327,7 +327,7 @@ void commentScreenDisplay(CommentScreen *screen)
         if (screen->lineCount >= screen->selected) {
             current = screen->lines[screen->selected]->comment;
             if (current != NULL) {
-                swprintf(tmpbuf, bufLen, L"%s - %d Up / %d Down", current->author, current->ups, current->downs);
+                swprintf(tmpbuf, bufLen, L"%s - %d Up / %d Down - %s", current->author, current->ups, current->downs, current->created);
                 mvaddwstr(lastLine + 1, 0, tmpbuf);
                 swprintf(tmpbuf, bufLen, L"-------");
                 mvaddwstr(lastLine + 2, 0, tmpbuf);
