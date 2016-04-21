@@ -13,6 +13,22 @@ extern "C" {
 # include <stdio.h>
 #endif
 
+/* 
+ * Implement StackNode structure for a stack of ints
+ * This is necessary for supporting comment text pane scrolling */
+struct __StackNode;
+
+typedef struct __StackNode
+{
+    int data;
+    struct __StackNode *next;
+}
+StackNode;
+
+extern StackNode *pushStackNode(StackNode *head, int input);
+extern void popStackNode(StackNode **head);
+extern void freeStackNode(StackNode *head);
+
 /*
  * This enum represents all possible errors from libreddit. Every function that
  * returns an error number returns a RedditErrno set to one of these options
@@ -245,6 +261,10 @@ typedef struct RedditComment {
     char *created; // Date that this comment was created
 
     unsigned int flags;
+
+    // This allows the user to scroll down on the (bottom screen) comment text pane
+    unsigned int advanceCommentTextCount; 
+    StackNode *commentScrollStack;
 } RedditComment;
 
 #define REDDIT_COMMENT_SCORE_HIDDEN  1

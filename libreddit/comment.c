@@ -62,6 +62,7 @@ EXPORT_SYMBOL void redditCommentFree (RedditComment *comment)
     free(comment->author);
     free(comment->parentId);
     free(comment->linkId);
+    freeStackNode(comment->commentScrollStack);
     redditCommentFreeChildren(comment);
     free(comment->childrenId);
     redditCommentFreeReplies(comment);

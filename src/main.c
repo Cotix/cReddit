@@ -272,6 +272,53 @@ void commentScreenUp(CommentScreen *screen)
         screen->offset--;
 }
 
+void commentScreenCommentScrollDown(CommentScreen *screen)
+{
+    RedditComment *current;
+    current = screen->lines[screen->selected]->comment;
+
+    // This variable points to where in the comment body we are currently advanced to
+    // (If the user has scrolled down on the comment screen already)
+    wchar_t *currentTextPointer = &(current->wbodyEsc[current->advanceCommentTextCount]);
+    
+    // Find next newline within next screen->width chars:
+    wchar_t * foundNewLineWChar = wcschr(currentTextPointer, '\n');
+
+    // We found a \n char, so advance to it if it's before end-of-screen
+    if (foundNewLineWChar != NULL) 
+    {
+        unsigned int untilNewLineChar = foundNewLineWChar - currentTextPointer + 1;
+        if (untilNewLineChar < screen->width)
+        {
+            current->advanceCommentTextCount += untilNewLineChar;
+            current->commentScrollStack = pushStackNode(
+                                            current->commentScrollStack,
+                                            untilNewLineChar);
+            return;
+        }
+    }
+
+    // if this comment text body has a length larger than screen->width:
+    if (wcslen(currentTextPointer) > screen->width)
+    {
+        current->advanceCommentTextCount += screen->width;
+        current->commentScrollStack = pushStackNode(
+                                        current->commentScrollStack,
+                                        screen->width); 
+    }
+}
+
+void commentScreenCommentScrollUp(CommentScreen *screen)
+{
+    RedditComment *current;
+    current = screen->lines[screen->selected]->comment;
+    if (current->commentScrollStack != NULL)
+    {
+        current->advanceCommentTextCount -= current->commentScrollStack->data;
+        popStackNode(&(current->commentScrollStack));
+    }
+}
+
 void commentScreenDisplay(CommentScreen *screen)
 {
     int i, screenLines;
@@ -332,7 +379,7 @@ void commentScreenDisplay(CommentScreen *screen)
                 swprintf(tmpbuf, bufLen, L"-------");
                 mvaddwstr(lastLine + 2, 0, tmpbuf);
 
-                mvaddwstr(lastLine + 3, 0, current->wbodyEsc);
+                mvaddwstr(lastLine + 3, 0, &(current->wbodyEsc[current->advanceCommentTextCount] ));
             }
         }
     }
@@ -399,11 +446,17 @@ void showThread(RedditLink *link)
     while((c = wgetch(stdscr))) {
         switch(c) {
             case 'j': case KEY_DOWN:
-                commentScreenDown(screen);
+                if (!screen->commentOpen)
+                    commentScreenDown(screen);
+                else // comment is open, this should scroll down
+                    commentScreenCommentScrollDown(screen);
                 commentScreenDisplay(screen);
                 break;
             case 'k': case KEY_UP:
-                commentScreenUp(screen);
+                if (!screen->commentOpen)
+                    commentScreenUp(screen);
+                else
+                    commentScreenCommentScrollUp(screen);
                 commentScreenDisplay(screen);
                 break;
             case 'J':
