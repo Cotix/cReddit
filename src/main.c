@@ -461,47 +461,43 @@ void showThread(RedditLink *link)
     while((c = wgetch(stdscr))) {
         switch(c) {
             case 'j': case KEY_DOWN:
-                if (!screen->commentOpen)
-                    commentScreenDown(screen);
-                else // comment is open, this should scroll down
-                    commentScreenCommentScrollDown(screen);
-                commentScreenDisplay(screen);
+                commentScreenDown(screen);
                 break;
             case 'k': case KEY_UP:
-                if (!screen->commentOpen)
-                    commentScreenUp(screen);
-                else
-                    commentScreenCommentScrollUp(screen);
-                commentScreenDisplay(screen);
+                commentScreenUp(screen);
                 break;
-            case 'J':
+                
+            case KEY_NPAGE:
                 commentScreenLevelDown(screen);
-                commentScreenDisplay(screen);
                 break;
-            case 'K':
+            case KEY_PPAGE:
                 commentScreenLevelUp(screen);
-                commentScreenDisplay(screen);
-                break;
-            case 'l': case '\n': case KEY_ENTER:
-                commentScreenToggleComment(screen);
-                commentScreenDisplay(screen);
                 break;
 
+            case 'J':
+                commentScreenCommentScrollDown(screen);
+                break;
+            case 'K':
+                commentScreenCommentScrollUp(screen);
+                break;
+
+            case 'l': case '\n': case KEY_ENTER:
+                commentScreenToggleComment(screen);
+                break;
             case 'm':
                 redditGetCommentChildren(screen->list, screen->lines[screen->selected]->comment);
                 commentScreenRenderLines(screen);
-                commentScreenDisplay(screen);
                 break;
 
             case 'q': case 'h':
                 if (screen->commentOpen) {
                     commentScreenCloseComment(screen);
-                    commentScreenDisplay(screen);
                 } else {
                     goto cleanup;
                 }
                 break;
         }
+        commentScreenDisplay(screen);
     }
 
 cleanup:;
