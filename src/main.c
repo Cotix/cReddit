@@ -274,49 +274,59 @@ void commentScreenUp(CommentScreen *screen)
 
 void commentScreenCommentScrollDown(CommentScreen *screen)
 {
-    RedditComment *current;
-    current = screen->lines[screen->selected]->comment;
-
-    // This variable points to where in the comment body we are currently advanced to
-    // (If the user has scrolled down on the comment screen already)
+    RedditComment *current = screen->lines[screen->selected]->comment;
     wchar_t *currentTextPointer = &(current->wbodyEsc[current->advanceCommentTextCount]);
-    
-    // Find next newline within next screen->width chars:
-    wchar_t * foundNewLineWChar = wcschr(currentTextPointer, '\n');
+    wchar_t * foundNewLineString = wcschr(currentTextPointer, '\n');
+
+    if (wcslen(currentTextPointer) <= screen->width)
+        return;
 
     // We found a \n char, so advance to it if it's before end-of-screen
-    if (foundNewLineWChar != NULL) 
+    if (foundNewLineString != NULL) 
     {
-        unsigned int untilNewLineChar = foundNewLineWChar - currentTextPointer + 1;
-        if (untilNewLineChar < screen->width)
+        unsigned int distanceToNewLine = foundNewLineString - currentTextPointer + 1;
+        if (distanceToNewLine < screen->width)
         {
-            current->advanceCommentTextCount += untilNewLineChar;
-            current->commentScrollStack = pushStackNode(
-                                            current->commentScrollStack,
-                                            untilNewLineChar);
+            current->advanceCommentTextCount += distanceToNewLine;
             return;
         }
     }
 
-    // if this comment text body has a length larger than screen->width:
-    if (wcslen(currentTextPointer) > screen->width)
-    {
-        current->advanceCommentTextCount += screen->width;
-        current->commentScrollStack = pushStackNode(
-                                        current->commentScrollStack,
-                                        screen->width); 
-    }
+    current->advanceCommentTextCount += screen->width;
 }
 
 void commentScreenCommentScrollUp(CommentScreen *screen)
 {
-    RedditComment *current;
-    current = screen->lines[screen->selected]->comment;
-    if (current->commentScrollStack != NULL)
+    RedditComment *current = screen->lines[screen->selected]->comment;
+
+    if (current->advanceCommentTextCount == 0)
+        return;
+
+    wchar_t *currentTextPointer = &(current->wbodyEsc[current->advanceCommentTextCount]);
+    wchar_t *textUntilScrollPoint = (wchar_t *)malloc(sizeof(wchar_t) * current->advanceCommentTextCount);
+
+    // Copy over the first part of the string, until advanceCommentTextCount.
+    if (NULL == memcpy(textUntilScrollPoint, current->wbodyEsc, (current->advanceCommentTextCount - 1) * sizeof(wchar_t)))
     {
-        current->advanceCommentTextCount -= current->commentScrollStack->data;
-        popStackNode(&(current->commentScrollStack));
+        exit(EXIT_FAILURE);
     }
+    textUntilScrollPoint[current->advanceCommentTextCount - 1] = '\0';
+    
+    wchar_t *foundNewLineString = wcsrchr(textUntilScrollPoint, '\n');
+    if (foundNewLineString != NULL)
+    {
+        unsigned int distanceToNewLine = foundNewLineString - currentTextPointer + 1;
+        if (distanceToNewLine < screen->width)
+        {
+            current->advanceCommentTextCount -= distanceToNewLine;
+            return;
+        }
+    }
+
+    if (screen->width > current->advanceCommentTextCount)
+        current->advanceCommentTextCount = 0;
+    else
+        current->advanceCommentTextCount -= screen->width;
 }
 
 void commentScreenDisplay(CommentScreen *screen)
