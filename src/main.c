@@ -276,10 +276,7 @@ void commentScreenCommentScrollDown(CommentScreen *screen)
 {
     RedditComment *current = screen->lines[screen->selected]->comment;
     wchar_t *currentTextPointer = &(current->wbodyEsc[current->advanceCommentTextCount]);
-    wchar_t * foundNewLineString = wcschr(currentTextPointer, '\n');
-
-    if (wcslen(currentTextPointer) <= screen->width)
-        return;
+    wchar_t *foundNewLineString = wcschr(currentTextPointer, '\n');
 
     // We found a \n char, so advance to it if it's before end-of-screen
     if (foundNewLineString != NULL) 
@@ -287,12 +284,14 @@ void commentScreenCommentScrollDown(CommentScreen *screen)
         unsigned int distanceToNewLine = foundNewLineString - currentTextPointer + 1;
         if (distanceToNewLine < screen->width)
         {
+            // Step past the newline char
             current->advanceCommentTextCount += distanceToNewLine;
             return;
         }
     }
 
-    current->advanceCommentTextCount += screen->width;
+    if (wcslen(currentTextPointer) > screen->width)
+        current->advanceCommentTextCount += screen->width;
 }
 
 void commentScreenCommentScrollUp(CommentScreen *screen)
@@ -302,31 +301,37 @@ void commentScreenCommentScrollUp(CommentScreen *screen)
     if (current->advanceCommentTextCount == 0)
         return;
 
-    wchar_t *currentTextPointer = &(current->wbodyEsc[current->advanceCommentTextCount]);
+    //wchar_t *currentTextPointer = &(current->wbodyEsc[current->advanceCommentTextCount]);
     wchar_t *textUntilScrollPoint = (wchar_t *)malloc(sizeof(wchar_t) * current->advanceCommentTextCount);
 
-    // Copy over the first part of the string, until advanceCommentTextCount.
+    // Copy over the first part of the string, until advanceCommentTextCount. 
+    // Exclude the last char (because it might be a newline)
     if (NULL == memcpy(textUntilScrollPoint, current->wbodyEsc, (current->advanceCommentTextCount - 1) * sizeof(wchar_t)))
     {
         exit(EXIT_FAILURE);
     }
     textUntilScrollPoint[current->advanceCommentTextCount - 1] = '\0';
     
+    // Find the distance to the previous newline character, if it exists.
     wchar_t *foundNewLineString = wcsrchr(textUntilScrollPoint, '\n');
+    unsigned int distanceToScroll = 0;
     if (foundNewLineString != NULL)
-    {
-        unsigned int distanceToNewLine = wcslen(foundNewLineString);
-        if (distanceToNewLine < screen->width)
-        {
-            current->advanceCommentTextCount -= distanceToNewLine;
-            return;
-        }
-    }
-
-    if (screen->width > current->advanceCommentTextCount)
-        current->advanceCommentTextCount = 0;
+        distanceToScroll = wcslen(foundNewLineString);
     else
-        current->advanceCommentTextCount -= screen->width;
+        distanceToScroll = current->advanceCommentTextCount;
+
+    // If the distance is shorter than screen width, just subtract it from the position.
+    if (distanceToScroll < screen->width)
+    {
+        current->advanceCommentTextCount -= distanceToScroll;
+        return;
+    }
+    else // distanceToScroll >= screen->width
+    {
+        unsigned int trimParagraphAmount = distanceToScroll % screen->width;
+        current->advanceCommentTextCount -= (trimParagraphAmount == 0) ? screen->width : trimParagraphAmount;
+        return;
+    }
 }
 
 void commentScreenDisplay(CommentScreen *screen)
