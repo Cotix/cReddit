@@ -315,7 +315,7 @@ void commentScreenCommentScrollUp(CommentScreen *screen)
     wchar_t *foundNewLineString = wcsrchr(textUntilScrollPoint, '\n');
     if (foundNewLineString != NULL)
     {
-        unsigned int distanceToNewLine = foundNewLineString - currentTextPointer + 1;
+        unsigned int distanceToNewLine = wcslen(foundNewLineString);
         if (distanceToNewLine < screen->width)
         {
             current->advanceCommentTextCount -= distanceToNewLine;
