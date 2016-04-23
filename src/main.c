@@ -315,10 +315,13 @@ void commentScreenCommentScrollUp(CommentScreen *screen)
     // Find the distance to the previous newline character, if it exists.
     wchar_t *foundNewLineString = wcsrchr(textUntilScrollPoint, '\n');
     unsigned int distanceToScroll = 0;
+
     if (foundNewLineString != NULL)
         distanceToScroll = wcslen(foundNewLineString);
     else
         distanceToScroll = current->advanceCommentTextCount;
+
+    free(textUntilScrollPoint);
 
     // If the distance is shorter than screen width, just subtract it from the position.
     if (distanceToScroll < screen->width)
@@ -573,7 +576,7 @@ void linkScreenRenderLinkText (LinkScreen *screen, wchar_t *tmpbuf, int bufLen, 
             addwstr(tmpbuf);
 
             if (current->flags & REDDIT_LINK_IS_SELF)
-                addwstr(current->wselftextEsc);
+                addwstr(&(current->wselftextEsc[current->advance]));
             else
                 addstr(current->url);
         }
@@ -674,6 +677,72 @@ void linkScreenUp(LinkScreen *screen)
         screen->offset--;
 }
 
+void linkScreenTextScrollDown(LinkScreen *screen)
+{
+    RedditLink *current = screen->list->links[screen->selected];
+    wchar_t *currentTextPointer = &(current->wselftextEsc[current->advance]);
+//wselftextEsc
+    wchar_t *foundNewLineString = wcschr(currentTextPointer, '\n');
+    int screenWidth = COLS;
+
+    // We found a \n char, so advance to it if it's before end-of-screen
+    if (foundNewLineString != NULL) 
+    {
+        unsigned int distanceToNewLine = foundNewLineString - currentTextPointer + 1;
+        if (distanceToNewLine < screenWidth)
+        {
+            // Step past the newline char
+            current->advance += distanceToNewLine;
+            return;
+        }
+    }
+
+    if (wcslen(currentTextPointer) > screenWidth)
+        current->advance += screenWidth;
+}
+
+void linkScreenTextScrollUp(LinkScreen *screen)
+{
+    RedditLink *current = screen->list->links[screen->selected];
+    int screenWidth = COLS;
+
+    if (current->advance == 0)
+        return;
+
+    wchar_t *textUntilScrollPoint = (wchar_t *)malloc(sizeof(wchar_t) * current->advance);
+
+    // Copy over the first part of the string, until advanceCommentTextCount. 
+    // Exclude the last char (because it might be a newline)
+    if (NULL == memcpy(textUntilScrollPoint, current->wselftextEsc, (current->advance - 1) * sizeof(wchar_t)))
+    {
+        exit(EXIT_FAILURE);
+    }
+    textUntilScrollPoint[current->advance - 1] = '\0';
+    
+    // Find the distance to the previous newline character, if it exists.
+    wchar_t *foundNewLineString = wcsrchr(textUntilScrollPoint, '\n');
+    unsigned int distanceToScroll = 0;
+    if (foundNewLineString != NULL)
+        distanceToScroll = wcslen(foundNewLineString);
+    else
+        distanceToScroll = current->advance;
+
+    free(textUntilScrollPoint);
+    // If the distance is shorter than screen width, just subtract it from the position.
+    if (distanceToScroll < screenWidth)
+    {
+        current->advance -= distanceToScroll;
+        return;
+    }
+    else
+    {
+        unsigned int trimParagraphAmount = distanceToScroll % screenWidth;
+        current->advance -= (trimParagraphAmount == 0) ? screenWidth : trimParagraphAmount;
+        return;
+    }
+}
+
+
 void linkScreenOpenLink(LinkScreen *screen)
 {
     if (!screen->linkOpen) {
@@ -754,6 +823,14 @@ void showSubreddit(const char *subreddit)
 
             case 'j': case KEY_DOWN:
                 linkScreenDown(screen);
+                drawScreen(screen);
+                break;
+            case 'K':
+                linkScreenTextScrollUp(screen);
+                drawScreen(screen);
+                break;
+            case 'J':
+                linkScreenTextScrollDown(screen);
                 drawScreen(screen);
                 break;
             case 'q':

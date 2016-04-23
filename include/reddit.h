@@ -155,6 +155,7 @@ typedef struct RedditLink {
     int numReports;
 
     unsigned int flags;
+    unsigned int advance;
 } RedditLink;
 
 #define REDDIT_LINK_IS_SELF       1
