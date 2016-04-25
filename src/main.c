@@ -54,7 +54,7 @@ typedef struct {
 
 RedditState *globalState;
 
-wchar_t *linkScreenHelp[19] = {
+wchar_t *linkScreenHelp[] = {
     L"Keypresses:",
     L"Link Screen:",
     L"- k / UP -- Move up one link in the list",
@@ -257,8 +257,8 @@ void commentScreenLevelUp(CommentScreen *screen)
         if (screen->lines[newPosition]->indentCount < indentCount)
             return;
         if (screen->lines[newPosition]->indentCount == indentCount) {
-            if (screen->offset > newPosition)
-                screen->offset += newPosition - screen->selected;
+            screen->offset += newPosition - screen->selected;
+            if (screen->offset < 0) screen->offset = 0;
             screen->selected = newPosition;
             return;
         }
@@ -782,7 +782,7 @@ void showSubreddit(const char *subreddit)
 
     /* Assign help-screen text */
     screen->helpText = linkScreenHelp;
-    screen->helpLineCount = 19;
+    screen->helpLineCount = sizeof(linkScreenHelp)/sizeof(linkScreenHelp[0]);
 
 
     drawScreen(screen); //And print the screen!
