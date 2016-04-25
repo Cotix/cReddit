@@ -275,8 +275,9 @@ void commentScreenUp(CommentScreen *screen)
 void commentScreenCommentScrollDown(CommentScreen *screen)
 {
     RedditComment *current = screen->lines[screen->selected]->comment;
-    wchar_t *currentTextPointer = &(current->wbodyEsc[current->advanceCommentTextCount]);
-    wchar_t *foundNewLineString = wcschr(currentTextPointer, '\n');
+    wchar_t *currentTextPointer = &(current->wbodyEsc[current->advance]);
+    
+    wchar_t *foundNewLineString = wcschr(currentTextPointer, L'\n');
 
     // We found a \n char, so advance to it if it's before end-of-screen
     if (foundNewLineString != NULL) 
@@ -284,57 +285,39 @@ void commentScreenCommentScrollDown(CommentScreen *screen)
         unsigned int distanceToNewLine = foundNewLineString - currentTextPointer + 1;
         if (distanceToNewLine < screen->width)
         {
-            // Step past the newline char
-            current->advanceCommentTextCount += distanceToNewLine;
+            current->advance += distanceToNewLine;
             return;
         }
     }
 
     if (wcslen(currentTextPointer) > screen->width)
-        current->advanceCommentTextCount += screen->width;
+        current->advance += screen->width;
 }
 
 void commentScreenCommentScrollUp(CommentScreen *screen)
 {
     RedditComment *current = screen->lines[screen->selected]->comment;
 
-    if (current->advanceCommentTextCount == 0)
+    if (current->advance == 0)
         return;
 
-    //wchar_t *currentTextPointer = &(current->wbodyEsc[current->advanceCommentTextCount]);
-    wchar_t *textUntilScrollPoint = (wchar_t *)malloc(sizeof(wchar_t) * current->advanceCommentTextCount);
+    wchar_t *currentTextPointer = &(current->wbodyEsc[current->advance - 1]);
+    const wchar_t *foundNewLineString = reverse_wcsnchr(currentTextPointer - 1, current->advance - 1, L'\n');
 
-    // Copy over the first part of the string, until advanceCommentTextCount. 
-    // Exclude the last char (because it might be a newline)
-    if (NULL == memcpy(textUntilScrollPoint, current->wbodyEsc, (current->advanceCommentTextCount - 1) * sizeof(wchar_t)))
-    {
-        exit(EXIT_FAILURE);
-    }
-    textUntilScrollPoint[current->advanceCommentTextCount - 1] = '\0';
-    
-    // Find the distance to the previous newline character, if it exists.
-    wchar_t *foundNewLineString = wcsrchr(textUntilScrollPoint, '\n');
     unsigned int distanceToScroll = 0;
+    unsigned int distanceToNewLine = 0;
 
     if (foundNewLineString != NULL)
-        distanceToScroll = wcslen(foundNewLineString);
+        distanceToNewLine = currentTextPointer - foundNewLineString;
+                            /*wcslen(foundNewLineString);*/
     else
-        distanceToScroll = current->advanceCommentTextCount;
+        distanceToNewLine = current->advance;
 
-    free(textUntilScrollPoint);
+    distanceToScroll = (distanceToNewLine % screen->width == 0) ?
+                        screen->width :
+                        distanceToNewLine % screen->width;
 
-    // If the distance is shorter than screen width, just subtract it from the position.
-    if (distanceToScroll < screen->width)
-    {
-        current->advanceCommentTextCount -= distanceToScroll;
-        return;
-    }
-    else // distanceToScroll >= screen->width
-    {
-        unsigned int trimParagraphAmount = distanceToScroll % screen->width;
-        current->advanceCommentTextCount -= (trimParagraphAmount == 0) ? screen->width : trimParagraphAmount;
-        return;
-    }
+    current->advance -= distanceToScroll;
 }
 
 void commentScreenDisplay(CommentScreen *screen)
@@ -397,7 +380,7 @@ void commentScreenDisplay(CommentScreen *screen)
                 swprintf(tmpbuf, bufLen, L"-------");
                 mvaddwstr(lastLine + 2, 0, tmpbuf);
 
-                mvaddwstr(lastLine + 3, 0, &(current->wbodyEsc[current->advanceCommentTextCount] ));
+                mvaddwstr(lastLine + 3, 0, &(current->wbodyEsc[current->advance] ));
             }
         }
     }
@@ -711,7 +694,7 @@ void linkScreenTextScrollUp(LinkScreen *screen)
 
     wchar_t *textUntilScrollPoint = (wchar_t *)malloc(sizeof(wchar_t) * current->advance);
 
-    // Copy over the first part of the string, until advanceCommentTextCount. 
+    // Copy over the first part of the string, until advance. 
     // Exclude the last char (because it might be a newline)
     if (NULL == memcpy(textUntilScrollPoint, current->wselftextEsc, (current->advance - 1) * sizeof(wchar_t)))
     {
@@ -856,7 +839,7 @@ void showSubreddit(const char *subreddit)
                 drawScreen(screen);
                 break;
             case 'o':
-                line = alloc_sprintf("xdg-open %s &>/dev/null", screen->list->links[screen->selected]->url);
+                line = alloc_sprintf("xdg-open %s", screen->list->links[screen->selected]->url);
                 system(line);
                 free(line);
                 break;

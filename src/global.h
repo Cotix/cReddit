@@ -25,5 +25,6 @@
 #include "debug.h"
 
 char *alloc_sprintf (const char *format, ...);
+const wchar_t *reverse_wcsnchr(const wchar_t *start, const size_t len, const wchar_t c);
 
 #endif

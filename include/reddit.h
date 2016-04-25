@@ -246,7 +246,7 @@ typedef struct RedditComment {
     char *created; // Date that this comment was created
 
     unsigned int flags;
-    unsigned int advanceCommentTextCount;
+    int advance;
 } RedditComment;
 
 #define REDDIT_COMMENT_SCORE_HIDDEN  1
