@@ -663,8 +663,11 @@ void linkScreenUp(LinkScreen *screen)
 void linkScreenTextScrollDown(LinkScreen *screen)
 {
     RedditLink *current = screen->list->links[screen->selected];
+
+    if (current->wselftextEsc == NULL)
+        return;
+
     wchar_t *currentTextPointer = &(current->wselftextEsc[current->advance]);
-//wselftextEsc
     wchar_t *foundNewLineString = wcschr(currentTextPointer, '\n');
     int screenWidth = COLS;
 
@@ -692,37 +695,23 @@ void linkScreenTextScrollUp(LinkScreen *screen)
     if (current->advance == 0)
         return;
 
-    wchar_t *textUntilScrollPoint = (wchar_t *)malloc(sizeof(wchar_t) * current->advance);
+    wchar_t *currentTextPointer = &(current->wselftextEsc[current->advance - 1]);
+    const wchar_t *foundNewLineString = reverse_wcsnchr(currentTextPointer - 1, current->advance - 1, L'\n');
 
-    // Copy over the first part of the string, until advance. 
-    // Exclude the last char (because it might be a newline)
-    if (NULL == memcpy(textUntilScrollPoint, current->wselftextEsc, (current->advance - 1) * sizeof(wchar_t)))
-    {
-        exit(EXIT_FAILURE);
-    }
-    textUntilScrollPoint[current->advance - 1] = '\0';
-    
-    // Find the distance to the previous newline character, if it exists.
-    wchar_t *foundNewLineString = wcsrchr(textUntilScrollPoint, '\n');
     unsigned int distanceToScroll = 0;
-    if (foundNewLineString != NULL)
-        distanceToScroll = wcslen(foundNewLineString);
-    else
-        distanceToScroll = current->advance;
+    unsigned int distanceToNewLine = 0;
 
-    free(textUntilScrollPoint);
-    // If the distance is shorter than screen width, just subtract it from the position.
-    if (distanceToScroll < screenWidth)
-    {
-        current->advance -= distanceToScroll;
-        return;
-    }
+    if (foundNewLineString != NULL)
+        distanceToNewLine = currentTextPointer - foundNewLineString;
+                            /*wcslen(foundNewLineString);*/
     else
-    {
-        unsigned int trimParagraphAmount = distanceToScroll % screenWidth;
-        current->advance -= (trimParagraphAmount == 0) ? screenWidth : trimParagraphAmount;
-        return;
-    }
+        distanceToNewLine = current->advance;
+
+    distanceToScroll = (distanceToNewLine % screenWidth == 0) ?
+                        screenWidth :
+                        distanceToNewLine % screenWidth;
+
+    current->advance -= distanceToScroll;
 }
 
 
