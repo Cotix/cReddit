@@ -154,6 +154,8 @@ typedef struct RedditLink {
     int numComments;
     int numReports;
 
+    char *created; // Date that this comment was created
+
     unsigned int flags;
     unsigned int advance;
 } RedditLink;

@@ -241,6 +241,7 @@ void commentScreenLevelDown(CommentScreen *screen)
         if (screen->lines[newPosition]->indentCount < indentCount)
             return;
         if (screen->lines[newPosition]->indentCount == indentCount) {
+            //if (screen->offset + screen->selected < screen->offset + (screen->displayed / 2))
             screen->offset += newPosition - screen->selected;
             screen->selected = newPosition;
             return;
@@ -256,7 +257,8 @@ void commentScreenLevelUp(CommentScreen *screen)
         if (screen->lines[newPosition]->indentCount < indentCount)
             return;
         if (screen->lines[newPosition]->indentCount == indentCount) {
-            screen->offset += newPosition - screen->selected;
+            if (screen->offset > newPosition)
+                screen->offset += newPosition - screen->selected;
             screen->selected = newPosition;
             return;
         }
@@ -551,7 +553,7 @@ void linkScreenRenderLinkText (LinkScreen *screen, wchar_t *tmpbuf, int bufLen, 
     if (screen->list->linkCount >= screen->selected) {
         current = screen->list->links[screen->selected];
         if (current != NULL) {
-            swprintf(tmpbuf, bufLen, L"%s - %d Score / %d Up / %d Down / %d Comments\nTitle: ", current->author, current->score, current->ups, current->downs, current->numComments);
+            swprintf(tmpbuf, bufLen, L"%s - %d Score / %d Up / %d Down / %d Comments / %s \nTitle: ", current->author, current->score, current->ups, current->downs, current->numComments, current->created);
             mvaddwstr(lastLine + 1, 0, tmpbuf);
             addwstr(current->wtitleEsc);
             addch('\n');
@@ -831,6 +833,12 @@ void showSubreddit(const char *subreddit)
                 line = alloc_sprintf("xdg-open %s", screen->list->links[screen->selected]->url);
                 system(line);
                 free(line);
+
+                redditLinkListFreeLinks(screen->list);
+                redditGetListing(screen->list);
+                screen->offset = 0;
+                screen->selected = 0;
+                drawScreen(screen);
                 break;
             case 'L':
                 redditGetListing(screen->list);

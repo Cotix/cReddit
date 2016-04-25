@@ -126,6 +126,7 @@ RedditLink *redditGetLink(TokenParser *parser)
         ADD_TOKEN_IDENT_BOOL    ("edited",        link->flags, REDDIT_LINK_EDITED),
         ADD_TOKEN_IDENT_BOOL    ("hidden",        link->flags, REDDIT_LINK_HIDDEN),
         ADD_TOKEN_IDENT_BOOL    ("distinguished", link->flags, REDDIT_LINK_DISTINGUISHED),
+        ADD_TOKEN_IDENT_DATE    ("created",       link->created),
         {0}
     };
 
