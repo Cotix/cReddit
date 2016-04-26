@@ -23,3 +23,5 @@ Known TODO's and FIXME's
             Password, perhaps color options, etc. choices about what to use to
             parse the config files, what syntax it should use, what it should
             support, etc. should be considered.
+        
+        Fix issue with & displaying as &amp; in link or comment text

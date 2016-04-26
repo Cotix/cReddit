@@ -154,7 +154,7 @@ typedef struct RedditLink {
     int numComments;
     int numReports;
 
-    char *created; // Date that this comment was created
+    char *created_utc; // Date that this comment was created in UTC
 
     unsigned int flags;
     unsigned int advance;
@@ -245,7 +245,7 @@ typedef struct RedditComment {
     char *childrenId;
     char **directChildrenIds;
 
-    char *created; // Date that this comment was created
+    char *created_utc; // Date that this comment was created in UTC
 
     unsigned int flags;
     int advance;

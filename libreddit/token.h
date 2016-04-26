@@ -194,7 +194,7 @@ void parseTokens  (TokenParser *parser, TokenIdent *identifiers, ...);
      .value = &(member)}
 
 /*
- * A specific token for getting the date from the 'created' JSON API object
+ * A specific token for getting the date from the 'created_utc' JSON API object
  */
 #define ADD_TOKEN_IDENT_DATE(key_name, member) \
     {.name = key_name,                        \
