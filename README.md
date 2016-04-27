@@ -32,6 +32,8 @@ Default Keypresses
 Link screen:
 *    k / UP      -- Move up one link in the list
 *    j / DOWN    -- Move down one link in the list
+*    K           -- Scroll up link text of open link
+*    J           -- Scroll down link text of open link 
 *    L           -- Get the next list of Links from Reddit
 *    u           -- Update the list (Clears the list of links, and then gets a new list from Reddit)
 *    l / ENTER   -- Open the selected link
@@ -41,8 +43,8 @@ Link screen:
 Comment screen:
 *    k / UP      -- Move up one comment in the list
 *    j / DOWN    -- Move down one comment in the list
-*    K           -- Scroll down comment text of open comment
-*    J           -- Scroll up comment text of open comment
+*    K           -- Scroll up comment text of open comment
+*    J           -- Scroll down comment text of open comment
 *    PGUP        -- Move up one comment at the same depth
 *    PGDN        -- Move down one comment at the same depth
 *    l / ENTER   -- Open the selected comment
