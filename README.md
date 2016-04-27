@@ -32,6 +32,8 @@ Default Keypresses
 Link screen:
 *    k / UP      -- Move up one link in the list
 *    j / DOWN    -- Move down one link in the list
+*    K           -- Scroll down link text of open link
+*    J           -- Scroll up link text of open link 
 *    L           -- Get the next list of Links from Reddit
 *    u           -- Update the list (Clears the list of links, and then gets a new list from Reddit)
 *    l / ENTER   -- Open the selected link
