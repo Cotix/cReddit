@@ -273,6 +273,54 @@ void commentScreenUp(CommentScreen *screen)
         screen->offset--;
 }
 
+void commentScreenCommentScrollDown(CommentScreen *screen)
+{
+    RedditComment *current = screen->lines[screen->selected]->comment;
+    wchar_t *currentTextPointer = &(current->wbodyEsc[current->advance]);
+    
+    wchar_t *foundNewLineString = wcschr(currentTextPointer, L'\n');
+
+    // We found a \n char, so advance to it if it's before end-of-screen
+    if (foundNewLineString != NULL) 
+    {
+        unsigned int distanceToNewLine = foundNewLineString - currentTextPointer + 1;
+        if (distanceToNewLine < screen->width)
+        {
+            current->advance += distanceToNewLine;
+            return;
+        }
+    }
+
+    if (wcslen(currentTextPointer) > screen->width)
+        current->advance += screen->width;
+}
+
+void commentScreenCommentScrollUp(CommentScreen *screen)
+{
+    RedditComment *current = screen->lines[screen->selected]->comment;
+
+    if (current->advance == 0)
+        return;
+
+    wchar_t *currentTextPointer = &(current->wbodyEsc[current->advance - 1]);
+    const wchar_t *foundNewLineString = reverse_wcsnchr(currentTextPointer - 1, current->advance - 1, L'\n');
+
+    unsigned int distanceToScroll = 0;
+    unsigned int distanceToNewLine = 0;
+
+    if (foundNewLineString != NULL)
+        distanceToNewLine = currentTextPointer - foundNewLineString;
+                            /*wcslen(foundNewLineString);*/
+    else
+        distanceToNewLine = current->advance;
+
+    distanceToScroll = (distanceToNewLine % screen->width == 0) ?
+                        screen->width :
+                        distanceToNewLine % screen->width;
+
+    current->advance -= distanceToScroll;
+}
+
 void commentScreenDisplay(CommentScreen *screen)
 {
     int i, screenLines;
@@ -328,12 +376,12 @@ void commentScreenDisplay(CommentScreen *screen)
         if (screen->lineCount >= screen->selected) {
             current = screen->lines[screen->selected]->comment;
             if (current != NULL) {
-                swprintf(tmpbuf, bufLen, L"%s - %d Up / %d Down", current->author, current->ups, current->downs);
+                swprintf(tmpbuf, bufLen, L"%s - %d Up / %d Down - %s", current->author, current->ups, current->downs, current->created_utc);
                 mvaddwstr(lastLine + 1, 0, tmpbuf);
                 swprintf(tmpbuf, bufLen, L"-------");
                 mvaddwstr(lastLine + 2, 0, tmpbuf);
 
-                mvaddwstr(lastLine + 3, 0, current->wbodyEsc);
+                mvaddwstr(lastLine + 3, 0, &(current->wbodyEsc[current->advance] ));
             }
         }
     }
@@ -401,40 +449,42 @@ void showThread(RedditLink *link)
         switch(c) {
             case 'j': case KEY_DOWN:
                 commentScreenDown(screen);
-                commentScreenDisplay(screen);
                 break;
             case 'k': case KEY_UP:
                 commentScreenUp(screen);
-                commentScreenDisplay(screen);
                 break;
-            case 'J':
+                
+            case KEY_NPAGE:
                 commentScreenLevelDown(screen);
-                commentScreenDisplay(screen);
                 break;
-            case 'K':
+            case KEY_PPAGE:
                 commentScreenLevelUp(screen);
-                commentScreenDisplay(screen);
-                break;
-            case 'l': case '\n': case KEY_ENTER:
-                commentScreenToggleComment(screen);
-                commentScreenDisplay(screen);
                 break;
 
+            case 'J':
+                commentScreenCommentScrollDown(screen);
+                break;
+            case 'K':
+                commentScreenCommentScrollUp(screen);
+                break;
+
+            case 'l': case '\n': case KEY_ENTER:
+                commentScreenToggleComment(screen);
+                break;
             case 'm':
                 redditGetCommentChildren(screen->list, screen->lines[screen->selected]->comment);
                 commentScreenRenderLines(screen);
-                commentScreenDisplay(screen);
                 break;
 
             case 'q': case 'h':
                 if (screen->commentOpen) {
                     commentScreenCloseComment(screen);
-                    commentScreenDisplay(screen);
                 } else {
                     goto cleanup;
                 }
                 break;
         }
+        commentScreenDisplay(screen);
     }
 
 cleanup:;
@@ -502,7 +552,7 @@ void linkScreenRenderLinkText (LinkScreen *screen, wchar_t *tmpbuf, int bufLen, 
     if (screen->list->linkCount >= screen->selected) {
         current = screen->list->links[screen->selected];
         if (current != NULL) {
-            swprintf(tmpbuf, bufLen, L"%s - %d Score / %d Up / %d Down / %d Comments\nTitle: ", current->author, current->score, current->ups, current->downs, current->numComments);
+            swprintf(tmpbuf, bufLen, L"%s - %d Score / %d Up / %d Down / %d Comments / %s \nTitle: ", current->author, current->score, current->ups, current->downs, current->numComments, current->created_utc);
             mvaddwstr(lastLine + 1, 0, tmpbuf);
             addwstr(current->wtitleEsc);
             addch('\n');
@@ -510,7 +560,7 @@ void linkScreenRenderLinkText (LinkScreen *screen, wchar_t *tmpbuf, int bufLen, 
             addwstr(tmpbuf);
 
             if (current->flags & REDDIT_LINK_IS_SELF)
-                addwstr(current->wselftextEsc);
+                addwstr(&(current->wselftextEsc[current->advance]));
             else
                 addstr(current->url);
         }
@@ -611,6 +661,61 @@ void linkScreenUp(LinkScreen *screen)
         screen->offset--;
 }
 
+void linkScreenTextScrollDown(LinkScreen *screen)
+{
+    RedditLink *current = screen->list->links[screen->selected];
+
+    if (current->wselftextEsc == NULL)
+        return;
+
+    wchar_t *currentTextPointer = &(current->wselftextEsc[current->advance]);
+    wchar_t *foundNewLineString = wcschr(currentTextPointer, '\n');
+    int screenWidth = COLS;
+
+    // We found a \n char, so advance to it if it's before end-of-screen
+    if (foundNewLineString != NULL) 
+    {
+        unsigned int distanceToNewLine = foundNewLineString - currentTextPointer + 1;
+        if (distanceToNewLine < screenWidth)
+        {
+            // Step past the newline char
+            current->advance += distanceToNewLine;
+            return;
+        }
+    }
+
+    if (wcslen(currentTextPointer) > screenWidth)
+        current->advance += screenWidth;
+}
+
+void linkScreenTextScrollUp(LinkScreen *screen)
+{
+    RedditLink *current = screen->list->links[screen->selected];
+    int screenWidth = COLS;
+
+    if (current->advance == 0)
+        return;
+
+    wchar_t *currentTextPointer = &(current->wselftextEsc[current->advance - 1]);
+    const wchar_t *foundNewLineString = reverse_wcsnchr(currentTextPointer - 1, current->advance - 1, L'\n');
+
+    unsigned int distanceToScroll = 0;
+    unsigned int distanceToNewLine = 0;
+
+    if (foundNewLineString != NULL)
+        distanceToNewLine = currentTextPointer - foundNewLineString;
+                            /*wcslen(foundNewLineString);*/
+    else
+        distanceToNewLine = current->advance;
+
+    distanceToScroll = (distanceToNewLine % screenWidth == 0) ?
+                        screenWidth :
+                        distanceToNewLine % screenWidth;
+
+    current->advance -= distanceToScroll;
+}
+
+
 void linkScreenOpenLink(LinkScreen *screen)
 {
     if (!screen->linkOpen) {
@@ -693,6 +798,14 @@ void showSubreddit(const char *subreddit)
                 linkScreenDown(screen);
                 drawScreen(screen);
                 break;
+            case 'K':
+                linkScreenTextScrollUp(screen);
+                drawScreen(screen);
+                break;
+            case 'J':
+                linkScreenTextScrollDown(screen);
+                drawScreen(screen);
+                break;
             case 'q':
                 if (screen->linkOpen) {
                     linkScreenCloseLink(screen);
@@ -716,9 +829,15 @@ void showSubreddit(const char *subreddit)
                 drawScreen(screen);
                 break;
             case 'o':
-                line = alloc_sprintf("xdg-open %s &>/dev/null", screen->list->links[screen->selected]->url);
+                line = alloc_sprintf("xdg-open %s", screen->list->links[screen->selected]->url);
                 system(line);
                 free(line);
+
+                redditLinkListFreeLinks(screen->list);
+                redditGetListing(screen->list);
+                screen->offset = 0;
+                screen->selected = 0;
+                drawScreen(screen);
                 break;
             case 'L':
                 redditGetListing(screen->list);

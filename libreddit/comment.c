@@ -288,6 +288,7 @@ RedditComment *redditGetComment(TokenParser *parser, RedditCommentList *list)
         ADD_TOKEN_IDENT_BOOL    ("edited",        comment->flags, REDDIT_COMMENT_EDITED),
         ADD_TOKEN_IDENT_BOOL    ("score_hidden",  comment->flags, REDDIT_COMMENT_SCORE_HIDDEN),
         ADD_TOKEN_IDENT_BOOL    ("distinguished", comment->flags, REDDIT_COMMENT_DISTINGUISHED),
+        ADD_TOKEN_IDENT_DATE    ("created_utc",   comment->created_utc),
         {0}
     };
 
