@@ -39,6 +39,7 @@ Link screen:
 *    l / ENTER   -- Open the selected link
 *    c           -- Display the comments for the selected link
 *    q           -- Close open Link, or exit program if no link is open
+*    [1 - 5]     -- Switch between subreddit list types (hot, new, rising, controversial, top)
 
 Comment screen:
 *    k / UP      -- Move up one comment in the list
