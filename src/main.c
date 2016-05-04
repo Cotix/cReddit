@@ -66,6 +66,7 @@ wchar_t *linkScreenHelp[] = {
     L"- l / ENTER -- Open the selected link",
     L"- c -- Display the comments for the selected link",
     L"- q -- Close open Link, or exit program if no link is open",
+    L"- [1 - 5] -- Switch between subreddit list types (hot, new, rising, controversial, top)",
     L"- ? -- Opens the help(but you wouldn't be reading this if you couldn't figure that out would you?)",
     L"",
     L"Comment screen:",
@@ -99,6 +100,25 @@ void linkScreenFree(LinkScreen *screen)
 
     free(screen->screenLines);
     free(screen);
+}
+
+void linkScreenSetup(LinkScreen *screen, const char *subreddit, const RedditListType listType)
+{
+    screen->list = redditLinkListNew();
+    screen->list->subreddit = redditCopyString(subreddit);
+    screen->list->type = listType;
+
+    redditGetListing(screen->list);
+
+    screen->displayed = LINES - 1;
+    screen->linkOpenSize = (screen->displayed / 5) * 4;
+
+    screen->offset = 0;
+    screen->selected = 0;
+
+    /* Assign help-screen text */
+    screen->helpText = linkScreenHelp;
+    screen->helpLineCount = sizeof(linkScreenHelp)/sizeof(linkScreenHelp[0]);
 }
 
 CommentLine *commentLineNew()
@@ -768,25 +788,12 @@ void showSubreddit(const char *subreddit)
 {
     char *line;
     LinkScreen *screen;
+    RedditListType listType = REDDIT_HOT; // Default RedditListType for screen is 'hot'
+
     DEBUG_PRINT(L"Loading Subreddit %s\n", subreddit);
     screen = linkScreenNew();
 
-    screen->list = redditLinkListNew();
-    screen->list->subreddit = redditCopyString(subreddit);
-    screen->list->type = REDDIT_HOT;
-
-    redditGetListing(screen->list);
-
-    screen->displayed = LINES - 1;
-    screen->linkOpenSize = (screen->displayed / 5) * 4;
-
-    screen->offset = 0;
-    screen->selected = 0;
-
-    /* Assign help-screen text */
-    screen->helpText = linkScreenHelp;
-    screen->helpLineCount = sizeof(linkScreenHelp)/sizeof(linkScreenHelp[0]);
-
+    linkScreenSetup(screen, subreddit, listType);
 
     drawScreen(screen); //And print the screen!
 
@@ -837,10 +844,12 @@ void showSubreddit(const char *subreddit)
                 system(line);
                 free(line);
 
-                redditLinkListFreeLinks(screen->list);
-                redditGetListing(screen->list);
-                screen->offset = 0;
-                screen->selected = 0;
+                redditLinkListFree(screen->list);
+                linkScreenFree(screen);
+
+                screen = linkScreenNew();
+                linkScreenSetup(screen, subreddit, listType);
+
                 drawScreen(screen);
                 break;
             case 'L':
@@ -856,6 +865,71 @@ void showSubreddit(const char *subreddit)
                 if (screen->helpOpen)
                     linkScreenOpenLink(screen);
                 drawScreen(screen);
+                break;
+            case '1':
+                if (screen->list->type != REDDIT_HOT)
+                {
+                    listType = REDDIT_HOT;
+                    redditLinkListFree(screen->list);
+                    linkScreenFree(screen);
+
+                    screen = linkScreenNew();
+                    linkScreenSetup(screen, subreddit, listType);
+
+                    drawScreen(screen);
+                }
+                break;
+            case '2':
+                if (screen->list->type != REDDIT_NEW)
+                {
+                    listType = REDDIT_NEW;
+                    redditLinkListFree(screen->list);
+                    linkScreenFree(screen);
+
+                    screen = linkScreenNew();
+                    linkScreenSetup(screen, subreddit, listType);
+
+                    drawScreen(screen);
+                }
+                break;
+            case '3':
+                if (screen->list->type != REDDIT_RISING)
+                {
+                    listType = REDDIT_RISING;
+                    redditLinkListFree(screen->list);
+                    linkScreenFree(screen);
+
+                    screen = linkScreenNew();
+                    linkScreenSetup(screen, subreddit, listType);
+
+                    drawScreen(screen);
+                }
+                break;
+            case '4':
+                if (screen->list->type != REDDIT_CONTR)
+                {
+                    listType = REDDIT_CONTR;
+                    redditLinkListFree(screen->list);
+                    linkScreenFree(screen);
+
+                    screen = linkScreenNew();
+                    linkScreenSetup(screen, subreddit, listType);
+
+                    drawScreen(screen);
+                }
+                break;
+            case '5':
+                if (screen->list->type != REDDIT_TOP)
+                {
+                    listType = REDDIT_TOP;
+                    redditLinkListFree(screen->list);
+                    linkScreenFree(screen);
+
+                    screen = linkScreenNew();
+                    linkScreenSetup(screen, subreddit, listType);
+
+                    drawScreen(screen);
+                }
                 break;
         }
     }
