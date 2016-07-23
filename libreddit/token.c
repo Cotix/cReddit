@@ -311,8 +311,10 @@ void vparseTokens (TokenParser *p, TokenIdent *identifiers, va_list args)
             continue;
 
         for (i = 0; i < identCount; i++)
-            if (performIdentAction(p, identifiers, i, args))
+            if (performIdentAction(p, identifiers, i, args)) {
+                (p->currentToken)--;
                 break;
+            }
 
     }
 
