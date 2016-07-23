@@ -194,6 +194,7 @@ typedef struct RedditLinkList {
 
     int linkCount;
     RedditLink **links;
+    char *afterId;
 } RedditLinkList;
 
 /*

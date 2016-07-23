@@ -82,6 +82,7 @@ EXPORT_SYMBOL void redditLinkListFree (RedditLinkList *list)
     redditLinkListFreeLinks(list);
     free(list->subreddit);
     free(list->modhash);
+    free(list->afterId);
     free(list);
 }
 
@@ -148,7 +149,7 @@ DEF_TOKEN_CALLBACK(getListingHelper)
     ARG_LIST_GET_LISTING
 
 
-    /* Search for the 'kink' ident, and check if it was set to 't3' */
+    /* Search for the 'kind' ident, and check if it was set to 't3' */
     int i;
     for (i = 0; idents[i].name != NULL; i++)
         if (strcmp(idents[i].name, "kind") == 0)
@@ -172,6 +173,7 @@ EXPORT_SYMBOL RedditErrno redditGetListing (RedditLinkList *list)
         ADD_TOKEN_IDENT_STRING("modhash", list->modhash),
         ADD_TOKEN_IDENT_STRING("kind",    kindStr),
         ADD_TOKEN_IDENT_FUNC  ("data",    getListingHelper),
+        ADD_TOKEN_IDENT_STRING("after",   list->afterId),
         {0}
     };
 
@@ -191,7 +193,7 @@ EXPORT_SYMBOL RedditErrno redditGetListing (RedditLinkList *list)
     strcat(subred, REDDIT_JSON);
 
     if (list->linkCount > 0)
-        sprintf(subred + strlen(subred), "?after=t3_%s", list->links[list->linkCount - 1]->id);
+        sprintf(subred + strlen(subred), "?after=%s", list->afterId);
 
     res = redditRunParser(subred, NULL, ids, list);
 

@@ -400,7 +400,7 @@ void commentScreenDisplay(CommentScreen *screen)
         if (screen->lineCount >= screen->selected) {
             current = screen->lines[screen->selected]->comment;
             if (current != NULL) {
-                swprintf(tmpbuf, bufLen, L"%s - %d Up / %d Down - %s", current->author, current->ups, current->downs, current->created_utc);
+                swprintf(tmpbuf, bufLen, L"%s - %d Score - %s", current->author, current->ups, current->created_utc);
                 mvaddwstr(lastLine + 1, 0, tmpbuf);
                 swprintf(tmpbuf, bufLen, L"-------");
                 mvaddwstr(lastLine + 2, 0, tmpbuf);
@@ -576,7 +576,7 @@ void linkScreenRenderLinkText (LinkScreen *screen, wchar_t *tmpbuf, int bufLen, 
     if (screen->list->linkCount >= screen->selected) {
         current = screen->list->links[screen->selected];
         if (current != NULL) {
-            swprintf(tmpbuf, bufLen, L"%s - %d Score / %d Up / %d Down / %d Comments / %s \nTitle: ", current->author, current->score, current->ups, current->downs, current->numComments, current->created_utc);
+            swprintf(tmpbuf, bufLen, L"%s - %d Score / %d Comments / %s \nTitle: ", current->author, current->score, current->numComments, current->created_utc);
             mvaddwstr(lastLine + 1, 0, tmpbuf);
             addwstr(current->wtitleEsc);
             addch('\n');
