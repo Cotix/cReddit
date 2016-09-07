@@ -1,5 +1,6 @@
 #define _XOPEN_SOURCE_EXTENDED
 
+#include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -786,7 +787,6 @@ void linkScreenToggleHelp(LinkScreen *screen)
 
 void showSubreddit(const char *subreddit)
 {
-    char *line;
     LinkScreen *screen;
     RedditListType listType = REDDIT_HOT; // Default RedditListType for screen is 'hot'
 
@@ -840,9 +840,12 @@ void showSubreddit(const char *subreddit)
                 drawScreen(screen);
                 break;
             case 'o':
-                line = alloc_sprintf("xdg-open %s", screen->list->links[screen->selected]->url);
-                system(line);
-                free(line);
+                if (fork() == 0) {
+                    char* const argv[]= {"xdg-open", 
+                                        screen->list->links[screen->selected]->url,
+                                        NULL};
+                    execvp("xdg-open", argv);
+                }
 
                 redditLinkListFree(screen->list);
                 linkScreenFree(screen);
