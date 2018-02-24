@@ -11,8 +11,8 @@ of libncurses). The project itself comprises a library called libreddit and a
 program called creddit.
 
 To do a normal compilation, run the two commands:
-make
-make install
+``` make ``` and
+``` make install ```
 
 Note: 'make install' will need to be run as root to install to the root
 directory.
