@@ -5,6 +5,7 @@ ifdef F_MACOSX
 	CREDDIT_LDFLAGS+=-lncurses
 else
 	CREDDIT_LDFLAGS+=-lncursesw
+	CREDDIT_CFLAGS+=-DCREDDIT_USE_NCURSESW
 endif
 
 ifdef STATIC

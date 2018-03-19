@@ -6,7 +6,11 @@
 #include <string.h>
 #include <stdbool.h>
 #include "reddit.h"
+#if defined(CREDDIT_USE_NCURSESW)
+#include <ncursesw/curses.h>
+#else
 #include <ncurses.h>
+#endif
 #include <form.h>
 #include <locale.h>
 
