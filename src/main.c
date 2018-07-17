@@ -8,10 +8,11 @@
 #include "reddit.h"
 #if defined(CREDDIT_USE_NCURSESW)
 #include <ncursesw/curses.h>
+#include <ncursesw/form.h>
 #else
 #include <ncurses.h>
-#endif
 #include <form.h>
+#endif
 #include <locale.h>
 
 #include "global.h"
